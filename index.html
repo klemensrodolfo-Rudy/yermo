@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yermo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14120f; --panel: rgba(28, 24, 20, 0.92); --panel2: #2a241d; --line: #4a3f33;
+    --text: #e8dcc6; --muted: #a8977c; --accent: #d9823b; --accent2: #9cff3a; --bad: #d9534a;
+    --slot: rgba(0, 0, 0, 0.45);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'VT323', monospace; font-size: 20px; user-select: none; }
+  canvas#game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  [hidden] { display: none !important; }
+  button { font: inherit; color: var(--text); background: var(--panel2); border: 2px solid var(--line); padding: 8px 18px; cursor: pointer; }
+  button:hover { border-color: var(--accent); color: #fff; }
+  button.primary { background: #6b3a16; border-color: var(--accent); }
+  input, select { font: inherit; color: var(--text); background: #0e0c0a; border: 2px solid var(--line); padding: 6px 10px; width: 100%; }
+  h1, h2, .pix { font-family: 'Silkscreen', monospace; }
+
+  /* Menú */
+  #menu { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: radial-gradient(ellipse at center, rgba(0,0,0,0.1), rgba(0,0,0,0.65)); padding: 16px; }
+  #menu h1 { font-size: clamp(56px, 12vw, 120px); margin: 0; letter-spacing: 8px; color: var(--accent); text-shadow: 4px 4px 0 #3a1c08, 0 0 40px rgba(217,130,59,0.35); }
+  #menu .sub { color: var(--muted); margin-top: -14px; letter-spacing: 2px; text-align: center; }
+  .card { background: var(--panel); border: 2px solid var(--line); padding: 16px; width: min(560px, 100%); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+  #worldList { max-height: 40vh; overflow: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+  .world { display: flex; align-items: center; gap: 8px; background: #1c1814; border: 2px solid #2e271f; padding: 8px 10px; }
+  .world > div { flex: 1; min-width: 0; } .world b { display: block; font-size: 24px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .world small { color: var(--muted); }
+  .world .del { padding: 8px 12px; } .world .del:hover { border-color: var(--bad); }
+  .empty { color: var(--muted); text-align: center; }
+  .row { display: flex; gap: 10px; } .row > * { flex: 1; }
+  label { display: block; color: var(--muted); margin: 8px 0 4px; }
+  #newForm .row { margin-top: 14px; }
+  .credits { color: #6e604c; font-size: 16px; }
+
+  /* Carga */
+  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); font-size: 28px; color: var(--muted); }
+  #loading .bar { width: 220px; height: 6px; background: #2a241d; margin-top: 14px; overflow: hidden; }
+  #loading .bar i { display: block; height: 100%; width: 30%; background: var(--accent); animation: slide 1.2s infinite ease-in-out; }
+  @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(340%); } }
+
+  /* HUD */
+  #hud { position: fixed; inset: 0; pointer-events: none; }
+  #hud.dim #crosshair { display: none; }
+  #crosshair { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; transform: translate(-50%, -50%); mix-blend-mode: difference; }
+  #crosshair::before, #crosshair::after { content: ''; position: absolute; background: #fff; }
+  #crosshair::before { left: 10px; top: 0; width: 2px; height: 22px; } #crosshair::after { top: 10px; left: 0; height: 2px; width: 22px; }
+  #hotbar { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 4px; background: rgba(0,0,0,0.35); border: 2px solid rgba(0,0,0,0.5); }
+  .slot { position: relative; width: 52px; height: 52px; background: var(--slot); border: 2px solid #3a3229; display: flex; align-items: center; justify-content: center; }
+  .slot canvas { width: 40px; height: 40px; image-rendering: pixelated; pointer-events: none; }
+  .slot .count { position: absolute; right: 3px; bottom: -2px; font-size: 20px; text-shadow: 2px 2px 0 #000; pointer-events: none; }
+  .slot .dur { position: absolute; left: 10%; bottom: 4px; height: 3px; display: none; pointer-events: none; }
+  .slot.sel { border-color: #f0e2c8; box-shadow: 0 0 0 2px #000, inset 0 0 12px rgba(240,226,200,0.25); }
+  #itemName { position: absolute; bottom: 82px; left: 50%; transform: translateX(-50%); font-size: 24px; text-shadow: 2px 2px 0 #000; transition: opacity 0.4s; opacity: 0; white-space: nowrap; }
+  #info { position: absolute; top: 12px; left: 14px; text-shadow: 2px 2px 0 #000; line-height: 1.05; }
+  #info #biome { font-size: 24px; } #info #clock { color: var(--muted); }
+  #debug { position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.5); padding: 4px 8px; font-size: 18px; max-width: 60vw; text-align: right; }
+  #toast { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 16px; opacity: 0; transition: opacity 0.3s; }
+  #toast.show { opacity: 1; }
+  #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(20,10,0,0.45)); }
+
+  /* Inventario */
+  #inv { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.45); padding: 16px; }
+  #inv .card { width: min(980px, 100%); display: grid; grid-template-columns: auto 1fr; gap: 20px; max-height: 92vh; }
+  #inv h2 { margin: 0 0 8px; font-size: 18px; color: var(--accent); letter-spacing: 1px; }
+  .grid { display: grid; grid-template-columns: repeat(9, 52px); gap: 4px; }
+  #invBar { margin-top: 12px; padding-top: 12px; border-top: 2px dashed var(--line); }
+  #inv .slot { cursor: pointer; pointer-events: auto; } #inv .slot:hover { border-color: var(--accent); }
+  #stationInfo { color: var(--muted); margin: 10px 0 0; font-size: 18px; }
+  #craftSide { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  #craftTabs { display: flex; gap: 6px; margin-bottom: 8px; } #craftTabs button { padding: 2px 10px; font-size: 18px; } #craftTabs button.on { border-color: var(--accent); color: #fff; }
+  #craftList { overflow: auto; max-height: 62vh; display: flex; flex-direction: column; gap: 4px; padding-right: 4px; }
+  #craftList.palette { display: grid; grid-template-columns: repeat(auto-fill, 52px); gap: 4px; }
+  #craftList.palette .slot { cursor: pointer; }
+  .recipe { display: flex; gap: 10px; align-items: center; padding: 4px; border: 2px solid transparent; background: #1c1814; opacity: 0.5; cursor: pointer; }
+  .recipe.ok { opacity: 1; } .recipe.ok:hover { border-color: var(--accent); }
+  .rinfo { flex: 1; min-width: 0; } .rinfo b { font-weight: normal; font-size: 22px; } .rinfo em { font-style: normal; color: var(--muted); margin-left: 8px; font-size: 16px; } .rinfo em.miss { color: var(--bad); }
+  .ings { display: flex; gap: 8px; flex-wrap: wrap; } .ings span { display: inline-flex; align-items: center; gap: 2px; font-size: 18px; } .ings span.miss { color: var(--bad); }
+  .ings canvas { width: 22px; height: 22px; image-rendering: pixelated; }
+  #held { position: fixed; left: 0; top: 0; width: 48px; height: 48px; pointer-events: none; z-index: 20; }
+  #held canvas { width: 48px; height: 48px; image-rendering: pixelated; } #held span { position: absolute; right: 0; bottom: -4px; text-shadow: 2px 2px 0 #000; }
+  #tooltip { position: fixed; left: 0; top: 0; z-index: 21; background: #120f0c; border: 2px solid var(--accent); padding: 4px 10px; pointer-events: none; max-width: 280px; }
+  #tooltip b { display: block; font-weight: normal; font-size: 22px; } #tooltip small { display: block; color: var(--muted); font-size: 17px; } #tooltip .hint { color: var(--accent2); }
+
+  /* Pausa / ayuda */
+  .overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); padding: 16px; }
+  .overlay .card h2 { margin: 0 0 12px; color: var(--accent); font-size: 26px; }
+  .overlay .card > button { width: 100%; margin-top: 10px; }
+  input[type=range] { padding: 0; accent-color: var(--accent); }
+  .keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; }
+  .keys kbd { font-family: inherit; background: #0e0c0a; border: 2px solid var(--line); padding: 0 8px; text-align: center; }
+  .tip { color: var(--muted); margin-top: 12px; }
+
+  /* Supervivencia */
+  #stats { position: absolute; bottom: 76px; left: 50%; transform: translateX(-50%); width: 480px; max-width: 96vw; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 20px; }
+  .srow { display: flex; gap: 1px; height: 18px; } .srow img { width: 18px; height: 18px; image-rendering: pixelated; }
+  #hearts.low img { animation: shake 0.3s infinite; }
+  @keyframes shake { 50% { transform: translateY(-1px); } }
+  #food { flex-direction: row-reverse; }
+  #air { grid-column: 2; flex-direction: row-reverse; }
+  #rad { grid-column: 1 / 3; display: flex; align-items: center; gap: 6px; font-size: 16px; text-shadow: 1px 1px 0 #000; }
+  #rad .bar { flex: 1; height: 6px; background: rgba(0,0,0,0.5); border: 1px solid #000; }
+  #radFill { height: 100%; width: 0; background: #9cff3a; transition: width 0.3s; }
+  #rad.danger { color: #ff8a7a; animation: blink 0.8s infinite; } @keyframes blink { 50% { opacity: 0.55; } }
+  #hurt { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(200,20,10,0.9)); opacity: 0; }
+  #crosshair.mob::before, #crosshair.mob::after { background: #ff5a4a; }
+  #crosshair.mob { mix-blend-mode: normal; }
+  #netInfo { position: absolute; top: 60px; left: 14px; color: var(--accent2); font-size: 18px; text-shadow: 2px 2px 0 #000; }
+
+  /* Tutorial */
+  #tut { position: absolute; top: 12px; right: 14px; width: min(340px, 44vw); background: rgba(20,16,12,0.85); border: 2px solid var(--accent); padding: 10px 14px; line-height: 1.15; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+  #tut .tn { color: var(--muted); font-size: 16px; } #tut .tt { font-family: 'Silkscreen', monospace; color: var(--accent); font-size: 16px; margin: 2px 0 6px; }
+  #tut .td { font-size: 19px; } #tut .tp { margin-top: 6px; color: var(--accent2); }
+  #tut kbd, .keys kbd { font-family: inherit; background: #0e0c0a; border: 1px solid var(--line); padding: 0 5px; margin: 0 1px; }
+  #tut.pop { animation: pop 0.5s; } @keyframes pop { 0% { transform: scale(1); border-color: var(--accent2); } 40% { transform: scale(1.04); } 100% { transform: scale(1); } }
+
+  /* Chat */
+  #chatLog { position: absolute; left: 14px; bottom: 130px; width: min(440px, 80vw); display: flex; flex-direction: column; gap: 2px; }
+  #chatLog div { background: rgba(0,0,0,0.45); padding: 1px 8px; text-shadow: 1px 1px 0 #000; transition: opacity 1s; }
+  #chatLog div.sys { color: var(--accent2); } #chatLog div b { font-weight: normal; color: var(--accent); }
+  #chatLog div.old { opacity: 0; } #chatLog.open div.old { opacity: 1; }
+  #chatInput { position: absolute; left: 14px; bottom: 96px; width: min(440px, 80vw); pointer-events: auto; }
+
+  /* Muerte / sueño */
+  #death { background: rgba(90, 10, 5, 0.6); flex-direction: column; }
+  #death h2 { font-family: 'Silkscreen', monospace; font-size: clamp(40px, 8vw, 72px); color: #ff6a5a; margin: 0; text-shadow: 4px 4px 0 #300; }
+  #death p { font-size: 26px; margin: 8px 0 20px; }
+  #sleepFade { position: fixed; inset: 0; background: #000; opacity: 0; transition: opacity 0.9s; pointer-events: none; z-index: 30; }
+
+  /* Guía */
+  #guide { z-index: 25; }
+  #guide .card { width: min(820px, 100%); max-height: 90vh; display: flex; flex-direction: column; }
+  #guideTabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; } #guideTabs button { padding: 4px 12px; } #guideTabs button.on { border-color: var(--accent); color: #fff; }
+  #guideBody { overflow: auto; padding-right: 6px; line-height: 1.2; } #guideBody h3 { font-family: 'Silkscreen', monospace; color: var(--accent); font-size: 16px; margin: 16px 0 6px; }
+  #guideBody p, #guideBody li { margin: 6px 0; } .muted { color: var(--muted); }
+  .glist { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 6px; margin-top: 10px; }
+  .grow { display: flex; gap: 10px; align-items: center; background: #1c1814; padding: 4px 8px; font-size: 18px; } .grow canvas { width: 32px; height: 32px; image-rendering: pixelated; flex: none; } .grow small { color: var(--muted); }
+  .mob { background: #1c1814; padding: 6px 10px; margin-bottom: 6px; } .mob small { color: var(--muted); } .mob p { margin: 2px 0 0; }
+  .menuRow { display: flex; gap: 8px; margin-top: 8px; } .menuRow button { flex: 1; }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--text); } .check input { width: auto; accent-color: var(--accent); }
+  #joinMsg { color: var(--accent); min-height: 1em; margin: 8px 0 0; }
+  #hostCode { margin-top: 10px; text-align: center; background: #0e0c0a; border: 2px dashed var(--accent2); padding: 8px; }
+  #hostCodeVal { font-family: 'Silkscreen', monospace; font-size: 34px; letter-spacing: 6px; color: var(--accent2); display: block; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .row2 button { margin-top: 10px; }
+
+  /* v4 */
+  #minimap { position: absolute; top: 12px; right: 14px; width: 150px; height: 150px; border: 2px solid rgba(0,0,0,0.7); box-shadow: 0 0 0 1px #4a3f33; image-rendering: pixelated; border-radius: 50%; }
+  #tut { top: 176px !important; }
+  #debug { top: 70px !important; right: auto !important; left: 14px; text-align: left !important; }
+  #netInfo { top: 56px !important; }
+  #bigmapWrap { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); z-index: 15; cursor: pointer; }
+  #bigmap { width: min(84vh, 92vw); height: min(84vh, 92vw); border: 3px solid var(--accent); image-rendering: pixelated; background: #14120f; }
+  #bigmapWrap p { position: absolute; bottom: 4vh; color: var(--muted); }
+  #bossbar { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: min(420px, 60vw); text-align: center; text-shadow: 2px 2px 0 #000; color: #ff8a6a; font-family: 'Silkscreen', monospace; font-size: 14px; }
+  #bossbar .bar { height: 10px; background: rgba(0,0,0,0.6); border: 2px solid #000; margin-top: 4px; } #bossFill { height: 100%; background: linear-gradient(#e8402a, #8a1a0a); width: 100%; }
+  #ach { position: absolute; top: 90px; left: 50%; transform: translate(-50%, -30px); opacity: 0; background: rgba(20,16,12,0.92); border: 2px solid #e0c23a; padding: 8px 18px; text-align: center; transition: opacity 0.4s, transform 0.4s; }
+  #ach.show { animation: achShow 5s forwards; }
+  @keyframes achShow { 0% { opacity: 0; transform: translate(-50%, -30px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
+  #ach small { display: block; color: #e0c23a; font-family: 'Silkscreen', monospace; font-size: 12px; } #ach b { display: block; font-size: 26px; font-weight: normal; } #ach span { color: var(--muted); }
+  #buffs { grid-column: 1 / 3; text-align: center; font-size: 17px; color: #f0d890; text-shadow: 1px 1px 0 #000; min-height: 0; }
+  #invEquip { display: flex; gap: 8px; margin-top: 12px; }
+  #equipInfo { color: var(--muted); font-size: 16px; margin: 6px 0 0; max-width: 480px; }
+  .slot .slabel { position: absolute; top: -2px; left: 2px; font-style: normal; font-size: 12px; color: var(--muted); pointer-events: none; line-height: 1; }
+  .slot.filled .slabel { opacity: 0.25; }
+  #craftList.machine { display: block; }
+  .mslots { display: grid; grid-template-columns: repeat(3, 76px); gap: 10px 12px; margin: 8px 0 14px; }
+  .mslots .slot { width: 76px; height: 64px; } .mslots .slabel { position: absolute; top: auto; bottom: -15px; left: 0; right: 0; text-align: center; font-size: 13px; }
+  .mprog .pbar { height: 12px; background: #0e0c0a; border: 2px solid var(--line); margin-top: 14px; } .mprog .pbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #d9823b, #e0c23a); transition: width 0.25s; }
+  .mstatus { color: var(--text); margin: 6px 0; } .mhelp { font-size: 17px; }
+  .recipe.locked { opacity: 0.35; }
+  .gi { width: 22px; height: 22px; image-rendering: pixelated; vertical-align: middle; }
+  .grow.ach { opacity: 0.45; } .grow.ach.got { opacity: 1; border-left: 3px solid #e0c23a; } .grow .medal { font-size: 22px; }
+  .serverbox { display: flex; align-items: center; gap: 8px; background: #1c2a14; border: 2px solid #4a7a2a; padding: 8px 10px; margin-bottom: 10px; } .serverbox b { flex: 1; font-weight: normal; }
+  code { background: #0e0c0a; padding: 0 5px; }
+  select { cursor: pointer; }
+  /* táctil */
+  #touch { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #touch .look { position: absolute; right: 0; top: 0; width: 55%; height: 100%; pointer-events: auto; }
+  #touch .stick { position: absolute; left: 24px; bottom: 110px; width: 130px; height: 130px; border-radius: 50%; background: rgba(0,0,0,0.25); border: 2px solid rgba(255,255,255,0.25); pointer-events: auto; }
+  #touch .stick i { position: absolute; left: 40px; top: 40px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.35); }
+  #touch .btns { position: absolute; right: 16px; bottom: 100px; display: grid; grid-template-columns: repeat(3, 62px); gap: 10px; pointer-events: auto; }
+  #touch .btns button, #touch .top button { width: 62px; height: 62px; border-radius: 50%; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.35); font-size: 15px; padding: 0; }
+  #touch button.on, #touch button.lock { background: rgba(217,130,59,0.6); }
+  #touch .top { position: absolute; top: 170px; right: 14px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; }
+  #touch .top button { width: 52px; height: 52px; }
+  body.touch #hotbar { pointer-events: auto; bottom: 8px; }
+
+  #interactHint { position: absolute; left: 50%; top: calc(50% + 26px); transform: translateX(-50%); background: rgba(0,0,0,0.55); padding: 2px 10px; font-size: 18px; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+  /* v5 */
+  #thirst { display: flex; gap: 1px; height: 14px; grid-column: 2; justify-content: flex-end; }
+  #thirst i { width: 12px; height: 14px; background: #1a2a3a; clip-path: polygon(50% 0, 90% 60%, 70% 100%, 30% 100%, 10% 60%); }
+  #thirst i.full { background: #5ab0e0; } #thirst i.half { background: linear-gradient(90deg, #1a2a3a 50%, #5ab0e0 50%); }
+  #temp { grid-column: 1; font-size: 16px; text-shadow: 1px 1px 0 #000; } #temp.cold { color: #8ac8ff; } #temp.hot { color: #ff8a4a; }
+  #sick { grid-column: 1 / 3; text-align: center; color: #b8e060; font-size: 16px; text-shadow: 1px 1px 0 #000; }
+  #vehHud { position: absolute; right: 14px; bottom: 90px; width: 190px; background: rgba(0,0,0,0.55); border: 2px solid #3a3229; padding: 6px 10px; text-shadow: 1px 1px 0 #000; }
+  #vehHud b { font-weight: normal; color: var(--accent); } #vehSpeed { font-family: 'Silkscreen', monospace; font-size: 22px; }
+  #vehHud .bar { height: 6px; background: #1a1612; margin: 3px 0 5px; } #vehFuel { height: 100%; background: #e0c23a; } #vehHp { height: 100%; background: #7ad84a; }
+  #vehHud small { color: var(--muted); }
+  #hordeBanner { position: absolute; top: 44px; left: 50%; transform: translateX(-50%); color: #ff5a4a; font-family: 'Silkscreen', monospace; font-size: 18px; text-shadow: 2px 2px 0 #000; animation: blink 1s infinite; }
+  #raceHud { position: absolute; top: 170px; left: 14px; background: rgba(0,0,0,0.55); padding: 8px 12px; border-left: 3px solid #c8302a; min-width: 200px; text-shadow: 1px 1px 0 #000; }
+  #raceHud b { color: #ffd84a; font-weight: normal; } #raceTable { margin-top: 6px; color: var(--muted); font-size: 17px; }
+  #raceLights { position: fixed; top: 22%; left: 50%; transform: translateX(-50%); display: flex; gap: 14px; background: #111; padding: 12px 18px; border: 3px solid #333; z-index: 12; }
+  #raceLights i { width: 46px; height: 46px; border-radius: 50%; background: #2a1010; box-shadow: inset 0 0 8px #000; }
+  #raceLights i.red { background: #ff2a1a; box-shadow: 0 0 22px #ff2a1a; } #raceLights i.green { background: #3aff4a; box-shadow: 0 0 22px #3aff4a; }
+  #podium { z-index: 13; } #podiumList div { font-size: 26px; margin: 4px 0; } #podiumList .p1 { color: #ffd84a; font-size: 32px; }
+  .trade { display: flex; align-items: center; gap: 10px; background: #1c1814; padding: 6px 8px; margin-bottom: 5px; }
+  .trade .tgive, .trade .tget { flex: 1; font-size: 17px; line-height: 1.3; } .trade .tarrow { color: var(--accent); font-size: 22px; } .trade small { display: block; color: var(--muted); }
+  .trade button { padding: 4px 10px; } .trade button:disabled { opacity: 0.4; cursor: default; }
+  #craftList.panel { display: block; } #craftList.panel h3 { color: var(--accent); font-family: 'Silkscreen', monospace; font-size: 14px; margin: 14px 0 6px; }
+  .quest { background: #1c2a14; border: 2px solid #4a7a2a; padding: 8px 12px; margin-bottom: 10px; } .quest p { margin: 4px 0; }
+  .slot .qual { position: absolute; top: 1px; right: 3px; font-weight: normal; font-size: 13px; color: #ffd84a; text-shadow: 1px 1px 0 #000; pointer-events: none; }
+  #noteReader .card { background: #e8dcc0; color: #3a2a1a; border-color: #8a6a3a; } #noteReader h2 { color: #6a3a1a !important; } #noteBody { font-size: 22px; line-height: 1.3; white-space: pre-wrap; }
+  #photoFlash { position: fixed; inset: 0; background: #fff; opacity: 0; transition: opacity 0.4s; z-index: 40; pointer-events: none; }
+  .skinrow { display: grid; grid-template-columns: 110px 1fr; gap: 6px 10px; align-items: center; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 6px; } .swatches button { width: 28px; height: 28px; padding: 0; border-width: 2px; } .swatches button.on { border-color: #fff; }
+  #skinPreview { width: 100%; height: 200px; background: #0e0c0a; border: 2px solid var(--line); margin-bottom: 10px; }
+  #lobbyList .world b { font-size: 22px; }
+
+  @media (max-width: 760px) {
+    #minimap { width: 96px; height: 96px; }
+    #tut { top: 120px !important; width: min(300px, 70vw); font-size: 17px; }
+    .srow { height: 14px; } .srow img { width: 14px; height: 14px; }
+    #stats { gap: 2px 8px; bottom: 66px; }
+    body.touch #touch .stick { bottom: 150px; left: 14px; width: 116px; height: 116px; } body.touch #touch .stick i { left: 33px; top: 33px; }
+    body.touch #touch .btns { bottom: 150px; right: 10px; grid-template-columns: repeat(3, 54px); gap: 8px; }
+    body.touch #touch .btns button { width: 54px; height: 54px; font-size: 13px; }
+    body.touch #touch .top { top: 112px; }
+    #bossbar { top: 118px; }
+    #inv .card { grid-template-columns: 1fr; overflow: auto; }
+    .grid { grid-template-columns: repeat(9, 1fr); } .slot { width: auto; aspect-ratio: 1; height: auto; }
+    #hotbar .slot { width: 9vw; height: 9vw; }
+  }
+  /* v6 */
+  #objective { position: absolute; left: 12px; top: 128px; max-width: 320px; background: rgba(20,18,15,.62); border-left: 3px solid #d9823b; padding: 6px 10px; font-size: 18px; line-height: 1.15; color: #f0e6d0; pointer-events: none; }
+  #objective small { display: block; color: #a89c88; font-size: 14px; }
+  .jtabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; } .jtabs button { padding: 4px 8px; font-size: 16px; }
+  .repbar { height: 8px; background: #2a2620; border: 1px solid #4a4236; margin: 4px 0; } .repbar i { display: block; height: 100%; }
+  .paints { display: flex; flex-wrap: wrap; gap: 6px; } .swatch { width: 38px; height: 30px; border: 2px solid #000; padding: 0; }
+  .emotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .emotes button { font-size: 18px; padding: 8px 4px; }
+  .miss { color: #ff7a5a; }
+  #podiumChamp h3 { margin: 10px 0 4px; } #podiumChamp div { font-size: 20px; }
+  @media (max-width: 700px) { #objective { top: auto; bottom: 150px; font-size: 15px; max-width: 60vw; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="menu">
+  <h1>YERMO</h1>
+  <div class="sub">Sobreviví. Excavá. Reconstruí lo que quedó.</div>
+  <div class="card">
+    <div id="serverBox" class="serverbox" hidden>🖧 <b id="serverName">Servidor</b><button id="joinServer" class="primary">Entrar al servidor</button></div>
+    <div id="worldList"></div>
+    <button id="newWorld" class="primary" style="width:100%">+ Nuevo mundo</button>
+    <div class="menuRow"><button id="joinWorld">Unirse a partida online</button><button id="openLobby">Partidas públicas</button></div>
+    <div class="menuRow"><button id="openSkin">Personaje</button><button id="openGuide">Guía</button></div>
+    <div id="joinForm" hidden>
+      <div class="row">
+        <div><label for="jName">Tu nombre</label><input id="jName" maxlength="20" placeholder="Superviviente"></div>
+        <div><label for="jCode">Código de sala o servidor</label><input id="jCode" maxlength="80" placeholder="ABCDE o 192.168.0.10:5173"></div>
+      </div>
+      <p id="joinMsg"></p>
+      <div class="row"><button id="cancelJoin">Cancelar</button><button id="doJoin" class="primary">Unirse</button></div>
+    </div>
+    <div id="newForm" hidden>
+      <label for="wName">Nombre</label>
+      <input id="wName" maxlength="40" placeholder="Mi refugio">
+      <label for="wSeedSel">Mundo (semilla)</label>
+      <select id="wSeedSel"></select>
+      <input id="wSeed" placeholder="Escribí un número o una palabra" hidden style="margin-top:6px">
+      <p id="seedDesc" class="muted" style="margin:4px 0 0"></p>
+      <div class="row">
+        <div><label for="wType">Tipo de mundo</label>
+          <select id="wType"><option value="normal">Normal</option><option value="brew">🍺 Cervecero</option></select></div>
+        <div><label for="wMode">Modo</label>
+          <select id="wMode"><option value="survival">Supervivencia</option><option value="creative">Creativo</option></select></div>
+        <div><label for="optDist">Distancia</label>
+          <select id="optDist"><option>4</option><option>5</option><option selected>6</option><option>8</option><option>10</option></select></div>
+      </div>
+      <label class="check"><input type="checkbox" id="wTut" checked> Tutorial guiado (recomendado la primera vez)</label>
+      <div class="row"><button id="cancelNew">Cancelar</button><button id="createWorld" class="primary">Crear mundo</button></div>
+    </div>
+  </div>
+  <div class="credits">v4 · hecho con Three.js · arte, sonido y música procedurales</div>
+</div>
+
+<div id="loading" hidden><div style="text-align:center"><div id="loadText">Generando…</div><div class="bar"><i></i></div></div></div>
+
+<div id="hud" hidden>
+  <div id="vignette"></div>
+  <div id="hurt"></div>
+  <div id="netInfo" hidden></div>
+  <div id="tut" hidden></div>
+  <div id="chatLog"></div>
+  <input id="chatInput" hidden maxlength="160" placeholder="Escribí y apretá Enter">
+  <div id="stats" hidden>
+    <div id="air" class="srow"></div>
+    <div id="hearts" class="srow"></div><div id="food" class="srow"></div>
+    <div id="rad"><span>☢</span><div class="bar"><div id="radFill"></div></div><span id="radVal">0%</span></div>
+    <div id="temp"></div><div id="thirst"></div>
+    <div id="sick"></div>
+    <div id="buffs"></div>
+  </div>
+  <div id="crosshair"></div>
+  <div id="interactHint" hidden></div>
+  <div id="info"><div id="biome"></div><div id="clock"></div></div>
+  <canvas id="minimap" width="150" height="150"></canvas>
+  <div id="bossbar" hidden><span id="bossName">BEHEMOT</span><div class="bar"><div id="bossFill"></div></div></div>
+  <div id="ach"></div>
+  <div id="hordeBanner" hidden>⚠ HORDA ⚠</div>
+  <div id="vehHud" hidden><b id="vehName"></b><div id="vehSpeed">0 km/h</div><div id="vehFuelRow"><small>Nafta</small><div class="bar"><div id="vehFuel"></div></div></div><small>Estado</small><div class="bar"><div id="vehHp"></div></div></div>
+  <div id="raceHud" hidden><div id="raceInfo"></div><div id="raceTable"></div></div>
+  <div id="debug" hidden></div>
+  <div id="itemName"></div>
+  <div id="hotbar"></div>
+  <div id="toast"></div>
+</div>
+
+<div id="inv" hidden>
+  <div class="card">
+    <div>
+      <h2>Mochila</h2>
+      <div id="invMain" class="grid"></div>
+      <div id="invBar" class="grid"></div>
+      <div id="invEquip"></div>
+      <p id="equipInfo"></p>
+      <p id="stationInfo"></p>
+    </div>
+    <div id="craftSide">
+      <h2 id="craftTitle">Fabricación</h2>
+      <div id="craftTabs"><button data-f="all" class="on">Todo</button><button data-f="ok">Disponibles</button></div>
+      <div id="craftList"></div>
+    </div>
+  </div>
+</div>
+<div id="held" hidden><canvas width="48" height="48"></canvas><span></span></div>
+<div id="tooltip" hidden></div>
+
+<div id="pause" class="overlay" hidden>
+  <div class="card" style="width:min(420px,100%)">
+    <h2 id="pauseTitle">Pausa</h2>
+    <label>Distancia de visión: <span id="optDistV">6</span> sectores</label>
+    <input id="optDistP" type="range" min="3" max="12" value="6">
+    <label>Sensibilidad del mouse</label>
+    <input id="optSens" type="range" min="6" max="60" value="22">
+    <label>Volumen de efectos</label>
+    <input id="optVol" type="range" min="0" max="100" value="60">
+    <label>Volumen de música</label>
+    <input id="optMusic" type="range" min="0" max="100" value="50">
+    <label for="optQuality">Calidad gráfica</label>
+    <select id="optQuality"><option value="bajo">Baja (PC lenta)</option><option value="medio">Media</option><option value="alto">Alta</option></select>
+    <label>Texturas <small id="packInfo" class="muted"></small></label>
+    <div class="row2"><button id="packExport" title="Descarga un PNG con todas las texturas para editarlo">Exportar plantilla</button><button id="packLoad" title="PNG de 16 columnas; los tiles vacíos quedan como están">Cargar paquete…</button></div>
+    <button id="packClear" style="width:100%;margin-top:4px" hidden>Quitar paquete de texturas</button>
+    <input id="packFile" type="file" accept="image/png,image/*" hidden>
+    <div id="onlineOpts" hidden>
+      <div class="row2" style="align-items:end">
+        <div><label for="optTeam">Equipo / clan</label><select id="optTeam"></select></div>
+        <label class="check"><input type="checkbox" id="optPvp"> PvP (lo decide el anfitrión)</label>
+      </div>
+      <div class="row2" style="align-items:end">
+        <label class="check"><input type="checkbox" id="optPublic"> Partida pública</label>
+        <label class="check"><input type="checkbox" id="optVoice"> Chat de voz</label>
+      </div>
+    </div>
+    <p class="muted" style="font-size:16px;margin:8px 0 0">V: cámara · F2: modo foto · H: bocina · L: faros</p>
+    <button id="resume" class="primary">Volver al juego</button>
+    <div class="row2"><button id="pauseGuide">Guía</button><button id="tutBtn">Saltar tutorial</button></div>
+    <button id="achBtn">Logros</button>
+    <button id="pauseHost">Abrir a amigos (online)</button>
+    <div id="hostCode" hidden>Código de la sala<span id="hostCodeVal">-----</span><button id="copyCode">Copiar código</button><div class="muted" style="margin-top:6px">Tus amigos lo ingresan en «Unirse a partida online».</div></div>
+    <button id="saveQuit">Guardar y salir al menú</button>
+  </div>
+</div>
+
+<div id="death" class="overlay" hidden>
+  <h2>MORISTE</h2>
+  <p id="deathCause"></p>
+  <button id="respawn" class="primary">Reaparecer</button>
+  <p class="muted" style="font-size:18px">Conservás tu inventario. Reaparecés en tu catre o en el inicio.</p>
+</div>
+<div id="sleepFade" hidden></div>
+
+<div id="guide" class="overlay" hidden>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0 0 10px">Guía del yermo</h2><button id="guideClose">Cerrar</button></div>
+    <div id="guideTabs"></div>
+    <div id="guideBody"></div>
+  </div>
+</div>
+
+<div id="help" class="overlay" hidden>
+  <div class="card" style="width:min(520px,100%)">
+    <h2>Bienvenido al Yermo</h2>
+    <div class="keys">
+      <kbd>WASD</kbd><span>Moverse · <b>Shift</b> correr · <b>Espacio</b> saltar/nadar</span>
+      <kbd>Clic izq.</kbd><span>Romper (mantener)</span>
+      <kbd>Clic der.</kbd><span>Colocar bloque · usar mesa u horno</span>
+      <kbd>E</kbd><span>Mochila y fabricación · <b>Q</b> tirar ítem</span>
+      <kbd>1–9 / rueda</kbd><span>Elegir ítem · <b>M</b> mapa · <b>F</b> moto</span>
+      <kbd>J</kbd><span>Diario: historia, desafíos, facciones · <b>B</b> gestos</span>
+      <kbd>G</kbd><span>Guardar · <b>F3</b> datos técnicos · <b>Esc</b> pausa</span>
+    </div>
+    <p class="tip">Empezá talando árboles muertos: tronco → tablas → mesa de trabajo. Buscá carbón para antorchas antes de que caiga la noche. La chatarra está en autos, ruinas y vetas.</p>
+    <button id="helpClose" class="primary">A sobrevivir</button>
+  </div>
+</div>
+
+<div id="noteReader" class="overlay" hidden>
+  <div class="card" style="width:min(520px,100%)"><h2 id="noteTitle">Nota</h2><p id="noteBody"></p><button id="noteClose" class="primary">Guardar la nota</button></div>
+</div>
+<div id="raceMenu" class="overlay" hidden>
+  <div class="card" style="width:min(460px,100%)">
+    <h2>🏁 Largada</h2>
+    <p id="raceTrack" class="hint"></p><p id="raceOpp"></p><p id="raceRecord" class="muted"></p>
+    <p>¿Cuántas vueltas?</p>
+    <div class="row2"><button class="primary" data-laps="1">1 vuelta</button><button class="primary" data-laps="3">3 vueltas</button></div>
+    <button class="primary" data-laps="5" style="width:100%;margin-top:8px">5 vueltas</button>
+    <button id="raceChamp" style="width:100%;margin-top:8px">🏆 Campeonato</button>
+    <p class="muted">Subite a un vehículo en la largada. En línea, los que estén cerca en un vehículo también corren.</p>
+    <button id="raceCancel" style="width:100%">Cancelar</button>
+  </div>
+</div>
+<div id="raceLights" hidden><i></i><i></i><i></i></div>
+<div id="podium" class="overlay" hidden><div class="card" style="width:min(420px,100%);text-align:center"><h2>🏁 Resultado</h2><div id="podiumList"></div><p id="podiumMsg"></p><div id="podiumChamp"></div><button id="podiumNext" class="primary" hidden>Siguiente fecha</button></div></div>
+<div id="photoFlash" hidden></div>
+<div id="skinEditor" class="overlay" hidden>
+  <div class="card" style="width:min(480px,100%)">
+    <h2>Tu personaje</h2>
+    <canvas id="skinPreview" width="440" height="200"></canvas>
+    <div class="skinrow">
+      <span>Campera</span><div class="swatches" data-k="0"></div>
+      <span>Pantalón</span><div class="swatches" data-k="1"></div>
+      <span>Piel</span><div class="swatches" data-k="4"></div>
+      <span>Máscara</span><select id="skinMask"><option value="gas">Máscara de gas</option><option value="none">Sin máscara</option></select>
+      <span>Sombrero</span><select id="skinHat"><option value="none">Ninguno</option><option value="casco">Casco</option><option value="gorro">Gorro rojo</option><option value="sombrero">Sombrero</option></select>
+    </div>
+    <button id="skinClose" class="primary" style="width:100%;margin-top:12px">Listo</button>
+  </div>
+</div>
+<div id="lobby" class="overlay" hidden>
+  <div class="card" style="width:min(560px,100%)">
+    <h2>Partidas públicas</h2>
+    <div id="lobbyList"></div>
+    <p class="muted">Aparecen las salas de quienes marcaron «Partida pública» y los servidores dedicados. La lista funciona cuando el juego se abre desde un servidor de Yermo (Jugar.bat, Servidor.bat o uno publicado).</p>
+    <div class="row"><button id="lobbyRefresh">Actualizar</button><button id="lobbyClose" class="primary">Cerrar</button></div>
+  </div>
+</div>
+
+<div id="bigmapWrap" hidden><canvas id="bigmap" width="640" height="640"></canvas><p>M o clic para cerrar</p></div>
+
+<div id="touch" hidden>
+  <div class="look"></div>
+  <div class="stick"><i></i></div>
+  <div class="btns">
+    <button class="b-use">Usar</button><button class="b-jump">Saltar</button><button class="b-break">Romper</button>
+    <button class="b-run">Correr</button><button class="b-inv">Mochila</button><button class="b-mount">Moto</button>
+  </div>
+  <div class="top"><button class="b-pause">❚❚</button><button class="b-map">Mapa</button></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# mundos del servidor dedicado (datos locales de cada uno)
+mundos/
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+.claude/
