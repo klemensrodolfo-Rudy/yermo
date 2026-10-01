@@ -9,7 +9,7 @@ export const ACTIONS = [
   ['jump', 'Saltar / subir', 'Space'], ['sprint', 'Correr', 'ShiftLeft'], ['down', 'Bajar (vuelo, ascensor)', 'KeyC'],
   ['inventory', 'Mochila', 'KeyE'], ['drop', 'Tirar ítem', 'KeyQ'], ['mount', 'Subir / bajar de vehículo', 'KeyF'],
   ['map', 'Mapa', 'KeyM'], ['chat', 'Chat', 'KeyT'], ['journal', 'Diario', 'KeyJ'], ['emotes', 'Gestos', 'KeyB'],
-  ['camera', 'Cámara', 'KeyV'], ['waypoint', 'Poner marcador', 'KeyN'], ['horn', 'Bocina', 'KeyH'], ['lights', 'Faros', 'KeyL'], ['save', 'Guardar', 'KeyG'],
+  ['camera', 'Cámara', 'KeyV'], ['waypoint', 'Poner marcador', 'KeyN'], ['voice', 'Control por voz', 'KeyK'], ['horn', 'Bocina', 'KeyH'], ['lights', 'Faros', 'KeyL'], ['save', 'Guardar', 'KeyG'],
 ];
 const keyName = (c) => (!c ? '—' : c.startsWith('Key') ? c.slice(3) : c.startsWith('Digit') ? c.slice(5) : { Space: 'Espacio', ShiftLeft: 'Shift', ShiftRight: 'Shift der.', ControlLeft: 'Ctrl', ControlRight: 'Ctrl der.', AltLeft: 'Alt', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Tab: 'Tab', Enter: 'Enter', CapsLock: 'Bloq Mayús' }[c] || c);
 
@@ -75,6 +75,7 @@ export function setupAccess({ settings, saveSettings, flash }) {
     <select id="accCb"><option value="">Normal</option><option value="deutan">Deuteranopía (verde-rojo, el más común)</option><option value="protan">Protanopía (rojo)</option><option value="tritan">Tritanopía (azul-amarillo)</option></select>
     <label>Tamaño de la interfaz: <b class="uzV"></b></label><input id="accBig" type="range" min="80" max="140" step="5">
     <label class="check"><input type="checkbox" id="accContrast"> Alto contraste (textos con borde y mira amarilla)</label>
+    <label class="check"><input type="checkbox" id="accVoice"> 🎙 Control por voz al entrar a un mundo (también con K o el botón 🎙)</label>
     <div class="touchOpts"><h3 style="margin:12px 0 4px">Pantalla táctil</h3>
       <label>Tamaño de los botones: <b class="tsV"></b></label><input class="tsz" type="range" min="70" max="140" step="5">
       <label>Opacidad: <b class="toV"></b></label><input class="tal" type="range" min="25" max="100" step="5">
@@ -125,13 +126,14 @@ export function setupAccess({ settings, saveSettings, flash }) {
   $('#accBig').oninput = (e) => { settings.uiScale = +e.target.value; $('.uzV').textContent = settings.uiScale + '%'; applyLook(); };
   $('#accBig').onchange = () => saveSettings();
   $('#accContrast').onchange = (e) => { settings.contrast = e.target.checked; applyLook(); saveSettings(); };
+  $('#accVoice').onchange = (e) => { settings.voiceCtl = e.target.checked; saveSettings(); };
   $('#accReset').onclick = () => { settings.keys = {}; rebuild(); saveSettings(); renderKeys(); flash?.('Teclas por defecto'); };
   let onClose = null;
   $('#accClose').onclick = () => { capture = null; ov.hidden = true; onClose?.(); };
   return {
     open(cb) {
       onClose = cb;
-      $('#accCb').value = settings.cb || ''; $('#accBig').value = settings.uiScale ?? (settings.bigui ? 118 : 100); $('.uzV').textContent = $('#accBig').value + '%'; $('#accContrast').checked = !!settings.contrast;
+      $('#accCb').value = settings.cb || ''; $('#accBig').value = settings.uiScale ?? (settings.bigui ? 118 : 100); $('.uzV').textContent = $('#accBig').value + '%'; $('#accContrast').checked = !!settings.contrast; $('#accVoice').checked = !!settings.voiceCtl;
       touchUI(); $('.touchOpts').hidden = !document.body.classList.contains('touch');
       renderKeys(); ov.hidden = false;
     },

@@ -80,6 +80,7 @@ export const ACHIEVEMENTS = [
   { id: 'acertijo', name: 'Cerrajero sabio', desc: 'Abrí un cofre con acertijo.' },
   { id: 'constructor', name: 'Maestro mayor de obras', desc: 'Terminá una construcción guiada.' },
   { id: 'marcador', name: 'Cartógrafo', desc: 'Poné tu primer marcador.' },
+  { id: 'voz', name: 'A tus órdenes', desc: 'Hacé algo con el control por voz.' },
 ];
 
 export class Achievements {

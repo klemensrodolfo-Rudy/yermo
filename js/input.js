@@ -105,6 +105,7 @@ export class Input {
     hold('.b-cam', () => this.a.press('camera'));
     hold('.b-photo', () => this.a.press('photo'));
     hold('.b-chat', () => this.a.press('chat'));
+    hold('.b-voice', () => this.a.press('voice'));
     let run = false;
     hold('.b-run', () => { run = !run; this.a.setKey('ShiftLeft', run); root.querySelector('.b-run').classList.toggle('lock', run); });
   }

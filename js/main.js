@@ -30,6 +30,7 @@ import { createSocial, openAdventures } from './social.js';
 import { createLearn } from './learn.js';
 import { createVisuals } from './visuals.js';
 import { createUX } from './ux.js';
+import { createVoiceCmd } from './voicecmd.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -1160,6 +1161,7 @@ async function startGame(meta, hello, cloudInfo) {
   const LE = game.learn = createLearn(fctx);
   game.visuals = createVisuals(fctx);
   game.ux = createUX(fctx);
+  game.voiceCmd = createVoiceCmd(fctx);
   // clic derecho en bloques y criaturas: cada módulo mira primero lo suyo
   const blockF2 = player.onUseBlock;
   player.onUseBlock = (...a) => LE.onUseBlock(...a) || CR.onUseBlock(...a) || MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
@@ -1215,7 +1217,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1554,7 +1556,7 @@ $('#lobbyClose').onclick = () => { $('#lobby').hidden = true; };
 
 // ---------- Entrada ----------
 const overlayOpen = () => !$('#cloud').hidden || !$('#death').hidden || !$('#guide').hidden || !$('#help').hidden || !$('#noteReader').hidden || !$('#raceMenu').hidden || !!document.querySelector('.v6modal') || chatting;
-const inputActive = () => locked || (input && (input.touch || input.padActive));
+const inputActive = () => locked || (input && (input.touch || input.padActive)) || !!game?.voiceCmd?.on;
 canvas.addEventListener('click', () => { if (game && !paused && !ui.open && !overlayOpen()) lockPointer(); });
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === canvas;
@@ -1598,6 +1600,7 @@ document.addEventListener('keydown', (e) => {
   if ((locked || game.features.photo) && game.features.key(e)) return;
   if (locked && game.features2.key(e)) return;
   if (locked && game.ux?.key(e)) return;
+  if (game.voiceCmd?.key(e)) return;
   if (e.code === 'KeyM' && inputActive()) { toggleBigMap(); return; }
   if (!locked) return;
   if (e.code === 'KeyT' && net.active) { e.preventDefault(); game.player.keys = {}; openChat(); return; }
@@ -1626,6 +1629,7 @@ const input = new Input({
     else if (name === 'pause') setPause(!paused);
     else if (name === 'mount') toggleMount();
     else if (name === 'drop') dropHand(false);
+    else if (name === 'voice') game.voiceCmd?.toggle();
     else if (name === 'chat') { if (net.active) { game.player.keys = {}; openChat(); } }
     else {
       // atajos del teclado para la barra táctil
@@ -1643,7 +1647,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '10.2 · 2026-10-02';
+const VERSION = '10.3 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1724,6 +1728,7 @@ function loop(now) {
   game.learn?.update(dt);
   game.visuals?.update(dt);
   game.ux?.update(dt);
+  game.voiceCmd?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';

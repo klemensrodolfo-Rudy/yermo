@@ -272,6 +272,14 @@ export function setupGuide(ui, getGame) {
       <p>Hay <b>viento</b> que cambia de dirección y de fuerza, con ráfagas, y sopla más fuerte en las tormentas: mueve las plantas, las flores y las copas de los árboles, inclina la lluvia, empuja las nubes, el humo de las fogatas y el fuego, la arena de las tormentas y las hojas que caen.</p>
       <h3>Más cómodo</h3>
       <p><b>Mochila</b>: buscador de recetas y bloques, y botón <b>↕ Ordenar</b>. <b>📍 Marcadores</b>: <b>N</b> pone uno donde estás (o tocá el mapa grande); se ven en pantalla con la distancia, y si quedan atrás aparece una flecha al costado. 🏠 Casa siempre está. <b>Mapa grande</b> (M): arrastrar, zoom con rueda o pellizco, centrar. <b>Modo foto</b> (F2): filtros (cálido, frío, sepia, blanco y negro, dramático, ensueño), viñeta, campo de visión y cuenta regresiva de 3 s. <b>Consejos</b> que aparecen la primera vez que ves algo nuevo (se pueden apagar). En Opciones: campo de visión, balanceo, sacudón, invertir mirada, color de cine y partículas.</p>`,
+    'Control por voz': () => `
+      <p>Apretá <b>K</b> (o el botón <b>🎙</b> en el celu) y hablá. Abajo aparece lo que entendió y lo que hizo. Funciona en <b>Chrome</b> (compu y Android) y Edge, y necesita internet: el navegador manda el audio a su servicio de reconocimiento de voz. La primera vez te pide permiso para el micrófono. Se puede activar solo al entrar a un mundo, en <b>Controles y accesibilidad</b>.</p>
+      <h3>Qué entiende</h3>
+      <ul><li><b>Moverse</b>: «adelante», «caminá», «corré», «atrás», «a la izquierda», «un pasito a la derecha», «pará» (frena todo).</li>
+      <li><b>Mirar</b>: «mirá a la derecha / izquierda» (con «mucho» o «un poco»), «mirá arriba / abajo», «mirá al frente», «date vuelta».</li>
+      <li><b>Acciones</b>: «golpeá» o «rompé» (sigue hasta que digas «dejá de golpear» o «pará»), «usá», «abrí», «poné», «comé», «saltá», «agachate», «tirá», «subite» o «bajate» de un vehículo.</li>
+      <li><b>Objetos y pantallas</b>: «elegí el tres», «siguiente», «abrí la mochila», «mapa», «pausa», «cerrá», «sacá una foto», «marcador», «cámara», «ayuda».</li></ul>
+      <p>Se pueden encadenar: «caminá y después saltá». Las órdenes de frenar se cumplen apenas se escuchan, sin esperar a que termines de hablar.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>
