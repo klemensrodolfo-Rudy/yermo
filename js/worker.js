@@ -27,7 +27,7 @@ self.onmessage = (e) => {
         return [0, 1, 2].map((k) => Math.round((at(i, j, k) * (1 - a) + at(i + 1, j, k) * a) * (1 - b) + (at(i, j + 1, k) * (1 - a) + at(i + 1, j + 1, k) * a) * b));
       };
     }
-    const r = buildMesh(m.vol, tintAt);
+    const r = buildMesh(m.vol, tintAt, m.shapes);
     const t = [];
     for (const part of [r.solid, r.water]) for (const k of ['pos', 'uv', 'lit', 'inf', 'tint', 'lcol', 'idx']) t.push(part[k].buffer);
     self.postMessage({ type: 'mesh', job: m.job, cx: m.cx, cz: m.cz, version: m.version, mesh: r }, t);

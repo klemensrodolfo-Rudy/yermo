@@ -1,6 +1,6 @@
 // Construye la geometría de un chunk a partir de un volumen con borde (padding)
 // e incluye luz de cielo + luz de bloques con BFS e iluminación suave + AO.
-import { CHUNK, HEIGHT, OPAQUE, EMIT, LCOL, RENDER, TEX_TOP, TEX_SIDE, TEX_BOTTOM, TEX_FRONT, TORCH_DIR, LIQ, LIQ_LEVEL, BOXES, ATLAS, TILE_FLAGS } from './blocks.js';
+import { SHAPE_BOXES, DECOR, BLOCKS as BK, CHUNK, HEIGHT, OPAQUE, EMIT, LCOL, RENDER, TEX_TOP, TEX_SIDE, TEX_BOTTOM, TEX_FRONT, TORCH_DIR, LIQ, LIQ_LEVEL, BOXES, ATLAS, TILE_FLAGS } from './blocks.js';
 
 export const PAD = 14;
 export const W = CHUNK + PAD * 2; // 44
@@ -104,7 +104,8 @@ class Buf {
 }
 
 // tintAt(x, z) → [r, g, b] (0-255, 128 = sin cambio) en coordenadas locales del chunk
-export function buildMesh(vol, tintAt) {
+export function buildMesh(vol, tintAt, shapes) {
+  const SH = new Map(); if (shapes) for (let i = 0; i < shapes.length; i += 3) SH.set(shapes[i], [shapes[i + 1], shapes[i + 2]]);
   const N = WW * HEIGHT;
   const sky = new Uint8Array(N), blk = new Uint8Array(N), lc = new Uint8Array(N);
   computeLight(vol, sky, blk, lc);
@@ -123,6 +124,13 @@ export function buildMesh(vol, tintAt) {
     const lx = x - PAD, lz = z - PAD;
 
     if (r === 2) { torch(solid, lx, y, lz, sky[i], blk[i], b); continue; }
+    if (r === 4 && BK[b]?.shaped) {
+      // formas con material propio y decoración: las cajas salen de su información guardada
+      const info = SH.get(i), op = (dx, dy, dz) => OPAQUE[get(x + dx, y + dy, z + dz)];
+      if (BK[b].shaped === 'decor') { const D = DECOR[info ? info[0] : 0] || DECOR[0]; boxes(solid, lx, y, lz, b, sky[i], blk[i], op, tintAt, lc[i], rotBoxes(D.boxes, info ? info[1] : 0), null); }
+      else { const mat = info ? info[0] : 2, rot = info ? info[1] : 0, list = SHAPE_BOXES[BK[b].shaped]; boxes(solid, lx, y, lz, b, sky[i], blk[i], op, tintAt, lc[i], list[rot % list.length] || list[0], mat); }
+      continue;
+    }
     if (r === 4) { boxes(solid, lx, y, lz, b, sky[i], blk[i], (dx, dy, dz) => OPAQUE[get(x + dx, y + dy, z + dz)], tintAt, lc[i]); continue; }
     if (r === 5) { cross(solid, lx, y, lz, b, sky[i], blk[i], tintAt, lc[i]); continue; }
     const liq = LIQ[b];
@@ -243,15 +251,25 @@ const BOX_FACES = [
   [[0, 0, 1], [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], 0.9],
   [[0, 0, -1], [[1, 0, 0], [0, 0, 0], [0, 1, 0], [1, 1, 0]], 0.7],
 ];
-function boxes(buf, x, y, z, b, s, bl, opaqueAt, tintAt, lcol = 0) {
+// decoración: girar las cajas en cuartos de vuelta alrededor del centro
+function rotBoxes(list, rot) {
+  if (!rot) return list;
+  return list.map((bx) => {
+    let [x0, y0, z0, x1, y1, z1, t] = bx;
+    for (let k = 0; k < rot; k++) { const nx0 = 16 - z1, nx1 = 16 - z0; z0 = x0; z1 = x1; x0 = nx0; x1 = nx1; }
+    return [x0, y0, z0, x1, y1, z1, t];
+  });
+}
+function boxes(buf, x, y, z, b, s, bl, opaqueAt, tintAt, lcol = 0, list = null, mat = null) {
   const P = new Float32Array(12), UV = new Float32Array(8), LIT = new Uint8Array(16), TINT = new Uint8Array(16);
-  for (const bx of BOXES[b]) {
+  const tb = mat != null ? mat : b;
+  for (const bx of list || BOXES[b]) {
     const c = [[bx[0] / 16, bx[3] / 16], [bx[1] / 16, bx[4] / 16], [bx[2] / 16, bx[5] / 16]];
     BOX_FACES.forEach(([n, vs, shade], f) => {
       // cara pegada al borde del bloque y vecino opaco: no se ve
       const onEdge = (n[0] === 1 && c[0][1] === 1) || (n[0] === -1 && c[0][0] === 0) || (n[1] === 1 && c[1][1] === 1) || (n[1] === -1 && c[1][0] === 0) || (n[2] === 1 && c[2][1] === 1) || (n[2] === -1 && c[2][0] === 0);
       if (onEdge && opaqueAt(n[0], n[1], n[2])) return;
-      const tile = bx[6] ?? (f === 2 ? TEX_TOP[b] : f === 3 ? TEX_BOTTOM[b] : f === 4 ? TEX_FRONT[b] : TEX_SIDE[b]);
+      const tile = bx[6] ?? (f === 2 ? TEX_TOP[tb] : f === 3 ? TEX_BOTTOM[tb] : f === 4 ? TEX_SIDE[tb] : TEX_SIDE[tb]);
       const tu = tileU(tile), tv = tileV(tile);
       for (let k = 0; k < 4; k++) {
         const v = vs[k];

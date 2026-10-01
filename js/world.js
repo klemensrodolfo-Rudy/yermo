@@ -186,8 +186,21 @@ export class World {
     if (!w) return false;
     c.dirty = false; c.meshing = true;
     const vol = this.buildVolume(c.cx, c.cz);
+    // formas y decoración del sector: [índice en el volumen, material/tipo, rotación]
+    let shapes = null;
+    if (this.shapeInfo) {
+      const d = c.data, list = [];
+      for (let i = 0; i < d.length; i++) {
+        const id = d[i];
+        if (id !== 128 && id !== 129 && id !== 254 && id !== 255) continue;
+        const lx = i & 15, lz = (i >> 4) & 15, y = i >> 8;
+        const info = this.shapeInfo(c.cx * CHUNK + lx, y, c.cz * CHUNK + lz);
+        if (info) list.push((PAD + lx) + (PAD + lz) * W + y * W * W, info[0], info[1]);
+      }
+      if (list.length) shapes = list;
+    }
     w.busy++;
-    w.postMessage({ type: 'mesh', cx: c.cx, cz: c.cz, version: c.version, vol }, [vol.buffer]);
+    w.postMessage({ type: 'mesh', cx: c.cx, cz: c.cz, version: c.version, vol, shapes }, [vol.buffer]);
     return true;
   }
 
@@ -279,6 +292,8 @@ export class World {
     return b === -1 ? true : SOLID[b] === 1;
   }
 
+  // volver a dibujar el sector de un bloque (cuando cambia su información, no su número)
+  touchAt(x, z) { const c = this.chunks.get(key(Math.floor(x / CHUNK), Math.floor(z / CHUNK))); if (c && c.state === 'ready') { c.dirty = true; c.version++; c.priority = true; } }
   setBlock(x, y, z, id, remote = false) {
     if (y < 0 || y >= HEIGHT) return false;
     const cx = Math.floor(x / CHUNK), cz = Math.floor(z / CHUNK);

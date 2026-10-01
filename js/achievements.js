@@ -86,6 +86,7 @@ export const ACHIEVEMENTS = [
   { id: 'coleccion', name: 'Coleccionista', desc: 'Completá una página entera del libro.' },
   { id: 'semana', name: 'Semana perfecta', desc: 'Completá los 3 desafíos de una semana.' },
   { id: 'nivel', name: 'Experimentado', desc: 'Subí de nivel.' },
+  { id: 'sierra', name: 'Carpintero fino', desc: 'Dale forma a un bloque con la sierra.' },
 ];
 
 export class Achievements {

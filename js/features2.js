@@ -880,6 +880,7 @@ export function createFeatures2(ctx) {
         row.appendChild(btn('✕', () => { if (confirm(`¿Borrar el diseño «${n}»?`)) { delete designs[n]; saveDesigns(designs); openBuild(t); } }));
         list.appendChild(row);
       }
+      ctx.ext?.build?.(list, t);
     });
   }
   function build(d, t) {
@@ -887,7 +888,7 @@ export function createFeatures2(ctx) {
     // rotación: cuartos de vuelta entre como se guardó y hacia donde mira ahora
     const q = ((Math.round((p.yaw - (d.yaw || 0)) / (Math.PI / 2)) % 4) + 4) % 4;
     const ox = t.x + t.face[0], oy = t.y + t.face[1], oz = t.z + t.face[2];
-    let placed = 0;
+    let placed = 0; const changes = [];
     for (let y = 0; y < Hh; y++) for (let z = 0; z < D; z++) for (let x = 0; x < W; x++) {
       const b = d.data[x + z * W + y * W * D];
       if (!b) continue;
@@ -899,8 +900,9 @@ export function createFeatures2(ctx) {
       if (!sim.canEdit(wx, wz, p.name, p.team)) continue;
       const it = needItem(b);
       if (!p.creative) { if (inv.count(it) < 1) continue; inv.remove(it, 1); }
-      w.setBlock(wx, wy, wz, b); placed++;
+      changes.push([wx, wy, wz, cur]); w.setBlock(wx, wy, wz, b); placed++;
     }
+    g.building?.recordUndo(changes, 'Construcción del diseño');
     sfx.craft(); flash(`Construcción terminada: ${placed} bloques`);
   }
 

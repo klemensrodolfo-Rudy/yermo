@@ -343,6 +343,10 @@ def(250, { name: 'Control de aventura', tex: { top: T.mg_blue, side: T.mg_white,
 def(251, { name: 'Trofeo', tex: tx(T.mg_gold), solid: false, opaque: false, render: 'box', box: [[5, 0, 5, 11, 2, 11], [7, 2, 7, 9, 5, 9], [4, 5, 4, 12, 11, 12]], hardness: 0.3, light: 10 });
 def(252, { name: 'Meta de aventura', tex: { top: T.mg_gold, side: T.mg_table, bottom: T.mg_white }, hardness: 1, light: 12 });
 def(253, { name: 'Cofre con acertijo', tex: { top: T.chest_top, side: T.mg_blue, bottom: T.chest_top, front: T.chest_front }, hardness: 1.5, tool: 'axe', container: 'chest' });
+def(128, { name: 'Losa', tex: tx(T.stone), opaque: false, render: 'box', box: [[0, 0, 0, 16, 8, 16]], coll: [0, 0, 0, 1, 0.5, 1], hardness: 1.2, drop: 0, shaped: 'losa' });
+def(129, { name: 'Escalón', tex: tx(T.stone), opaque: false, render: 'box', box: [[0, 0, 0, 16, 8, 16], [0, 8, 8, 16, 16, 16]], coll: [[0, 0, 0, 1, 0.5, 1], [0, 0.5, 0.5, 1, 1, 1]], hardness: 1.2, drop: 0, shaped: 'escalon' });
+def(254, { name: 'Panel', tex: tx(T.stone), opaque: false, render: 'box', box: [[0, 0, 6, 16, 16, 10]], coll: [0, 0, 0.375, 1, 1, 0.625], hardness: 1, drop: 0, shaped: 'panel' });
+def(255, { name: 'Decoración', tex: tx(T.planks), solid: false, opaque: false, render: 'box', box: [[4, 0, 4, 12, 8, 12]], hardness: 0.3, drop: 0, shaped: 'decor' });
 def(226, { name: 'Cofre antiguo', tex: { top: T.chest_top, side: T.chest_side, bottom: T.chest_top, front: T.chest_front }, hardness: 1.5, tool: 'axe', drop: 0, loot: 'eldra' });
 def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12, portal: true });
 
@@ -384,7 +388,27 @@ export const isWater = (id) => LIQ[id] === 1 || LIQ[id] === 2;
 export const isLiquid = (id) => LIQ[id] > 0;
 export const liquidId = (kind, level) => (kind === 1 ? (level ? 39 + level : 17) : kind === 2 ? (level ? 47 + level : 47) : (level ? 55 + Math.ceil(level / 2) : 55));
 // caja de colisión (0..1) de un bloque sólido
-export const collBox = (id) => B[id]?.coll ?? null; // lista de cajas o null (= cubo entero)
+export const collBox = (id, x, y, z) => (shapeHook && B[id]?.shaped && x != null ? shapeHook(id, x, y, z) : null) ?? B[id]?.coll ?? null; // lista de cajas o null (= cubo entero)
+// formas: cajas en 16avos según la rotación (0-3); el panel con rot 2 es una alfombra
+export const SHAPE_BOXES = {
+  losa: [[[0, 0, 0, 16, 8, 16]], [[0, 8, 0, 16, 16, 16]]],
+  escalon: [[[0, 0, 0, 16, 8, 16], [0, 8, 8, 16, 16, 16]], [[0, 0, 0, 16, 8, 16], [0, 8, 0, 8, 16, 16]], [[0, 0, 0, 16, 8, 16], [0, 8, 0, 16, 16, 8]], [[0, 0, 0, 16, 8, 16], [8, 8, 0, 16, 16, 16]]],
+  panel: [[[0, 0, 6, 16, 16, 10]], [[6, 0, 0, 10, 16, 16]], [[0, 0, 0, 16, 1, 16]]],
+};
+// decoración (bloque 255): cajas con su propia textura
+export const DECOR = [
+  { id: 'maceta', name: 'Maceta', boxes: [[5, 0, 5, 11, 6, 11, T.brick], [6, 6, 6, 10, 7, 10, T.dirt], [7.5, 7, 7.5, 8.5, 10, 8.5, T.oak_bark], [5, 10, 5, 11, 15, 11, T.oak_leaves]] },
+  { id: 'farol', name: 'Farol', boxes: [[5, 0, 5, 11, 1, 11, T.metal_plate], [6, 1, 6, 10, 8, 10, T.light_orb], [5, 8, 5, 11, 9, 11, T.metal_plate], [7.5, 9, 7.5, 8.5, 12, 8.5, T.metal_plate]] },
+  { id: 'mesa', name: 'Mesa', boxes: [[0, 13, 0, 16, 16, 16, T.planks], [1, 0, 1, 3, 13, 3, T.planks], [13, 0, 1, 15, 13, 3, T.planks], [1, 0, 13, 3, 13, 15, T.planks], [13, 0, 13, 15, 13, 15, T.planks]] },
+  { id: 'silla', name: 'Silla', boxes: [[3, 7, 3, 13, 9, 13, T.planks], [3, 0, 3, 5, 7, 5, T.planks], [11, 0, 3, 13, 7, 5, T.planks], [3, 0, 11, 5, 7, 13, T.planks], [11, 0, 11, 13, 7, 13, T.planks], [3, 9, 11, 13, 16, 13, T.planks]] },
+  { id: 'estante', name: 'Estante', boxes: [[0, 0, 8, 16, 16, 16, T.crate_side]] },
+  { id: 'barril', name: 'Barril', boxes: [[3, 0, 3, 13, 14, 13, T.log_side]] },
+  { id: 'banco', name: 'Banco', boxes: [[0, 6, 4, 16, 8, 12, T.planks], [1, 0, 5, 3, 6, 11, T.planks], [13, 0, 5, 15, 6, 11, T.planks]] },
+  { id: 'alfombra', name: 'Alfombra roja', boxes: [[0, 0, 0, 16, 1, 16, T.mg_red]] },
+  { id: 'caja', name: 'Caja de madera', boxes: [[1, 0, 1, 15, 14, 15, T.crate_side]] },
+];
+let shapeHook = null;
+export const setShapeHook = (fn) => { shapeHook = fn; };
 
 // ---------- Ítems (no bloques) ----------
 export const ITEMS = {
@@ -547,6 +571,17 @@ export const ITEMS = {
   402: { name: 'Velero', icon: 'sailboat', vehicle: 'ship' },
   403: { name: 'Coco', icon: 'coconut', food: 3, thirst: 6 },
   404: { name: 'Pez dorado', icon: 'fish', color: 0xf0c040, food: 4 },
+  // v10.9: construcción y decoración
+  405: { name: 'Sierra de formas', icon: 'saw', saw: true, durability: 400 },
+  406: { name: 'Maceta', icon: 'decor', decor: 0, color: 0xc0603a },
+  407: { name: 'Farol', icon: 'decor', decor: 1, color: 0xf0e0a0 },
+  408: { name: 'Mesa', icon: 'decor', decor: 2, color: 0x9a7040 },
+  409: { name: 'Silla', icon: 'decor', decor: 3, color: 0x8a6036 },
+  410: { name: 'Estante', icon: 'decor', decor: 4, color: 0x7a5a36 },
+  411: { name: 'Barril', icon: 'decor', decor: 5, color: 0x6a4a2a },
+  412: { name: 'Banco', icon: 'decor', decor: 6, color: 0x9a7040 },
+  413: { name: 'Alfombra roja', icon: 'decor', decor: 7, color: 0xc83a3a },
+  414: { name: 'Caja de madera', icon: 'decor', decor: 8, color: 0xa08050 },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -777,6 +812,16 @@ export const RECIPES = [
   { out: [252, 1], in: [[238, 2], [239, 2]], station: 'mesa' },
   { out: [238, 4], in: [[353, 3], [9, 2]], station: 'mesa' },
   { out: [253, 1], in: [[38, 1], [353, 1]], station: 'mesa' },
+  { out: [405, 1], in: [[260, 2], [23, 1]], station: 'mesa' },
+  { out: [406, 1], in: [[13, 2], [248, 1]], station: 'mesa' },
+  { out: [407, 2], in: [[27, 1], [14, 1], [26, 1]], station: 'mesa' },
+  { out: [408, 1], in: [[23, 4]], station: 'mesa' },
+  { out: [409, 2], in: [[23, 3]], station: 'mesa' },
+  { out: [410, 1], in: [[23, 6]], station: 'mesa' },
+  { out: [411, 1], in: [[23, 4], [258, 1]], station: 'mesa' },
+  { out: [412, 1], in: [[23, 3]], station: 'mesa' },
+  { out: [413, 4], in: [[176, 2], [236, 1]], station: 'mesa' },
+  { out: [414, 1], in: [[23, 4], [256, 2]], station: 'mesa' },
   { out: [236, 8], in: [[176, 1], [23, 2]], station: 'mesa' },
   { out: [237, 8], in: [[176, 1], [9, 2]], station: 'mesa' },
   { out: [239, 8], in: [[9, 4]], station: 'mesa' },

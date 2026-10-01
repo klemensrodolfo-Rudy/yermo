@@ -715,7 +715,7 @@ export class Mobs {
       const b = w.getBlock(bx, by, bz);
       if (b === -1) return true;
       if (!SOLID[b]) continue;
-      const cbs = collBox(b);
+      const cbs = collBox(b, bx, by, bz);
       if (!cbs) return true;
       for (const cb of cbs) if (y < by + cb[4] && y + h > by + cb[1] && x + hw > bx + cb[0] && x - hw < bx + cb[3] && z + hw > bz + cb[2] && z - hw < bz + cb[5]) return true;
     }

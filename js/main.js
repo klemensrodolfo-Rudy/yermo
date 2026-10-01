@@ -33,6 +33,7 @@ import { createUX } from './ux.js';
 import { createVoiceCmd } from './voicecmd.js';
 import { createLife } from './life.js';
 import { createProgress } from './progress.js';
+import { createBuilding } from './building.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -1142,7 +1143,7 @@ async function startGame(meta, hello, cloudInfo) {
   mobs.onHitRemote = (id, dmg, dir) => net.sendHitMob(id, dmg, dir);
   ui.bind(inv, meta.mode === 'creative', known);
   if (!meta.inventory && !meta.remote) {
-    if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80, 245, 246, 247, 240, 244, 75, 249, 250, 251, 252, 191].forEach((id) => inv.add(id, 64));
+    if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80, 245, 246, 247, 240, 244, 75, 249, 250, 251, 252, 191].forEach((id) => inv.add(id, 64)), [405, 406, 407, 408, 409].forEach((id) => inv.add(id, id === 405 ? 1 : 16));
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'magic') [[385, 6], [353, 10], [379, 1], [26, 8]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'islands') [[398, 1], [402, 1], [403, 4], [26, 8], [267, 1]].forEach(([id, n]) => inv.add(id, n));
@@ -1203,6 +1204,9 @@ async function startGame(meta, hello, cloudInfo) {
   game.voiceCmd = createVoiceCmd(fctx);
   game.life = createLife(fctx);
   game.progress = createProgress(fctx);
+  const BU = game.building = createBuilding(fctx);
+  const useAll = player.onUseItem;
+  player.onUseItem = (...a) => BU.onUseItem(...a) || useAll(...a);
   // clic derecho en bloques y criaturas: cada módulo mira primero lo suyo
   const blockF2 = player.onUseBlock;
   player.onUseBlock = (...a) => LE.onUseBlock(...a) || CR.onUseBlock(...a) || MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
@@ -1258,7 +1262,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1691,7 +1695,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '10.8 · 2026-10-02';
+const VERSION = '10.9 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles

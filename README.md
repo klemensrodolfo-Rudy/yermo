@@ -126,6 +126,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v10.8 — Progresión**: libro de colección con premios, desafíos semanales y experiencia con 7 mejoras del personaje.
 
+**v10.9 — Construcción**: sierra de formas (losa, escalón, panel y alfombra de cualquier material), 9 decoraciones (maceta, farol, mesa, silla, estante, barril, banco, alfombra, caja) y herramientas de obra (rellenar, vaciar, reemplazar, deshacer).
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

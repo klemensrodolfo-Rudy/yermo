@@ -190,7 +190,7 @@ export class Player {
       const b = this.world.getBlock(bx, by, bz);
       if (b === -1) return true;
       if (!SOLID[b]) continue;
-      const cbs = collBox(b);
+      const cbs = collBox(b, bx, by, bz);
       if (!cbs) return true;
       for (const cb of cbs) if (x + hw > bx + cb[0] && x - hw < bx + cb[3] && y + H > by + cb[1] && y < by + cb[4] && z + hw > bz + cb[2] && z - hw < bz + cb[5]) return true;
     }
@@ -770,7 +770,9 @@ export class Player {
       if (this.perkLuck && Math.random() < this.perkLuck) { const T = LOOT_TABLES[b.loot], e = T[Math.floor(Math.random() * T.length)]; if (e[0] !== 337) this.give(e[0], e[1]); }
       this.onEvent('loot', id);
     }
-    if (this.canHarvest(id) && b.drop) {
+    const dropOv = this.dropFor?.(br.x, br.y, br.z, id);
+    if (dropOv) this.give(dropOv, 1);
+    else if (this.canHarvest(id) && b.drop) {
       if (!b.dropChance || Math.random() < b.dropChance) this.give(b.drop, b.dropCount);
     }
     if (b.extra) for (const [eid, n, p] of b.extra) if (Math.random() < p) this.give(eid, n, eid === 337 ? { note: this.storyNote?.(br.x, br.z) ?? Math.floor(Math.random() * 1000) } : undefined);
