@@ -140,6 +140,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v12.4 — Hogar**: camas de colores y elegir en cuál aparecer al morir, cocina (también sirve para cocinar), mesada con pileta, biblioteca de roble, 8 decoraciones nuevas (sillón, mesa de luz, florero, macetas con cactus, helecho y hongo, cajonera, perchero), marcos para colgar copias de tus dibujos y carteles de pared.
 
+**v12.5 — Terreno sin repetición**: la piedra, la tierra, el pasto, la arena y la nieve cambian un poco de tono por zonas (más claro, más oscuro, más cálido o más frío), así el terreno no se ve como un mosaico repetido.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

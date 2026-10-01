@@ -90,6 +90,8 @@ export const TILE_FLAGS = new Uint8Array(1024);
   set('red_sand salt_top thermal_top tuff sandstone obsidian', 1);
   set('red_sandstone clay_ochre clay_white quartz_block', 2);
   set('glow_mushroom', 16);
+  // 128: variación de tono por zona (manchas grandes que rompen la repetición)
+  set('stone deepstone dirt grass_top grass_side deadgrass_top deadgrass_side sand red_sand gravel ash mud snow_top snow_side mycelium_top mycelium_side tuff sandstone basalt salt_top thermal_top sand_toxic red_sandstone farmland', 128);
 }
 
 export const AIR = 0;

@@ -220,6 +220,14 @@ const frag = (water) => /* glsl */`
     // tinte del bioma (pasto) y leve cambio de tono por bloque
     if ((flags & 4) == 0) tex.rgb = mix(tex.rgb, tex.rgb * vTint, mt.a);
     if ((flags & 3) != 0) tex.rgb *= 0.96 + h2 * 0.08;
+    // variación por zona: manchas grandes de tono (más claro, más oscuro, más cálido o más frío) para que el terreno no se vea repetido
+    if ((flags & 128) != 0 && texFx > 0.5) {
+      vec2 zp = bp.xz + vec2(bp.y * 0.37, -bp.y * 0.29);
+      float m1 = vn(zp * 0.045), m2 = vn(zp * 0.17 + 31.0);
+      tex.rgb *= 1.0 + (m1 - 0.5) * 0.26 + (m2 - 0.5) * 0.09;
+      tex.rgb = mix(tex.rgb, tex.rgb * vec3(1.07, 1.0, 0.9), smoothstep(0.55, 0.8, vn(zp * 0.02 + 5.0)) * 0.6);
+      tex.rgb = mix(tex.rgb, tex.rgb * vec3(0.93, 1.0, 1.06), smoothstep(0.6, 0.85, vn(zp * 0.025 - 9.0)) * 0.5);
+    }
     float B = mt.b * 255.0;
     float emis = B > 200.5 ? (B - 200.0) / 55.0 : 0.0;
     float spec = B > 200.5 ? 0.0 : B / 200.0;
@@ -1720,7 +1728,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '12.4 · 2026-10-02';
+const VERSION = '12.5 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
