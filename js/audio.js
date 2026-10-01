@@ -184,9 +184,10 @@ export class Sfx {
       20: [[[40, 47, 52, 56], [41, 48, 53, 57], [43, 50, 55, 58]], [64, 65, 68, 69, 71, 72, 74]], // cañones: frigio dominante
       21: [[[41, 48, 57, 60], [43, 50, 59, 62], [45, 52, 57, 64]], [65, 67, 69, 71, 72, 76, 79]], // salar: lidio, abierto
       22: [[[34, 41, 46, 50], [36, 43, 48, 52]], [58, 60, 62, 64, 66, 68]], // géiseres: tonos enteros graves
+      23: [[[45, 52, 57, 60], [38, 45, 50, 53], [40, 47, 52, 56], [45, 52, 57, 60]], [69, 71, 72, 74, 76, 77, 80, 81]], // centro porteño: menor armónica (tango)
     };
     // timbre propio de cada bioma: [onda, duración, volumen]
-    const LEAD = { 20: ['sawtooth', 0.7, 0.035], 21: ['sine', 2.6, 0.07], 22: ['sine', 2.0, 0.06], 6: ['sine', 2.2, 0.06], 7: ['sine', 2.4, 0.06], 14: ['triangle', 2.2, 0.06], 18: ['sine', 2.0, 0.06] };
+    const LEAD = { 23: ['sawtooth', 0.45, 0.03], 20: ['sawtooth', 0.7, 0.035], 21: ['sine', 2.6, 0.07], 22: ['sine', 2.0, 0.06], 6: ['sine', 2.2, 0.06], 7: ['sine', 2.4, 0.06], 14: ['triangle', 2.2, 0.06], 18: ['sine', 2.0, 0.06] };
     const harm = () => HARM[this.biome] || minor;
     let ci = 0;
     const pad = () => {

@@ -1,13 +1,14 @@
 // Generación procedural del mundo postapocalíptico.
 import { Simplex, hash2, hash3, mulberry32 } from './noise.js';
 import { CHUNK, HEIGHT, SEA, doorId, ladderFor } from './blocks.js';
+import { makePorteno, inArea, areaBlend, GROUND as BA_GROUND, AREA as BA_AREA } from './porteno.js';
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
 const mod = (a, n) => ((a % n) + n) % n;
 
-export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11, ZOO: 12, VALE: 13, ELFWOOD: 14, PEAKS: 15, MIRE: 16, ASHEN: 17, OCEAN: 18, ISLAND: 19, CANYON: 20, SALT: 21, GEYSER: 22 };
-export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo', 'Bioparque', 'Colinas de Valverde', 'Bosque de Lunaria', 'Montes de Hierroalto', 'Ciénaga Sombría', 'Tierras de Brasa', 'Mar abierto', 'Isla', 'Cañones rojos', 'Salar', 'Campo de géiseres'];
+export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11, ZOO: 12, VALE: 13, ELFWOOD: 14, PEAKS: 15, MIRE: 16, ASHEN: 17, OCEAN: 18, ISLAND: 19, CANYON: 20, SALT: 21, GEYSER: 22, PORTENO: 23 };
+export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo', 'Bioparque', 'Colinas de Valverde', 'Bosque de Lunaria', 'Montes de Hierroalto', 'Ciénaga Sombría', 'Tierras de Brasa', 'Mar abierto', 'Isla', 'Cañones rojos', 'Salar', 'Campo de géiseres', 'Centro porteño'];
 export const MAGIC_BIOMES = new Set([13, 14, 15, 16, 17]);
 // El Abismo: mazmorra infinita lejos del mundo normal; cada nivel ocupa ABYSS_W bloques en x
 export const ABYSS_X = 300000, ABYSS_W = 256;
@@ -52,6 +53,7 @@ export class WorldGen {
     this.nCanyon = new Simplex(seed + 15);
     this.nSalt = new Simplex(seed + 16);
     this.nGeyser = new Simplex(seed + 17);
+    if (type === 'baires') this.porteno = makePorteno(this);
     // desplazamiento por semilla: el ruido simplex vale ~0 en el origen
     this.ox = (hash2(seed, 1, 2) - 0.5) * 200000;
     this.oz = (hash2(seed, 3, 4) - 0.5) * 200000;
@@ -585,6 +587,11 @@ export class WorldGen {
 
   column(wx, wz) {
     if (wx >= ABYSS_X - 64) return { h: 120, biome: BIOME.ABYSS, urbanT: 0, cityLevel: 47, temp: 0, level: abyssLevel(wx) };
+    if (this.porteno) {
+      if (inArea(wx, wz)) return { h: BA_GROUND, biome: BIOME.PORTENO, urbanT: 0, cityLevel: BA_GROUND, temp: 0 };
+      const t = areaBlend(wx, wz);
+      if (t > 0) { const b = this.baseColumn(wx, wz), k = smooth(0, 1, t); return { ...b, h: Math.round(lerp(b.h, BA_GROUND, k)), urbanT: b.urbanT * (1 - k) }; }
+    }
     const bs = this.baseSite();
     if (bs) {
       const d = Math.max(Math.abs(wx - bs.x), Math.abs(wz - bs.z));
@@ -944,6 +951,7 @@ export class WorldGen {
     this.military(cx, cz, set);
     this.undercity(cx, cz, set);
     this.ghostTowns(cx, cz, set, colAt);
+    if (this.porteno) this.portenoFill(data, cx, cz, I);
 
     return data;
   }
@@ -1428,6 +1436,20 @@ export class WorldGen {
     }
   }
 
+  // v14: rellena las columnas del centro porteño (todo lo de arriba se rehace)
+  portenoFill(data, cx, cz, I) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK;
+    if (x0 + 15 < BA_AREA.x0 || x0 > BA_AREA.x1 || z0 + 15 < BA_AREA.z0 || z0 > BA_AREA.z1) return;
+    for (let lz = 0; lz < CHUNK; lz++) for (let lx = 0; lx < CHUNK; lx++) {
+      const wx = x0 + lx, wz = z0 + lz;
+      if (!inArea(wx, wz)) continue;
+      for (let y = BA_GROUND - 3; y < HEIGHT; y++) data[I(lx, y, lz)] = 0;
+      const put = (y, id) => { if (y >= 0 && y < HEIGHT) data[I(lx, y, lz)] = id; };
+      this.porteno.column(wx, wz, put);
+      this.porteno.canopy(wx, wz, put, (y) => data[I(lx, y, lz)] === 0);
+    }
+  }
+
   // busca (una sola vez por celda) un lugar plano dentro de un cañón
   ghostSite(cxg, czg, CELL) {
     this.ghostCache = this.ghostCache || new Map();
@@ -1858,6 +1880,7 @@ export class WorldGen {
   }
 
   findSpawn(pref) {
+    if (this.porteno) return { x: 0.5, y: BA_GROUND + 2, z: 24.5 };
     if (this.type === 'islands') {
       for (let r = 0; r < 600; r += 4) for (let a = 0; a < 24; a++) {
         const wx = Math.round(Math.cos(a / 24 * Math.PI * 2) * r), wz = Math.round(Math.sin(a / 24 * Math.PI * 2) * r);

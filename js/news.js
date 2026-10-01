@@ -2,6 +2,7 @@
 import { itemName } from './blocks.js';
 
 export const NEWS = [
+  ['14.0', 'Buenos Aires', [[1116, 'Nuevo tipo de mundo: réplica del centro porteño con el Obelisco, la 9 de Julio y Corrientes.'], [1148, 'Jacarandás, palos borrachos y tipas en las plazoletas.'], [1117, 'Carteles del Gran Rex y del Ópera, Teatro Colón y Diagonal Norte.'], [443, 'Arrancás al pie del Obelisco con un globo aerostático.']]],
   ['13.4', 'Recuerdos y mascotas', [[116, 'Álbum de viaje automático con tus mejores momentos.'], [443, 'Grabar recorrido: un video de tu mundo en 30 segundos.'], [271, 'El perro encuentra tesoros y la cabra avisa del peligro.'], [245, 'Música propia en los cañones, el salar y los géiseres.']]],
   ['13.3', 'Con amigos', [[285, 'El mundo sigue mientras no estás: cultivos y baterías avanzan.'], [442, 'Paquetes de hasta 4 cosas por el buzón.'], [443, 'Carreras en globo con 10 aros y ranking del grupo.'], [251, 'Concurso semanal de construcción con votos.']]],
   ['13.2', 'Pincel, portones y planos', [[444, 'Pincel para teñir hormigón, vidrio y camas con 12 colores.'], [1147, 'Portón automático que se abre al acercarte.'], [362, 'Planos compartibles como código de texto.']]],

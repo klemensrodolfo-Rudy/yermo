@@ -60,6 +60,8 @@ export const TILES = [
   'x_mark',
   // v13.2
   'garage_door',
+  // v14: Buenos Aires
+  'jac_leaves', 'palo_leaves', 'vereda',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -75,6 +77,7 @@ export const BIOME_TINT = [
   [96, 152, 88], [108, 150, 124], [116, 128, 110], [92, 108, 84], [140, 112, 92],
   [100, 140, 120], [92, 168, 80],
   [150, 118, 84], [140, 136, 120], [124, 126, 96],
+  [104, 140, 84],
 ];
 // banderas por tile para el shader: 1 variación completa (rota/espeja por bloque), 2 sólo espejo, 4 agua que fluye,
 // 8 lava, 16 se mece con el viento, 32 remolino (portal), 64 llama que titila
@@ -94,6 +97,7 @@ export const TILE_FLAGS = new Uint8Array(1024);
   set('red_sand salt_top thermal_top tuff sandstone obsidian', 1);
   set('red_sandstone clay_ochre clay_white quartz_block', 2);
   set('glow_mushroom', 16);
+  set('jac_leaves palo_leaves', 16);
   // 128: variación de tono por zona (manchas grandes que rompen la repetición)
   set('stone deepstone dirt grass_top grass_side deadgrass_top deadgrass_side sand red_sand gravel ash mud snow_top snow_side mycelium_top mycelium_side tuff sandstone basalt salt_top thermal_top sand_toxic red_sandstone farmland', 128);
 }
@@ -471,6 +475,9 @@ const WALLS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 WALLS.forEach((wall, i) => def(1135 + i, { name: 'Cuadro con tu dibujo', tex: tx(T.frame_wood), solid: false, opaque: false, render: 'box', box: [WALL_BOX[wall.join(',')]], hardness: 0.3, drop: 0, wall2: wall, container: 'canvas', frame: true, hidden: true }));
 WALLS.forEach((wall, i) => def(1139 + i, { name: 'Cartel de pared', tex: tx(T.sign), solid: false, opaque: false, render: 'box', box: [SIGN_BOX[wall.join(',')]], hardness: 0.5, tool: 'axe', drop: 1139, wall2: wall, container: 'sign', wallSet: [1139, 1140, 1141, 1142], hidden: i > 0 }));
 // ---------- v12.8: exploración ----------
+def(1148, { name: 'Hojas de jacarandá', tex: tx(T.jac_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[248, 1, 0.08]] });
+def(1149, { name: 'Hojas de palo borracho', tex: tx(T.palo_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[248, 1, 0.08]] });
+def(1150, { name: 'Vereda porteña', tex: tx(T.vereda), hardness: 1.5, tool: 'pick' });
 def(1147, { name: 'Portón automático', tex: { top: T.metal_plate, side: T.garage_door, bottom: T.metal_plate }, hardness: 2.5, tool: 'pick' });
 def(1146, { name: 'Lámpara del faro', tex: tx(T.quartz_lamp), hardness: 1, tool: 'pick', light: 15 });
 def(1143, { name: 'Marca del tesoro', tex: { top: T.x_mark, side: T.sand, bottom: T.sand }, hardness: 0.5, tool: 'shovel', drop: 229 });
@@ -862,6 +869,7 @@ export const RECIPES = [
   // v13.2
   { out: [444, 1], in: [[256, 1], [176, 1], [353, 1]], station: 'mesa' },
   { out: [1147, 2], in: [[260, 3], [27, 2]], station: 'mesa' },
+  { out: [1150, 4], in: [[9, 4]], station: 'mesa' },
   // v12.9
   { out: [443, 1], in: [[176, 12], [23, 6], [260, 2]], station: 'mesa' },
   // v12.7: de las cabras

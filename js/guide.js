@@ -154,6 +154,13 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Buenos Aires': () => `
+      <p>Creá un mundo nuevo de tipo <b>🏙 Buenos Aires</b> (o elegí «Buenos Aires» en las semillas): es una réplica del centro porteño, en escala real (1 bloque = 1 metro), rodeada por el yermo.</p>
+      <ul><li><b>🗼 El Obelisco</b> (67,5 m) en la Plaza de la República, con las letras «BA». De noche se ilumina.</li>
+      <li><b>Avenida 9 de Julio</b>: 140 m de ancho, con el Metrobús en el centro, cinco carriles por mano, plazoletas con tipas, jacarandás y palos borrachos, y las colectoras Cerrito y Carlos Pellegrini.</li>
+      <li><b>Avenida Corrientes</b>, la calle que nunca duerme: los carteles del Gran Rex y del Ópera, marquesinas con luces y teatros.</li>
+      <li><b>Diagonal Norte</b>, el <b>Teatro Colón</b> sobre Cerrito y las calles Lavalle, Tucumán, Viamonte, Córdoba, Sarmiento, Perón, Mitre, Rivadavia y Avenida de Mayo, con sus carteles.</li></ul>
+      <p>Arrancás al pie del Obelisco con un globo aerostático para verla desde arriba. En el centro no aparecen bichos peligrosos: sólo palomas. Suena un tango suave.</p>`,
     'Recuerdos y mascotas': () => `
       <p><b>📔 Álbum de viaje</b> (pausa → Juego): se llena solo con una foto de cada logro, cada bioma nuevo y los momentos especiales (tesoros, eclipses, caravanas, carreras, tu primer vuelo en globo).</p>
       <p><b>🎬 Grabar recorrido</b> (pausa → Juego): la cámara vuela sola alrededor de tu casa y se aleja mostrando tu mundo; en 30 segundos tenés un video para guardar o compartir. Esc lo corta.</p>

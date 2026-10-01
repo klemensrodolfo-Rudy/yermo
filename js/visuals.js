@@ -7,6 +7,7 @@ import { Avatar } from './net.js';
 
 // color por bioma: [saturación, contraste, brillo, tono]
 const GRADE = {
+  [BIOME.PORTENO]: [1.06, 1.03, 1.03, 0],
   [BIOME.FOREST]: [0.95, 1.04, 1, 0], [BIOME.DESERT]: [1.08, 1.05, 1.02, -4], [BIOME.SWAMP]: [0.9, 1.02, 0.97, 8],
   [BIOME.CITY]: [0.85, 1.07, 0.99, 0], [BIOME.CRATER]: [1.05, 1.1, 1, 6], [BIOME.BREW]: [1.12, 1.03, 1.02, -2],
   [BIOME.MUSHROOM]: [1.18, 1.05, 1, 6], [BIOME.TUNDRA]: [0.88, 1.03, 1.03, 4], [BIOME.ZOO]: [1.1, 1.04, 1.02, -3],

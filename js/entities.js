@@ -53,6 +53,7 @@ export const MOB_TYPES = {
   flamingo: { name: 'Flamenco', hp: 8, hw: 0.3, h: 1.8, speed: 2, flee: 4.5, hostile: false, drops: [[314, 1, 3, 1]] },
   penguin: { name: 'Pingüino', hp: 8, hw: 0.3, h: 1.1, speed: 1.6, flee: 2.5, hostile: false, drops: [[271, 1, 1, 0.6], [314, 1, 2, 0.8]] },
   hippo: { name: 'Hipopótamo', animal: true, hp: 70, hw: 0.8, h: 1.6, speed: 3, hostile: true, neutral: true, range: 12, dmg: 7, rad: 0, knock: 2.4, drops: [[271, 3, 5, 1], [336, 1, 2, 1]] },
+  pigeon: { name: 'Paloma', hp: 2, hw: 0.2, h: 0.35, speed: 1.6, flee: 3, hostile: false, drops: [[314, 1, 1, 0.5]] },
   lizard: { name: 'Lagartija', hp: 4, hw: 0.2, h: 0.2, speed: 4.6, flee: 6, hostile: false, drops: [[271, 1, 1, 0.3]] },
   goat: { name: 'Cabra montés', hp: 12, hw: 0.35, h: 1.15, speed: 2.6, flee: 5, hostile: false, drops: [[271, 1, 2, 1], [336, 1, 1, 0.5]] },
   bat: { name: 'Murciélago', hp: 3, hw: 0.2, h: 0.3, speed: 5, flee: 6, hostile: false, fly: true, caveFly: true, drops: [] },
@@ -143,7 +144,7 @@ const box = (w, h, d, mat, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d
 const MODEL_PAT = {
   boar: 'fur', ghoul: 'skin', rat: 'fur', crow: 'feather', behemoth: 'wrinkle', dog: 'fur', shroom: 'skin', wolf: 'fur', ratqueen: 'fur', leviathan: 'scales',
   alpha: 'skin', guardian: 'skin', scorpion: 'shell', orc: 'skin', troll: 'wrinkle', spider: 'fur', warg: 'fur', ent: 'shell', dragon: 'scales', horse: 'shortfur', lion: 'fur', giraffe: 'giraffe', elephant: 'wrinkle', zebra: 'zebra', gorilla: 'fur', bear: 'fur',
-  lizard: 'scales', goat: 'shortfur', bat: 'fur',
+  lizard: 'scales', goat: 'shortfur', bat: 'fur', pigeon: 'feather',
   crocodile: 'scales', ostrich: 'feather', kangaroo: 'shortfur', flamingo: 'feather', penguin: 'feather', hippo: 'wrinkle', snake: 'scales', monkey: 'fur', rhino: 'wrinkle',
 };
 
@@ -200,8 +201,8 @@ function buildModel(type) {
     const tail = new THREE.Group(); tail.position.set(0, 0.3, 0.31); tail.add(box(0.05, 0.05, 0.55, pink, 0, 0, 0.27)); g.add(tail); parts.tail = tail;
     parts.legs = [];
     for (const [x, z] of [[0.14, -0.2], [-0.14, -0.2], [0.14, 0.2], [-0.14, 0.2]]) { const l = new THREE.Group(); l.position.set(x, 0.18, z); l.add(box(0.08, 0.18, 0.08, dark, 0, -0.09, 0)); g.add(l); parts.legs.push(l); }
-  } else if (type === 'crow') {
-    const black = M(0x1a1a20), beak = M(0xc8a030), eye = M(0x9cff3a, true);
+  } else if (type === 'crow' || type === 'pigeon') {
+    const pg = type === 'pigeon', black = M(pg ? 0x8a8e98 : 0x1a1a20), beak = M(pg ? 0x3a3a3a : 0xc8a030), eye = M(pg ? 0xff8a3a : 0x9cff3a, !pg);
     g.add(box(0.3, 0.26, 0.5, black, 0, 0.25, 0));
     const head = new THREE.Group(); head.position.set(0, 0.36, -0.3);
     head.add(box(0.2, 0.2, 0.2, black, 0, 0, 0)); head.add(box(0.06, 0.06, 0.16, beak, 0, -0.02, -0.16));
@@ -1170,6 +1171,8 @@ export class Mobs {
         for (let by = py + 1; by < py + 6; by++) if (this.world.getBlock(bx, by, bz) === 0 && this.world.getBlock(bx, by + 1, bz) === 0) { const m = this.add('bat', bx + 0.5, by + 0.5, bz + 0.5); if (m) m.homeY = by + 0.5; return; }
       }
     }
+    // centro porteño: sin bichos peligrosos, con palomas en las plazas
+    if (col.biome === BIOME.PORTENO) { if (sy != null && count.pigeon < 10 && r < 0.5) herd('pigeon', 2 + Math.floor(Math.random() * 3)); return; }
     if (sy != null && (col.biome === BIOME.CANYON || col.biome === BIOME.PEAKS) && r > 0.72 && count.goat < 6) { herd('goat', 2 + Math.floor(Math.random() * 2)); return; }
     if (sy != null && (col.biome === BIOME.CANYON || col.biome === BIOME.DESERT || col.biome === BIOME.SALT) && !night && r < 0.12 && count.lizard < 4) { herd('lizard', 1); return; }
     if (sy != null && col.biome === BIOME.TUNDRA && r > 0.92) { if (r > 0.97 && count.bear < 2) herd('bear', 1); else if (count.penguin < 6) herd('penguin', 3); return; }

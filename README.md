@@ -160,6 +160,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v13.4 — Recuerdos y mascotas**: álbum de viaje automático, «Grabar recorrido» (video de 30 s de tu mundo), perro que olfatea tesoros, cabra que avisa del peligro y música propia de los biomas nuevos.
 
+**v14.0 — Buenos Aires**: nuevo tipo de mundo con una réplica del centro porteño en escala real: la Avenida 9 de Julio (140 m, Metrobús, plazoletas con jacarandás, palos borrachos y tipas), el Obelisco en la Plaza de la República con las letras «BA», Corrientes con los carteles del Gran Rex y el Ópera, la Diagonal Norte, el Teatro Colón, carteles con los nombres de las calles, palomas y tango.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

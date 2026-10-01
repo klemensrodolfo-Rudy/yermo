@@ -954,6 +954,8 @@ const leafy = (c1, c2, tintK, glow) => (t) => t.fill((x, y) => {
   return scl(mixc(c1, c2, c.rid), 1.15 - c.f1 * 0.6 + (t.rnd() - 0.5) * 0.08);
 });
 HD.oak_leaves = leafy([70, 120, 50], [46, 90, 36], 230, false);
+HD.jac_leaves = leafy([150, 110, 220], [110, 80, 190], 0, false);
+HD.palo_leaves = leafy([236, 130, 180], [200, 96, 150], 0, false);
 HD.silver_leaves = leafy([170, 200, 190], [120, 160, 150], 0, true);
 HD.silver_bark = (t) => t.fill((x, y) => {
   const r = t.anoise(x, y, 8, 2, 31) * 0.6 + t.anoise(x, y, 16, 4, 32) * 0.4, g = r < 0.32;
@@ -1379,6 +1381,8 @@ HD.fern = (t) => { t.clear(); for (let i = 0; i < 9; i++) { const a = -1.2 + i *
 HD.sofa = (t) => t.fill((x, y) => { const seam = x % 16 === 0 || y % 16 === 0, btn = x % 16 === 8 && y % 16 === 8; t.H(x, y, seam || btn ? 0.2 : 0.65); return scl([150, 54, 50], seam || btn ? 0.7 : 0.92 + t.fbm(x, y, 4, 2) * 0.1); });
 HD.drawer_front = (t) => t.fill((x, y) => { const gap = y % 8 === 0 || x === 0 || x === 31, knob = (y % 8 === 4) && (x === 15 || x === 16); if (knob) { t.H(x, y, 1); t.S(x, y, 0.7); return [200, 180, 110]; } t.H(x, y, gap ? 0.1 : 0.6); return scl([150, 110, 70], gap ? 0.55 : 0.9 + t.anoise(x, y, 2, 16, y >> 3) * 0.15); });
 HD.vase = (t) => t.fill((x, y) => { const band = y > 12 && y < 18; t.S(x, y, 0.7); t.H(x, y, 0.6); return band ? [230, 200, 90] : scl([60, 120, 190], 0.9 + Math.sin(x * 0.4) * 0.05); });
+// v14: vereda porteña (baldosas grises de 20 cm con vainillas)
+HD.vereda = (t) => t.fill((x, y) => { const gx = x % 8, gy = y % 8, joint = gx === 0 || gy === 0, dot = (gx % 4 === 2 || gx % 4 === 3) && gy > 1 && gy < 7 && !joint; t.H(x, y, joint ? 0.15 : dot ? 0.35 : 0.65); return scl([176, 172, 164], joint ? 0.7 : dot ? 0.86 : 0.97 + t.fbm(x, y, 4, 2) * 0.06); });
 // v13.2: portón de garaje (chapas horizontales)
 HD.garage_door = (t) => t.fill((x, y) => { const seam = y % 6 === 5, e = x < 2 || x > 29; t.H(x, y, seam ? 0.1 : 0.7); t.S(x, y, 0.45); if (e) return [80, 84, 90]; if (y > 25 && x > 13 && x < 18) return [40, 40, 44]; return scl([176, 182, 188], seam ? 0.6 : 0.92 + Math.sin(y * 1.1) * 0.04); });
 // v12.8: la X del tesoro
