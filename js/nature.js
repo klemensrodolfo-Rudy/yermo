@@ -152,6 +152,7 @@ export function createNature(ctx) {
     const wantFog = marsh && (local || night) ? 1 : 0;
     storm += Math.sign(wantStorm - storm) * Math.min(Math.abs(wantStorm - storm), dt / 8);
     fog += Math.sign(wantFog - fog) * Math.min(Math.abs(wantFog - fog), dt / 10);
+    api.storm = storm;
     if (biome !== lastBiome) { if (wantStorm && storm < 0.1) flash('🌪 Se viene una tormenta de arena'); if (wantFog && fog < 0.1 && marsh) flash('🌫 Se levanta una niebla espesa'); lastBiome = biome; }
     const tint = (c, k, near, far) => {
       if (k <= 0.001) return;
@@ -167,7 +168,8 @@ export function createNature(ctx) {
     sand.material.opacity = storm * 0.8; sand.visible = storm > 0.02;
     if (sand.visible) {
       for (let i = 0; i < sandN; i++) {
-        const o = i * 3; let x = sandPos[o] + dt * 14, y = sandPos[o + 1] + Math.sin(i + performance.now() / 300) * dt, z = sandPos[o + 2] + dt * 4;
+        const W = g.wind || { x: 1, z: 0.3, k: 1 }, wl = Math.max(0.3, Math.hypot(W.x, W.z));
+        const o = i * 3; let x = sandPos[o] + dt * 14 * W.x / wl, y = sandPos[o + 1] + Math.sin(i + performance.now() / 300) * dt, z = sandPos[o + 2] + dt * 14 * W.z / wl;
         if (x - p.pos.x > 20) x -= 40; if (x - p.pos.x < -20) x += 40; if (z - p.pos.z > 20) z -= 40; if (z - p.pos.z < -20) z += 40;
         if (y - p.pos.y > 10) y -= 13; if (y - p.pos.y < -3) y += 13;
         sandPos[o] = x; sandPos[o + 1] = y; sandPos[o + 2] = z;

@@ -124,6 +124,39 @@ export function buildMesh(vol, tintAt) {
     // altura de la superficie del líquido
     let lh = 1;
     if (liq && LIQ[get(x, y + 1, z)] !== liq) lh = 0.875 * (8 - LIQ_LEVEL[b]) / 8 + (LIQ_LEVEL[b] ? 0.02 : 0);
+    // agua que corre: esquinas a distinta altura (pendiente) y dirección de la corriente
+    let corner = null, flowT = null;
+    if (liq && liq !== 3) {
+      const cellH = (cx, cz) => {
+        const nb = get(cx, y, cz);
+        if (LIQ[nb] !== liq) return null;
+        if (LIQ[get(cx, y + 1, cz)] === liq) return 1;
+        return 0.875 * (8 - LIQ_LEVEL[nb]) / 8 + (LIQ_LEVEL[nb] ? 0.02 : 0);
+      };
+      const myH = lh;
+      let fx = 0, fz = 0;
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nh = cellH(x + dx, z + dz);
+        if (nh != null) { fx += dx * (myH - nh); fz += dz * (myH - nh); }
+        else if (LIQ_LEVEL[b] > 0 && !OPAQUE[get(x + dx, y, z + dz)]) { fx += dx * 0.4; fz += dz * 0.4; }
+      }
+      const fl = Math.hypot(fx, fz) * 3;
+      if (fl > 1) { fx /= fl / 3; fz /= fl / 3; } else { fx *= 3; fz *= 3; }
+      const falling = LIQ[get(x, y + 1, z)] === liq || LIQ[get(x, y - 1, z)] === liq && LIQ_LEVEL[b] > 0 && !OPAQUE[get(x, y - 1, z)];
+      flowT = [128 + Math.round(Math.max(-1, Math.min(1, fx)) * 120), 128 + Math.round(Math.max(-1, Math.min(1, fz)) * 120), falling ? 255 : 0];
+      if (lh < 1) {
+        corner = (vx, vz) => {
+          let s = 0, n = 0;
+          for (const [cx, cz] of [[x + vx - 1, z + vz - 1], [x + vx, z + vz - 1], [x + vx - 1, z + vz], [x + vx, z + vz]]) {
+            const h = cellH(cx, cz);
+            if (h == null) continue;
+            if (h === 1) return 1;
+            s += h; n++;
+          }
+          return n ? s / n : lh;
+        };
+      }
+    }
 
     for (let f = 0; f < 6; f++) {
       const F = FACES[f];
@@ -142,7 +175,7 @@ export function buildMesh(vol, tintAt) {
       for (let k = 0; k < 4; k++) {
         const v = F.v[k];
         let vy = v[1];
-        if (liq && vy === 1) vy = lh;
+        if (liq && vy === 1) vy = corner ? corner(v[0], v[2]) : lh;
         P[k * 3] = lx + v[0]; P[k * 3 + 1] = y + vy; P[k * 3 + 2] = lz + v[2];
         UV[k * 2] = tu + (FACE_UV[k][0] ? TS - e : e);
         UV[k * 2 + 1] = 1 - (tv + (FACE_UV[k][1] ? TS - e : e));
@@ -179,7 +212,8 @@ export function buildMesh(vol, tintAt) {
         LIT[k * 4 + 1] = liq === 3 ? 255 : Math.round(sb / cnt * 17);
         LIT[k * 4 + 2] = Math.round((0.45 + ao * 0.55 / 3) * 255);
         LIT[k * 4 + 3] = Math.round(F.shade * 255);
-        if (tintAt) { const c = tintAt(lx + v[0], lz + v[2]); TINT[k * 4] = c[0]; TINT[k * 4 + 1] = c[1]; TINT[k * 4 + 2] = c[2]; } else TINT.set(WHITE.subarray(k * 4, k * 4 + 4), k * 4);
+        if (flowT) { TINT[k * 4] = flowT[0]; TINT[k * 4 + 1] = flowT[1]; TINT[k * 4 + 2] = flowT[2]; TINT[k * 4 + 3] = 255; }
+        else if (tintAt) { const c = tintAt(lx + v[0], lz + v[2]); TINT[k * 4] = c[0]; TINT[k * 4 + 1] = c[1]; TINT[k * 4 + 2] = c[2]; } else TINT.set(WHITE.subarray(k * 4, k * 4 + 4), k * 4);
         aoSum[k] = ao + (ss + sb) / cnt * 0.01;
       }
       const flip = aoSum[0] + aoSum[2] < aoSum[1] + aoSum[3];

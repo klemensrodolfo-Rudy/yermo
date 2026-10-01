@@ -50,11 +50,12 @@ export class Weather {
       const len = snow ? 0.08 : 0.7;
       for (let i = 0; i < this.N; i++) {
         const o = i * 6;
-        let x = a[o] + (snow ? Math.sin(i + y0t) * dt * 0.8 : 0), y = a[o + 1] - dt * (snow ? 3.5 : 22), z = a[o + 2];
+        const wx = this.wx || 0, wz = this.wz || 0;
+        let x = a[o] + (snow ? Math.sin(i + y0t) * dt * 0.8 : 0) + wx * dt * (snow ? 3 : 7), y = a[o + 1] - dt * (snow ? 3.5 : 22), z = a[o + 2] + wz * dt * (snow ? 3 : 7);
         if (y - cam.y < -20) y += 40;
         if (x - cam.x > 25) x -= 50; else if (x - cam.x < -25) x += 50;
         if (z - cam.z > 25) z -= 50; else if (z - cam.z < -25) z += 50;
-        a[o] = x; a[o + 1] = y; a[o + 2] = z; a[o + 3] = x + 0.05; a[o + 4] = y - len; a[o + 5] = z;
+        a[o] = x; a[o + 1] = y; a[o + 2] = z; a[o + 3] = x + 0.05 - wx * len * 0.3; a[o + 4] = y - len; a[o + 5] = z - wz * len * 0.3;
       }
       this.geo.attributes.position.needsUpdate = true;
     }

@@ -66,7 +66,7 @@ export const BIOME_TINT = [
 export const TILE_FLAGS = new Uint8Array(256);
 {
   const set = (names, f) => names.split(' ').forEach((n) => { if (T[n] != null) TILE_FLAGS[T[n]] |= f; });
-  set('leaves', 16);
+  set('leaves flowers oak_leaves silver_leaves', 16);
   set('sand coral_red coral_yellow', 1);
   set('palm_leaves sapling', 16);
   set('bedrock stone deepstone dirt ash mud gravel coal_ore scrap_ore copper_ore uranium_ore trinitite grass_top deadgrass_top snow_top sand_toxic rubble abyss mycelium_top concrete asphalt asphalt_under track camo mush_cap_blue mush_cap_purple log_top ice oak_barrel_top', 1);

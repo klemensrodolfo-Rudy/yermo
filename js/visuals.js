@@ -106,7 +106,8 @@ export function createVisuals(ctx) {
       const o = i * 3, k = kind[i];
       if (k === 1) { vel[o] += Math.sin(t * 2 + i) * dt * 0.8; vel[o + 2] += Math.cos(t * 1.7 + i) * dt * 0.8; vel[o + 1] += Math.sin(t * 3 + i) * dt * 0.4; }
       if (k === 2) { vel[o] = 0.6 + Math.sin(t * 1.5 + i) * 0.5; }
-      pos[o] += vel[o] * dt; pos[o + 1] += vel[o + 1] * dt; pos[o + 2] += vel[o + 2] * dt;
+      const wd = k === 2 || k === 3 || k === 5 ? 1.8 : k === 1 ? 0.3 : 0;
+      pos[o] += (vel[o] + wind.x * wd) * dt; pos[o + 1] += vel[o + 1] * dt; pos[o + 2] += (vel[o + 2] + wind.z * wd) * dt;
       const fade = Math.min(1, life[i], 1);
       const blink = k === 1 ? 0.5 + 0.5 * Math.sin(t * 4 + i * 1.7) : 1;
       const base = { 1: [0.85, 1, 0.35], 2: [0.5, 0.6, 0.25], 3: [0.45, 0.42, 0.36], 4: [0.5, 0.7, 1], 5: [1, 0.45, 0.12] }[k];
@@ -126,7 +127,7 @@ export function createVisuals(ctx) {
     if (settings.grade) {
       const dusk = Math.max(0, 1 - Math.abs(g.time - 0.77) * 14) + Math.max(0, 1 - Math.abs(g.time - 0.23) * 14);
       target = [target[0] * (1 + dusk * 0.12) * (0.85 + day * 0.15), target[1], target[2], target[3] - dusk * 4];
-      if (p.headInWater) target = [1.15, 1.02, 0.95, 10];
+      if (p.headInWater) target = uniforms.uwFar.value > 20 ? [1.12, 1.03, 1.0, -6] : [1.15, 1.02, 0.95, 10];
     }
     for (let i = 0; i < 4; i++) gr[i] += (target[i] - gr[i]) * Math.min(1, dt * 1.5);
     const f = `saturate(${gr[0].toFixed(3)}) contrast(${gr[1].toFixed(3)}) brightness(${gr[2].toFixed(3)}) hue-rotate(${gr[3].toFixed(1)}deg)`;
@@ -136,7 +137,65 @@ export function createVisuals(ctx) {
     skyUniforms.aurora.value = aur;
   }
 
-  api.update = (dt) => { handLight(); ambient(dt); grade(dt); };
-  api.dispose = () => { scene.remove(pts); geo.dispose(); canvas.style.filter = ''; uniforms.plOn.value = 0; skyUniforms.aurora.value = 0; };
+  // ---------- viento: dirección que gira despacio, ráfagas y más fuerza con tormenta ----------
+  const wind = { x: 0.3, z: 0.1, k: 0.3 };
+  g.wind = wind;
+  function windTick(dt) {
+    const t = performance.now() / 1000, W = g.weather;
+    const ang = Math.sin(t * 0.013) * 2.2 + Math.sin(t * 0.0041) * 1.3;
+    const storm = W ? W.windK : 0;
+    const gust = Math.max(0, Math.sin(t * 0.37) * Math.sin(t * 0.21 + 1.3)) * 0.35;
+    const k = Math.min(1.4, 0.18 + storm * 0.95 + gust + (g.nature?.storm || 0) * 0.8);
+    wind.k += (k - wind.k) * Math.min(1, dt * 0.8);
+    wind.x = Math.cos(ang) * wind.k; wind.z = Math.sin(ang) * wind.k;
+    uniforms.wind.value.set(wind.x, wind.z);
+    if (W) { W.wx = wind.x; W.wz = wind.z; }
+    const co = skyUniforms.cloudOff.value; co.x += (0.006 + wind.x * 0.03) * dt; co.y += (0.002 + wind.z * 0.03) * dt;
+  }
+
+  // ---------- humo de fogatas y fuego ----------
+  const SN = 160, sPos = new Float32Array(SN * 3).fill(-1e4), sCol = new Float32Array(SN * 3), sVel = new Float32Array(SN * 3), sLife = new Float32Array(SN);
+  const sGeo = new THREE.BufferGeometry(); sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3)); sGeo.setAttribute('color', new THREE.BufferAttribute(sCol, 3));
+  const smoke = new THREE.Points(sGeo, new THREE.PointsMaterial({ size: 0.9, map: glowTex, vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false }));
+  smoke.frustumCulled = false; scene.add(smoke);
+  let sNext = 0, sources = [], scanAcc = 3, puffAcc = 0;
+  function smokeTick(dt) {
+    scanAcc += dt;
+    if (scanAcc > 2.5) {
+      scanAcc = 0; sources = [];
+      const x0 = Math.floor(p.pos.x), y0 = Math.floor(p.pos.y), z0 = Math.floor(p.pos.z);
+      for (let dx = -18; dx <= 18; dx++) for (let dz = -18; dz <= 18; dz++) for (let dy = -6; dy <= 6; dy++) {
+        const b = w.getBlock(x0 + dx, y0 + dy, z0 + dz);
+        if (b === 108 || b === 181) { sources.push([x0 + dx + 0.5, y0 + dy + (b === 108 ? 0.6 : 0.9), z0 + dz + 0.5]); if (sources.length > 24) break; }
+      }
+    }
+    puffAcc += dt;
+    while (puffAcc > 0.18) {
+      puffAcc -= 0.18;
+      for (const s of sources) {
+        if (Math.random() < 0.5) continue;
+        const i = sNext = (sNext + 1) % SN;
+        sPos.set([s[0] + (Math.random() - 0.5) * 0.3, s[1], s[2] + (Math.random() - 0.5) * 0.3], i * 3);
+        sVel.set([(Math.random() - 0.5) * 0.15, 0.9 + Math.random() * 0.4, (Math.random() - 0.5) * 0.15], i * 3);
+        sLife[i] = 4 + Math.random() * 2;
+      }
+    }
+    const day = Math.max(0.25, uniforms.daylight.value);
+    for (let i = 0; i < SN; i++) {
+      if (sLife[i] <= 0) continue;
+      sLife[i] -= dt;
+      const o = i * 3;
+      sVel[o] += (wind.x * 1.6 - sVel[o]) * dt * 0.6; sVel[o + 2] += (wind.z * 1.6 - sVel[o + 2]) * dt * 0.6;
+      sPos[o] += sVel[o] * dt; sPos[o + 1] += sVel[o + 1] * dt; sPos[o + 2] += sVel[o + 2] * dt;
+      const f = Math.min(1, sLife[i] / 2) * Math.min(1, (6 - sLife[i]) * 2);
+      const c = 0.32 * f * day;
+      sCol[o] = c; sCol[o + 1] = c; sCol[o + 2] = c * 1.05;
+      if (sLife[i] <= 0) sPos[o + 1] = -1e4;
+    }
+    sGeo.attributes.position.needsUpdate = true; sGeo.attributes.color.needsUpdate = true;
+  }
+
+  api.update = (dt) => { windTick(dt); handLight(); ambient(dt); grade(dt); smokeTick(dt); };
+  api.dispose = () => { scene.remove(smoke); sGeo.dispose(); scene.remove(pts); geo.dispose(); canvas.style.filter = ''; uniforms.plOn.value = 0; skyUniforms.aurora.value = 0; };
   return api;
 }

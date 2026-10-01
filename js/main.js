@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BLOCKS, ITEMS, isBlock, T, HEIGHT, BLUEPRINT_NAMES, ATLAS, tileUV } from './blocks.js';
+import { BLOCKS, ITEMS, isBlock, T, HEIGHT, BLUEPRINT_NAMES, ATLAS, tileUV, LIQ } from './blocks.js';
 import { buildAtlas, drawIcon, exportTemplate, applyPack } from './textures.js';
 import { World } from './world.js';
 import { WorldGen, BIOME_NAMES } from './worldgen.js';
@@ -76,7 +76,7 @@ const uniforms = {
   fogColor: { value: new THREE.Color() },
   fogNear: { value: 40 }, fogFar: { value: 90 },
   time: { value: 0 },
-  underwater: { value: 0 },
+  underwater: { value: 0 }, uwCol: { value: new THREE.Color(0.18, 0.26, 0.06) }, uwFar: { value: 14 },
   sunDir: { value: new THREE.Vector3(0, 1, 0) },
   waterFx: { value: 1 },
   // sombras del sol
@@ -87,10 +87,12 @@ const uniforms = {
   hlPos: { value: new THREE.Vector3() }, hlDir: { value: new THREE.Vector3(0, 0, -1) }, hlOn: { value: 0 },
   // luz que lleva el jugador en la mano
   plPos: { value: new THREE.Vector3() }, plOn: { value: 0 }, plCol: { value: new THREE.Color(1, 0.72, 0.42) }, plR: { value: 10 },
+  // viento (dirección × fuerza) y lluvia, para plantas, hojas y agua
+  wind: { value: new THREE.Vector2(0.3, 0.1) }, rain: { value: 0 },
 };
 const vert = /* glsl */`
   attribute vec4 lit; attribute vec4 tinf; attribute vec4 tint;
-  uniform float time;
+  uniform float time; uniform vec2 wind;
   varying vec2 vUv; varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
   flat varying vec4 vInf;
   void main() {
@@ -98,10 +100,30 @@ const vert = /* glsl */`
     vec3 p = position;
     vec4 wp = modelMatrix * vec4(p, 1.0);
     // plantas: la parte de arriba se mece con el viento
-    if ((int(tinf.y + 0.5) & 16) != 0) {
-      float cellY = floor(tinf.x / 16.0) * 48.0 + 8.0;
-      float ly = ((1.0 - uv.y) * 768.0 - cellY) / 32.0;
-      if (ly < 0.5) { wp.x += sin(time * 1.7 + wp.x * 0.7 + wp.z * 0.3) * 0.07; wp.z += cos(time * 1.3 + wp.z * 0.8 + wp.x * 0.2) * 0.05; }
+    int fl = int(tinf.y + 0.5), fc = int(tinf.z + 0.5);
+    float wk = length(wind);
+    if ((fl & 16) != 0) {
+      // ráfagas: una onda que viaja en la dirección del viento
+      float gust = 0.6 + 0.4 * sin(time * 0.9 + dot(wp.xz, wind) * 0.35);
+      if (fc == 6) {
+        float cellY = floor(tinf.x / 16.0) * 48.0 + 8.0;
+        float ly = ((1.0 - uv.y) * 768.0 - cellY) / 32.0;
+        if (ly < 0.5) {
+          float amp = 0.05 + wk * 0.12;
+          wp.x += sin(time * (1.7 + wk) + wp.x * 0.7 + wp.z * 0.3) * amp + wind.x * 0.12 * gust;
+          wp.z += cos(time * (1.3 + wk) + wp.z * 0.8 + wp.x * 0.2) * amp * 0.7 + wind.y * 0.12 * gust;
+        }
+      } else {
+        // copas de los árboles: se mecen enteras, suave
+        float amp = (0.012 + wk * 0.035) * gust;
+        wp.x += sin(time * 1.4 + wp.y * 0.6 + wp.z * 0.4) * amp + wind.x * 0.02 * gust;
+        wp.z += cos(time * 1.1 + wp.y * 0.5 + wp.x * 0.4) * amp + wind.y * 0.02 * gust;
+      }
+    }
+    // olas en la superficie del agua (más con viento)
+    if ((fl & 4) != 0 && fc == 2) {
+      float a = 0.025 + wk * 0.04;
+      wp.y += (sin(wp.x * 1.3 + time * 1.6 + wind.x * 2.0) + cos(wp.z * 1.1 + time * 1.3) + sin((wp.x + wp.z) * 0.7 + time * 2.1) * 0.5) * a - a;
     }
     vWorld = wp.xyz;
     vec4 mv = viewMatrix * wp;
@@ -111,12 +133,13 @@ const vert = /* glsl */`
 const frag = (water) => /* glsl */`
   uniform sampler2D map; uniform sampler2D matMap; uniform float texFx;
   uniform float daylight; uniform vec3 skyTint; uniform vec3 fogColor;
-  uniform float fogNear; uniform float fogFar; uniform float time; uniform float underwater;
+  uniform float fogNear; uniform float fogFar; uniform float time; uniform float underwater; uniform vec3 uwCol; uniform float uwFar;
   uniform vec3 sunDir; uniform float waterFx;
   uniform sampler2D shadowMap; uniform mat4 shadowMatrix; uniform float shadowOn;
   uniform float fogHeight; uniform float moonLight;
   uniform vec3 hlPos; uniform vec3 hlDir; uniform float hlOn;
   uniform vec3 plPos; uniform float plOn; uniform vec3 plCol; uniform float plR;
+  uniform vec2 wind; uniform float rain;
   varying vec2 vUv; varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
   flat varying vec4 vInf;
   const float SZ = 768.0;
@@ -154,7 +177,15 @@ const frag = (water) => /* glsl */`
     vec2 lt = c + 0.5;
     // animaciones
     bool wrap = false;
-    if ((flags & 4) != 0) { lt += vec2(time * 0.035, time * 0.02) + vec2(sin(time * 0.7 + lt.y * 6.28), cos(time * 0.6 + lt.x * 6.28)) * 0.015; wrap = true; }
+    if ((flags & 4) != 0) {
+      // agua: corre en la dirección de la corriente; en cascadas cae; quieta, se mueve apenas con el viento
+      vec2 fw = vTint.xy - 1.0; bool falls = vTint.z > 1.5;
+      if (falls && face != 2 && face != 3) lt.y -= time * 1.1;
+      else if (length(fw) > 0.06 && face == 2) lt -= fw * time * 0.55;
+      else lt += vec2(time * 0.035, time * 0.02) + wind * time * 0.02;
+      lt += vec2(sin(time * 0.7 + lt.y * 6.28), cos(time * 0.6 + lt.x * 6.28)) * 0.015;
+      wrap = true;
+    }
     if ((flags & 8) != 0) { lt += vec2(time * 0.01, -time * 0.006); wrap = true; }
     if ((flags & 32) != 0) { vec2 q = lt - 0.5; float a = time * 0.9 * (1.0 - length(q) * 1.4); lt = mat2(cos(a), sin(a), -sin(a), cos(a)) * q + 0.5; wrap = true; }
     if ((flags & 64) != 0) { lt.x += sin(time * 9.0 + lt.y * 12.0 + h * 6.0) * 0.02 * (1.0 - lt.y); }
@@ -169,7 +200,7 @@ const frag = (water) => /* glsl */`
     vec4 mt = textureGrad(matMap, suv, dgx, dgy);
     ${water ? '' : 'if (tex.a < 0.4) discard;'}
     // tinte del bioma (pasto) y leve cambio de tono por bloque
-    tex.rgb = mix(tex.rgb, tex.rgb * vTint, mt.a);
+    if ((flags & 4) == 0) tex.rgb = mix(tex.rgb, tex.rgb * vTint, mt.a);
     if ((flags & 3) != 0) tex.rgb *= 0.96 + h2 * 0.08;
     float B = mt.b * 255.0;
     float emis = B > 200.5 ? (B - 200.0) / 55.0 : 0.0;
@@ -232,14 +263,42 @@ const frag = (water) => /* glsl */`
       col = mix(col, fogColor * (0.4 + daylight * 0.8), fres * 0.6 * vLit.x);
       float spw = pow(max(dot(reflect(-sunDir, Nw), V), 0.0), 80.0) * daylight * vLit.x;
       col += vec3(1.0, 0.9, 0.7) * spw * 0.9;
-    }` : ''}
+    }
+    // espuma donde el agua corre o cae
+    { vec2 fw = vTint.xy - 1.0; bool fallF = vTint.z > 1.5 && face != 2 && face != 3;
+      float foam = (fallF ? 0.22 : 0.0) + smoothstep(0.4, 1.0, length(fw)) * 0.12;
+      if (foam > 0.0) {
+        vec3 fp = vWorld * 8.0; fp.y += fallF ? time * 9.0 : 0.0; fp.xz -= fw * time * 4.0;
+        float n = fract(sin(dot(floor(fp), vec3(12.9, 78.2, 37.7))) * 43758.5);
+        col = mix(col, vec3(0.88, 0.94, 0.97) * (0.35 + daylight * 0.65), foam * step(0.72, n));
+      } }
+    // gotas de lluvia: anillos que se abren en la superficie
+    if (rain > 0.05 && face == 2) {
+      vec2 g = vWorld.xz * 1.6; vec2 c0 = floor(g);
+      float rings = 0.0;
+      for (int k = 0; k < 2; k++) {
+        vec2 c = c0 + vec2(float(k), 0.0);
+        float r1 = fract(sin(dot(c, vec2(41.3, 289.1))) * 43758.5);
+        float t = fract(time * 0.9 + r1 * 7.0);
+        vec2 ctr = c + vec2(fract(r1 * 13.7), fract(r1 * 7.3));
+        float d = length(g - ctr);
+        rings += smoothstep(0.06, 0.0, abs(d - t * 0.6)) * (1.0 - t);
+      }
+      col += vec3(0.6, 0.7, 0.75) * rings * rain * 0.5 * (0.3 + daylight);
+    }` : `
+    // bajo el agua: reflejos de luz que bailan sobre el fondo
+    if (underwater > 0.5) {
+      vec2 q = vWorld.xz * 0.9 + vWorld.y * 0.15;
+      float v = sin(q.x + time * 1.1 + sin(q.y * 1.3 + time)) * sin(q.y * 1.1 - time * 0.9 + sin(q.x * 1.7 + time * 0.5));
+      col += vec3(0.55, 0.75, 0.8) * pow(abs(v), 3.0) * 0.35 * daylight * vLit.x;
+    }`}
     float fog = smoothstep(fogNear, fogFar, vDepth);
     // niebla baja: se junta en valles y zonas bajas
     fog = max(fog, fogHeight * 0.35 * exp(-max(vWorld.y - 40.0, 0.0) / 10.0) * smoothstep(8.0, 60.0, vDepth));
-    fog = max(fog, underwater * smoothstep(0.0, 14.0, vDepth));
+    fog = max(fog, underwater * smoothstep(0.0, uwFar, vDepth));
     vec3 Vf = normalize(vWorld - cameraPosition);
     vec3 fc = fogColor + vec3(1.0, 0.75, 0.45) * pow(max(dot(Vf, sunDir), 0.0), 8.0) * 0.35 * daylight;
-    fc = mix(fc, vec3(0.18, 0.26, 0.06), underwater);
+    fc = mix(fc, uwCol * (0.35 + daylight * 0.65), underwater);
     gl_FragColor = vec4(mix(col, fc, fog), ${water ? 'min(0.92, tex.a + 0.08)' : '1.0'});
     #include <colorspace_fragment>
   }`;
@@ -252,14 +311,14 @@ const materials = {
 const skyUniforms = {
   top: { value: new THREE.Color() }, horizon: { value: new THREE.Color() },
   sunDir: { value: new THREE.Vector3() }, sunCol: { value: new THREE.Color() }, night: { value: 0 }, moonPhase: { value: 1 },
-  time: { value: 0 }, clouds: { value: 0.45 }, aurora: { value: 0 }, cloudDark: { value: 0 },
+  time: { value: 0 }, clouds: { value: 0.45 }, aurora: { value: 0 }, cloudDark: { value: 0 }, cloudOff: { value: new THREE.Vector2() },
 };
 const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), new THREE.ShaderMaterial({
   uniforms: skyUniforms, side: THREE.BackSide, depthWrite: false,
   vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
   fragmentShader: `
     uniform vec3 top; uniform vec3 horizon; uniform vec3 sunDir; uniform vec3 sunCol; uniform float night; uniform float moonPhase;
-    uniform float time; uniform float clouds; uniform float aurora; uniform float cloudDark;
+    uniform float time; uniform float clouds; uniform float aurora; uniform float cloudDark; uniform vec2 cloudOff;
     varying vec3 vDir;
     float h(vec3 p){ return fract(sin(dot(p, vec3(12.9898,78.233,45.164)))*43758.5453); }
     float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -303,7 +362,7 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), new THREE.Shad
       }
       // nubes: una capa que se mueve con el viento, iluminada por el sol (o la luna)
       if (d.y > 0.0 && clouds > 0.01) {
-        vec2 uv = d.xz / (d.y + 0.12) * 1.6 + vec2(time * 0.012, time * 0.004);
+        vec2 uv = d.xz / (d.y + 0.12) * 1.6 + cloudOff;
         float c = fbm(uv);
         float cov = smoothstep(1.0 - clouds * 0.85, 1.05 - clouds * 0.5, c) * smoothstep(0.0, 0.18, d.y);
         float lit = clamp(0.55 + dot(normalize(vec3(sunDir.x, 0.0, sunDir.z) + 0.001), normalize(vec3(d.x, 0.0, d.z))) * 0.25, 0.0, 1.0);
@@ -459,6 +518,7 @@ function updateSky(t) {
   skyUniforms.sunCol.value.setRGB(1, 0.75 + day * 0.15, 0.5 + day * 0.3).multiplyScalar(sunH > -0.1 ? 1 - w.k * 0.7 : 0);
   skyUniforms.night.value = (1 - day) * (1 - w.k * 0.8);
   skyUniforms.time.value = performance.now() / 1000;
+  uniforms.rain.value = game?.weather ? game.weather.rainK : 0;
   skyUniforms.clouds.value = 0.42 + w.k * 0.5; skyUniforms.cloudDark.value = w.k;
   uniforms.daylight.value = (0.1 + day * 0.9) * (1 - w.k * 0.25);
   uniforms.skyTint.value.setRGB(1, 0.93 - dusk * 0.12, 0.85 - dusk * 0.25).lerp(new THREE.Color(0.55, 0.62, 0.9), 1 - day);
@@ -1583,7 +1643,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '10.1 · 2026-10-02';
+const VERSION = '10.2 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1672,6 +1732,13 @@ function loop(now) {
   sfx.setRain(weather.rainK); sfx.setWind(weather.windK);
   uniforms.time.value = now / 1000;
   uniforms.underwater.value = player.headInWater ? 1 : 0;
+  if (player.headInWater) {
+    // agua limpia: azul y se ve más lejos; tóxica: verde y turbia
+    const cb = world.getBlock(Math.floor(camera.position.x), Math.floor(camera.position.y), Math.floor(camera.position.z));
+    const clean = LIQ[cb] === 2;
+    uniforms.uwCol.value.setRGB(clean ? 0.07 : 0.18, clean ? 0.3 : 0.26, clean ? 0.42 : 0.06);
+    uniforms.uwFar.value = clean ? 26 : 14;
+  }
   if (game.shake > 0) {
     game.shake -= dt;
     camera.position.x += (Math.random() - 0.5) * game.shake * 0.4;
