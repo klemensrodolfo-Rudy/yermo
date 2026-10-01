@@ -26,6 +26,7 @@ import { createSea } from './sea.js';
 import { createMinigames } from './minigames.js';
 import { createCreative } from './creative.js';
 import { createNature } from './nature.js';
+import { createSocial, openAdventures } from './social.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -963,7 +964,7 @@ async function startGame(meta, hello, cloudInfo) {
   mobs.onHitRemote = (id, dmg, dir) => net.sendHitMob(id, dmg, dir);
   ui.bind(inv, meta.mode === 'creative', known);
   if (!meta.inventory && !meta.remote) {
-    if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80, 245, 246, 247, 240, 244, 75].forEach((id) => inv.add(id, 64));
+    if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80, 245, 246, 247, 240, 244, 75, 249, 250, 251, 252, 191].forEach((id) => inv.add(id, 64));
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'magic') [[385, 6], [353, 10], [379, 1], [26, 8]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'islands') [[398, 1], [402, 1], [403, 4], [26, 8], [267, 1]].forEach(([id, n]) => inv.add(id, n));
@@ -1000,6 +1001,7 @@ async function startGame(meta, hello, cloudInfo) {
   const fctx = {
     game, ui, net, sfx, flash, scene, camera, renderer, uniforms, skyUniforms, settings, particles, voice, ext,
     skin: skinOf, isAuthority, openInventory, closeInventory, lockPointer, toggleMount, addChat,
+    saveGame, Storage,
     endRun: async () => { const id = game.meta.id, local = !game.meta.remote && !game.meta.cloud; $('#death').hidden = true; await quitToMenu(); if (local) { await Storage.deleteWorld(id); showMenu(); } },
     openPanel: (title, render) => { ui.player = player; ui.openPanel(nearbyStations(player.pos), title, render); document.exitPointerLock(); $('#hud').classList.add('dim'); },
   };
@@ -1014,6 +1016,7 @@ async function startGame(meta, hello, cloudInfo) {
   const MG = game.minigames = createMinigames(fctx);
   const CR = game.creative = createCreative(fctx);
   const NA = game.nature = createNature(fctx);
+  game.social = createSocial(fctx);
   const mobF = player.onInteractMob;
   player.onInteractMob = (m, h) => NA.onInteractMob(m, h) || mobF(m, h);
   const blockF2 = player.onUseBlock;
@@ -1066,7 +1069,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1090,7 +1093,7 @@ async function showMenu() {
   for (const w of worlds) {
     const row = document.createElement('div'); row.className = 'world';
     const d = new Date(w.lastPlayed);
-    row.innerHTML = `<div><b></b><small>${w.worldType === 'brew' ? '🍺 Cervecero · ' : w.worldType === 'magic' ? '🧙 Eldra · ' : w.worldType === 'islands' ? '🏝 Archipiélago · ' : w.worldType === 'base' ? '🧰 Base · ' : ''}${w.mode === 'creative' ? 'Creativo' : w.mode === 'hardcore' ? '☠ Una sola vida' : 'Supervivencia'} · semilla ${w.seed} · ${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0, 5)}</small></div>
+    row.innerHTML = `<div><b></b><small>${w.worldType === 'brew' ? '🍺 Cervecero · ' : w.worldType === 'magic' ? '🧙 Eldra · ' : w.worldType === 'islands' ? '🏝 Archipiélago · ' : w.worldType === 'base' ? '🧰 Base · ' : ''}${w.mode === 'creative' ? 'Creativo' : w.mode === 'hardcore' ? '☠ Una sola vida' : w.mode === 'adventure' ? '🗺 Aventura' : 'Supervivencia'} · semilla ${w.seed} · ${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0, 5)}</small></div>
       <button class="play">Jugar</button><button class="del" title="Borrar mundo">✕</button>`;
     row.querySelector('b').textContent = w.name;
     row.querySelector('.play').onclick = () => startGame(w);
@@ -1279,6 +1282,7 @@ $('#optReal').onchange = (e) => setRule('realTime', e.target.checked);
 $('#accBtn').onclick = () => { $('#pause').hidden = true; access.open(() => { $('#pause').hidden = false; }); };
 $('#openAccess').onclick = () => access.open();
 $('#openRanking').onclick = () => openRanking();
+$('#openAdventures').onclick = () => openAdventures({ startGame, Storage });
 // paquetes de texturas: plantilla para editar y carga de un PNG propio (se guarda en el navegador)
 function usePack(url, save) {
   const img = new Image();
@@ -1459,7 +1463,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '9.6 · 2026-10-02';
+const VERSION = '9.7 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1523,6 +1527,7 @@ function loop(now) {
   game.minigames?.update(dt);
   game.creative?.update(dt);
   game.nature?.update(dt);
+  game.social?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
@@ -1638,6 +1643,7 @@ function loop(now) {
   for (const poi of game.features.pois()) markers.push(poi);
   for (const poi of game.features2.pois()) markers.push(poi);
   for (const mk of game.features2.markers()) markers.push(mk);
+  for (const mk of game.social?.markers() || []) markers.push(mk);
   mapView.update(dt, world, player, markers, bigMap);
 
   // HUD

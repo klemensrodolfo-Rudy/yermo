@@ -10,13 +10,13 @@ export const PLAYER_KEYS = ['player', 'inventory', 'equip', 'selected', 'p6', 's
 const LOCAL_KEYS = ['id', 'remote', 'cloud', 'cloudName', 'lastPlayed', 'guests'];
 
 // bloques: comprimidos y en base64 (un chunk modificado ocupa unos pocos KB)
-async function pack(u8) {
+export async function pack(u8) {
   const s = new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate-raw'));
   const b = new Uint8Array(await new Response(s).arrayBuffer());
   let bin = ''; for (let i = 0; i < b.length; i += 0x8000) bin += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
   return btoa(bin);
 }
-async function unpack(b64) {
+export async function unpack(b64) {
   const bin = atob(b64), b = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
   const s = new Blob([b]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
@@ -135,6 +135,55 @@ export const Cloud = {
     const { error } = await this.sb.from('yermo_players').upsert({ world_id: id, user_id: this.user.id, name: this.username, data, updated_at: new Date().toISOString() });
     if (error) console.warn('nube: no se guardó el jugador', error.message);
   },
+
+  // ---------- buzón ----------
+  async inbox(worldId) {
+    const { data, error } = await this.sb.from('yermo_mail').select('id, from_name, text, items, taken, created_at').eq('world_id', worldId).eq('to_user', this.user.id).order('created_at', { ascending: false }).limit(40);
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+  async sendMail(worldId, toUser, text, items) {
+    const { error } = await this.sb.from('yermo_mail').insert({ world_id: worldId, to_user: toUser, from_name: this.username, text: text || null, items: items || null });
+    if (error) throw new Error(error.message);
+  },
+  async takeMail(id) {
+    const { data, error } = await this.sb.from('yermo_mail').update({ taken: true }).eq('id', id).eq('taken', false).select('items');
+    if (error) throw new Error(error.message);
+    return data?.[0]?.items ?? null; // null si ya lo habían tomado
+  },
+  async deleteMail(id) { await this.sb.from('yermo_mail').delete().eq('id', id); },
+  // ---------- marcas del mapa ----------
+  async marks(worldId) {
+    const { data, error } = await this.sb.from('yermo_marks').select('id, user_id, name, label, icon, x, z').eq('world_id', worldId).limit(300);
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+  async addMark(worldId, m) { const { error } = await this.sb.from('yermo_marks').insert({ world_id: worldId, name: this.username, label: m.label, icon: m.icon, x: m.x, z: m.z }); if (error) throw new Error(error.message); },
+  async deleteMark(id) { const { error } = await this.sb.from('yermo_marks').delete().eq('id', id); if (error) throw new Error(error.message); },
+  // ---------- galería ----------
+  async photos(n = 30) {
+    const { data, error } = await this.sb.from('yermo_photos').select('id, user_id, name, caption, world, image, created_at').order('created_at', { ascending: false }).limit(n);
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+  async addPhoto(image, caption, world) { const { error } = await this.sb.from('yermo_photos').insert({ name: this.username, image, caption: caption || null, world: world || null }); if (error) throw new Error(error.message); },
+  async deletePhoto(id) { const { error } = await this.sb.from('yermo_photos').delete().eq('id', id); if (error) throw new Error(error.message); },
+  // ---------- aventuras ----------
+  async adventures() {
+    const { data, error } = await this.sb.from('yermo_adventures').select('id, user_id, author, title, description, world_type, trophies, plays, finishes, created_at').order('created_at', { ascending: false }).limit(60);
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+  async adventure(id) { const { data, error } = await this.sb.from('yermo_adventures').select('*').eq('id', id).single(); if (error) throw new Error(error.message); return data; },
+  async publishAdventure(a) {
+    const row = { author: this.username, title: a.title, description: a.description || null, seed: a.seed, world_type: a.world_type, trophies: a.trophies, data: a.data };
+    if (a.id) { const { error } = await this.sb.from('yermo_adventures').update({ ...row, updated_at: new Date().toISOString() }).eq('id', a.id); if (error) throw new Error(error.message); return a.id; }
+    const { data, error } = await this.sb.from('yermo_adventures').insert(row).select('id').single();
+    if (error) throw new Error(error.message);
+    return data.id;
+  },
+  async deleteAdventure(id) { const { error } = await this.sb.from('yermo_adventures').delete().eq('id', id); if (error) throw new Error(error.message); },
+  async countAdventure(id, done) { await this.sb.rpc('yermo_adv_count', { a: id, done }); },
 
   // ---------- ranking de «una sola vida» ----------
   async submitScore(r) {

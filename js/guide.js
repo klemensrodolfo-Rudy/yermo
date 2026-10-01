@@ -241,6 +241,15 @@ export function setupGuide(ui, getGame) {
       <p>Tu perro o lobo gana experiencia acompañándote y peleando a tu lado, y sube hasta el nivel 5: ${PET_TRICKS_TXT}. Clic derecho con la mano vacía para ponerle <b>nombre</b>, cambiar el <b>collar</b> o pedirle que se quede.</p>
       <h3>Clima extremo y mareas</h3>
       <p>En el desierto y las Tierras de Brasa se arman <b>tormentas de arena</b> que no dejan ver casi nada; en los pantanos y la Ciénaga sube una <b>niebla espesa</b>, sobre todo de noche. En el archipiélago la <b>marea</b> sube y baja dos veces por día y tapa las playas. Si pescás mucho en el mismo lugar, los peces se agotan por un rato.</p>`,
+    'Aventuras, buzón y galería': () => `
+      <p>Todo esto usa tu cuenta de <b>☁ Mundo del grupo</b>.</p>
+      <h3>🗺 Aventuras</h3>
+      <p>En el menú, <b>🗺 Aventuras de la comunidad</b> lista los mapas que armaron otros jugadores: juntá los ${icon(251)} trofeos y llegá a la ${icon(252)} meta; los ${icon(250)} controles guardan dónde reaparecés. En una aventura no se rompe ni se construye (las puertas, palancas y cofres sí funcionan).</p>
+      <p><b>Crear una</b>: en un mundo tuyo (mejor en Creativo) armá el recorrido y poné un ${icon(249)} <b>Inicio de aventura</b>, controles, trofeos y la meta. Usá carteles para contar la historia y cofres con premios. Después, en la pausa: <b>🗺 Publicar como aventura</b> (sube lo que construiste a menos de 120 bloques del inicio). Podés volver a publicarla para actualizarla.</p>
+      <h3>📬 Buzón y 📍 marcas</h3>
+      <p>En un mundo del grupo, desde la pausa: mandale mensajes (y lo que tengas en la mano) a otro miembro aunque no esté conectado; le aparece cuando entra. <b>Marcar este lugar</b> pone una marca rosa en el mapa de todos.</p>
+      <h3>🖼 Galería</h3>
+      <p>Sacá una foto (F2 y después P) y en la pausa → <b>Galería del grupo</b> compartila con un epígrafe. Ahí ves las fotos de todos.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

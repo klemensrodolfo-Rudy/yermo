@@ -221,13 +221,111 @@ drop policy if exists "yermo scores insert" on public.yermo_scores;
 create policy "yermo scores read" on public.yermo_scores for select to authenticated using (true);
 create policy "yermo scores insert" on public.yermo_scores for insert to authenticated with check (user_id = auth.uid());
 
+-- ---------- v9.7: buzón, marcas del mapa, galería y aventuras ----------
+create table if not exists public.yermo_mail (
+  id bigint generated always as identity primary key,
+  world_id text not null references public.yermo_worlds(id) on delete cascade,
+  from_user uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  from_name text not null,
+  to_user uuid not null references auth.users(id) on delete cascade,
+  text text check (text is null or char_length(text) <= 300),
+  items jsonb,
+  taken boolean not null default false,
+  created_at timestamptz not null default now()
+);
+alter table public.yermo_mail enable row level security;
+revoke all on public.yermo_mail from anon;
+grant select, insert, delete on public.yermo_mail to authenticated;
+grant update (taken) on public.yermo_mail to authenticated;
+drop policy if exists "yermo mail read" on public.yermo_mail;
+drop policy if exists "yermo mail send" on public.yermo_mail;
+drop policy if exists "yermo mail take" on public.yermo_mail;
+drop policy if exists "yermo mail delete" on public.yermo_mail;
+create policy "yermo mail read" on public.yermo_mail for select to authenticated using (to_user = auth.uid() or from_user = auth.uid());
+create policy "yermo mail send" on public.yermo_mail for insert to authenticated
+  with check (from_user = auth.uid() and public.yermo_is_member(world_id) and exists (select 1 from public.yermo_members m where m.world_id = yermo_mail.world_id and m.user_id = to_user));
+create policy "yermo mail take" on public.yermo_mail for update to authenticated using (to_user = auth.uid()) with check (to_user = auth.uid());
+create policy "yermo mail delete" on public.yermo_mail for delete to authenticated using (to_user = auth.uid() or from_user = auth.uid());
+
+create table if not exists public.yermo_marks (
+  id bigint generated always as identity primary key,
+  world_id text not null references public.yermo_worlds(id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  name text not null,
+  label text not null check (char_length(label) between 1 and 40),
+  icon text check (icon is null or char_length(icon) <= 8),
+  x int not null, z int not null,
+  created_at timestamptz not null default now()
+);
+alter table public.yermo_marks enable row level security;
+revoke all on public.yermo_marks from anon;
+grant select, insert, delete on public.yermo_marks to authenticated;
+drop policy if exists "yermo marks read" on public.yermo_marks;
+drop policy if exists "yermo marks add" on public.yermo_marks;
+drop policy if exists "yermo marks delete" on public.yermo_marks;
+create policy "yermo marks read" on public.yermo_marks for select to authenticated using (public.yermo_is_member(world_id));
+create policy "yermo marks add" on public.yermo_marks for insert to authenticated with check (user_id = auth.uid() and public.yermo_is_member(world_id));
+create policy "yermo marks delete" on public.yermo_marks for delete to authenticated
+  using (user_id = auth.uid() or exists (select 1 from public.yermo_worlds w where w.id = world_id and w.owner = auth.uid()));
+
+create table if not exists public.yermo_photos (
+  id bigint generated always as identity primary key,
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  name text not null,
+  caption text check (caption is null or char_length(caption) <= 80),
+  world text,
+  image text not null check (char_length(image) < 400000),
+  created_at timestamptz not null default now()
+);
+alter table public.yermo_photos enable row level security;
+revoke all on public.yermo_photos from anon;
+grant select, insert, delete on public.yermo_photos to authenticated;
+drop policy if exists "yermo photos read" on public.yermo_photos;
+drop policy if exists "yermo photos add" on public.yermo_photos;
+drop policy if exists "yermo photos delete" on public.yermo_photos;
+create policy "yermo photos read" on public.yermo_photos for select to authenticated using (true);
+create policy "yermo photos add" on public.yermo_photos for insert to authenticated with check (user_id = auth.uid());
+create policy "yermo photos delete" on public.yermo_photos for delete to authenticated using (user_id = auth.uid());
+
+create table if not exists public.yermo_adventures (
+  id bigint generated always as identity primary key,
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  author text not null,
+  title text not null check (char_length(title) between 1 and 40),
+  description text check (description is null or char_length(description) <= 300),
+  seed bigint not null,
+  world_type text not null default 'normal',
+  trophies int not null default 0,
+  data jsonb not null,
+  plays int not null default 0,
+  finishes int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table public.yermo_adventures enable row level security;
+revoke all on public.yermo_adventures from anon;
+grant select, insert, delete on public.yermo_adventures to authenticated;
+grant update (title, description, seed, world_type, trophies, data, updated_at) on public.yermo_adventures to authenticated;
+drop policy if exists "yermo adv read" on public.yermo_adventures;
+drop policy if exists "yermo adv add" on public.yermo_adventures;
+drop policy if exists "yermo adv edit" on public.yermo_adventures;
+drop policy if exists "yermo adv delete" on public.yermo_adventures;
+create policy "yermo adv read" on public.yermo_adventures for select to authenticated using (true);
+create policy "yermo adv add" on public.yermo_adventures for insert to authenticated with check (user_id = auth.uid());
+create policy "yermo adv edit" on public.yermo_adventures for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy "yermo adv delete" on public.yermo_adventures for delete to authenticated using (user_id = auth.uid());
+create or replace function public.yermo_adv_count(a bigint, done boolean) returns void
+language sql security definer set search_path = public as $$
+  update yermo_adventures set plays = plays + case when done then 0 else 1 end, finishes = finishes + case when done then 1 else 0 end where id = a;
+$$;
+
 do $$
 declare f text;
 begin
   foreach f in array array[
     'yermo_is_member(text)', 'yermo_username(uuid)', 'yermo_join_world(text)', 'yermo_get_invite(text)', 'yermo_new_invite(text)',
     'yermo_claim_host(text, text, text)', 'yermo_set_host_code(text, text, text)', 'yermo_host_beat(text, text)',
-    'yermo_release_host(text, text)', 'yermo_alive_host(text)', 'yermo_list_worlds()'] loop
+    'yermo_release_host(text, text)', 'yermo_alive_host(text)', 'yermo_list_worlds()', 'yermo_adv_count(bigint, boolean)'] loop
     execute format('revoke all on function public.%s from public, anon', f);
     execute format('grant execute on function public.%s to authenticated', f);
   end loop;

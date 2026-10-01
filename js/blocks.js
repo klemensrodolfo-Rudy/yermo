@@ -338,6 +338,10 @@ def(245, { name: 'Bloque musical', tex: tx(T.note_block), hardness: 1, tool: 'ax
 def(246, { name: 'Caja musical', tex: { top: T.music_box, side: T.note_block, bottom: T.planks }, hardness: 1, tool: 'axe', elec: 'device', container: 'musicbox' });
 def(247, { name: 'Lienzo', tex: { top: T.planks, side: T.canvas, bottom: T.planks }, hardness: 0.5, tool: 'axe', container: 'canvas' });
 def(248, { name: 'Plantín', tex: tx(T.sapling), solid: false, opaque: false, render: 'cross', hardness: 0, drop: 248 });
+def(249, { name: 'Inicio de aventura', tex: { top: T.mg_table, side: T.mg_white, bottom: T.mg_white }, hardness: 1, light: 6 });
+def(250, { name: 'Control de aventura', tex: { top: T.mg_blue, side: T.mg_white, bottom: T.mg_white }, hardness: 1, light: 6 });
+def(251, { name: 'Trofeo', tex: tx(T.mg_gold), solid: false, opaque: false, render: 'box', box: [[5, 0, 5, 11, 2, 11], [7, 2, 7, 9, 5, 9], [4, 5, 4, 12, 11, 12]], hardness: 0.3, light: 10 });
+def(252, { name: 'Meta de aventura', tex: { top: T.mg_gold, side: T.mg_table, bottom: T.mg_white }, hardness: 1, light: 12 });
 def(226, { name: 'Cofre antiguo', tex: { top: T.chest_top, side: T.chest_side, bottom: T.chest_top, front: T.chest_front }, hardness: 1.5, tool: 'axe', drop: 0, loot: 'eldra' });
 def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12, portal: true });
 
@@ -759,6 +763,11 @@ export const RECIPES = [
   { out: [245, 1], in: [[23, 4], [259, 1]], station: 'mesa' },
   { out: [246, 1], in: [[23, 4], [259, 2], [260, 1]], station: 'mesa' },
   { out: [247, 2], in: [[23, 2], [176, 1]], station: 'mesa' },
+  { out: [249, 1], in: [[239, 2], [353, 1]], station: 'mesa' },
+  { out: [250, 2], in: [[237, 2], [239, 1]], station: 'mesa' },
+  { out: [251, 2], in: [[238, 1], [353, 2]], station: 'mesa' },
+  { out: [252, 1], in: [[238, 2], [239, 2]], station: 'mesa' },
+  { out: [238, 4], in: [[353, 3], [9, 2]], station: 'mesa' },
   { out: [236, 8], in: [[176, 1], [23, 2]], station: 'mesa' },
   { out: [237, 8], in: [[176, 1], [9, 2]], station: 'mesa' },
   { out: [239, 8], in: [[9, 4]], station: 'mesa' },

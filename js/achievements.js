@@ -73,6 +73,8 @@ export const ACHIEVEMENTS = [
   { id: 'arbol', name: 'Reverdecer', desc: 'Hacé crecer un árbol desde un plantín.' },
   { id: 'cria', name: 'La familia crece', desc: 'Lográ que nazca una cría.' },
   { id: 'mejoramigo', name: 'Mejores amigos', desc: 'Llevá a tu mascota al nivel 5.' },
+  { id: 'aventura', name: 'Aventurero', desc: 'Terminá una aventura de la comunidad.' },
+  { id: 'autor', name: 'Creador de mundos', desc: 'Publicá tu propia aventura.' },
 ];
 
 export class Achievements {
