@@ -34,6 +34,7 @@ import { createVoiceCmd } from './voicecmd.js';
 import { createLife } from './life.js';
 import { createProgress } from './progress.js';
 import { createBuilding } from './building.js';
+import { createTogether } from './together.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -283,6 +284,8 @@ const frag = (water) => /* glsl */`
       float sp = pow(max(dot(Np, Hh), 0.0), 16.0 + spec * 64.0) * spec * (0.3 + spec);
       col += vec3(1.0, 0.93, 0.8) * sp * sky * shadowF * 1.6;
       col += vLcol * pow(max(dot(Np, V), 0.0), 24.0) * spec * blk * 0.35;
+      // lo brillante (metal, vidrio, hielo) refleja un poco el cielo
+      if (spec > 0.3) col += fogColor * pow(1.0 - max(dot(Np, V), 0.0), 3.0) * spec * 0.3 * vLit.x;
     }
     // píxeles que brillan solos (minerales, lava, lámparas, hongos)
     if (emis > 0.0) {
@@ -1051,6 +1054,7 @@ const TIPS = [
 function showTip() { const el = $('#loadTip'); if (!el) return; el.style.opacity = 0; setTimeout(() => { el.innerHTML = '💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)]; el.style.opacity = 1; }, 300); }
 
 async function startGame(meta, hello, cloudInfo) {
+  try { if (!meta.remote && !meta.cloud) { localStorage.setItem('yermo-last', meta.id); localStorage.setItem('yermo-open', '1'); } } catch { /* sin almacenamiento */ }
   goFullscreen();
   $('#menu').hidden = true;
   $('#loading').hidden = false;
@@ -1104,6 +1108,7 @@ async function startGame(meta, hello, cloudInfo) {
     game?.extras?.event(n, id);
     game?.life?.event(n, id);
     game?.progress?.event(n, id);
+    game?.visuals?.event?.(n, id);
   };
   player.onBreakStage = setCrack;
   player.onStation = (st) => openInventory(st);
@@ -1205,6 +1210,9 @@ async function startGame(meta, hello, cloudInfo) {
   game.life = createLife(fctx);
   game.progress = createProgress(fctx);
   const BU = game.building = createBuilding(fctx);
+  const TO = game.together = createTogether(fctx);
+  const blockAll = player.onUseBlock;
+  player.onUseBlock = (...a) => TO.onUseBlock(...a) || blockAll(...a);
   const useAll = player.onUseItem;
   player.onUseItem = (...a) => BU.onUseItem(...a) || useAll(...a);
   // clic derecho en bloques y criaturas: cada módulo mira primero lo suyo
@@ -1254,6 +1262,7 @@ async function startGame(meta, hello, cloudInfo) {
 let quitting = false;
 async function quitToMenu() {
   if (!game || quitting) return;
+  try { localStorage.setItem('yermo-open', '0'); } catch { /* sin almacenamiento */ }
   quitting = true;
   try { await doQuit(); } finally { quitting = false; }
 }
@@ -1262,7 +1271,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1695,14 +1704,18 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '10.9 · 2026-10-02';
+const VERSION = '11.0 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
-let skipT = 0, distAcc = 0, distLow = 0, distHigh = 0;
+let skipT = 0, distAcc = 0, distLow = 0, distHigh = 0, lastInputT = performance.now();
+for (const ev2 of ['keydown', 'mousemove', 'mousedown', 'touchstart', 'wheel']) addEventListener(ev2, () => { lastInputT = performance.now(); }, { passive: true });
 function loop(now) {
   requestAnimationFrame(loop);
-  if (settings.battery && now - skipT < 30) return;
+  // ahorro: con batería, a 30 cuadros; en menús, pausa o mochila, a 20; quieto un rato, a 30
+  const idleSlow = game && !paused && !ui.open && performance.now() - (lastInputT || 0) > 30000 && Math.hypot(game.player.vel.x, game.player.vel.z) < 0.1;
+  const cap = !game || paused || ui.open ? 48 : settings.battery || idleSlow ? 30 : 0;
+  if (cap && now - skipT < cap) return;
   skipT = now;
   // controles táctiles visibles sólo jugando (sin menús, mochila ni ventanas encima)
   const playing = !!game && !ui.open && $('#menu').hidden && $('#loading').hidden && !document.querySelector('.overlay:not([hidden]), .v6modal');
@@ -1742,6 +1755,7 @@ function loop(now) {
   const simDt = paused && !net.active ? 0 : dt;
   const active = inputActive() && !paused && !ui.open && !chatting;
   player.analog = input.analog; player.autoRun = input.autoRun;
+  { const v = player.riding || player; const vx = v.vel?.x ?? 0, vz = v.vel?.z ?? 0, sp = Math.hypot(vx, vz); world.bias = sp > 2 ? { x: vx / sp * Math.min(3, sp / 4), z: vz / sp * Math.min(3, sp / 4) } : null; }
   game.time = (game.time + simDt / DAY_LEN) % 1;
   // amanecer: logro por noche sobrevivida
   if (game.lastTime < 0.25 && game.time >= 0.25 && !player.dead) game.ach.event('dawn');
@@ -1779,6 +1793,7 @@ function loop(now) {
   game.voiceCmd?.update(dt);
   game.life?.update(dt);
   game.progress?.update(dt);
+  game.together?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
@@ -1918,6 +1933,7 @@ function loop(now) {
   for (const mk of game.social?.markers() || []) markers.push(mk);
   for (const mk of game.ux?.markers() || []) markers.push(mk);
   for (const mk of game.life?.markers() || []) markers.push(mk);
+  for (const mk of game.together?.markers() || []) markers.push(mk);
   mapView.update(dt, world, player, markers, bigMap);
 
   // HUD
@@ -1945,7 +1961,15 @@ function loop(now) {
   if (game.saveAcc > (game.meta.cloud ? 20 : 45)) { game.saveAcc = 0; saveGame(true); }
 }
 requestAnimationFrame(loop);
-showMenu();
+showMenu().then(async () => {
+  // seguir donde dejaste: si la app se cerró jugando, vuelve a entrar sola a ese mundo
+  try {
+    if (settings.resume === false || localStorage.getItem('yermo-open') !== '1' || new URLSearchParams(location.search).has('mute')) return;
+    const id = localStorage.getItem('yermo-last');
+    const w = (await Storage.listWorlds()).find((x) => x.id === id);
+    if (w && !game) { flash(`▶ Seguís en «${w.name}»`); startGame(w); }
+  } catch { /* nada */ }
+});
 
 // ---------- App instalable (PWA) ----------
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});

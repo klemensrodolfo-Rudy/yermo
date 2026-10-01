@@ -419,6 +419,11 @@
   #touch .b-mount { right: calc(0px * var(--ts)); bottom: calc(176px * var(--ts)); width: calc(58px * var(--ts)); height: calc(58px * var(--ts)); }
   #touch .b-drop { right: calc(176px * var(--ts)); bottom: calc(72px * var(--ts)); width: calc(46px * var(--ts)); height: calc(46px * var(--ts)); }
   #touch .b-use.ctx { border-color: #9cff3a; }
+  /* modo una mano: sin joystick; se camina con un botón y se mira arrastrando en cualquier lado */
+  #touch .b-walk { right: calc(176px * var(--ts)); bottom: calc(130px * var(--ts)); width: calc(64px * var(--ts)); height: calc(64px * var(--ts)); }
+  body.onehand #touch .stickzone, body.onehand #touch .stick { display: none; }
+  body.onehand #touch .look { width: 100%; }
+  body.onehand #touch .b-walk { display: flex !important; }
   #touch .tbar { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; pointer-events: auto; opacity: var(--to); }
   #touch .tbar button { width: calc(40px * var(--ts)); height: calc(36px * var(--ts)); padding: 0; font-size: calc(17px * var(--ts)); border-radius: 6px; background: rgba(10,8,6,0.55); border: 2px solid rgba(255,236,200,0.25); }
   #touch .tbar button.on { background: rgba(217,130,59,0.7); }
@@ -804,6 +809,7 @@
     <button class="b-down" hidden><i>⤓</i><span>Bajar</span></button>
     <button class="b-mount" hidden><i>🚗</i><span>Subir</span></button>
     <button class="b-drop"><i>⇩</i><span>Tirar</span></button>
+    <button class="b-walk" hidden><i>🚶</i><span>Caminar</span></button>
   </div>
 </div>
 

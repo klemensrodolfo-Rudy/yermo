@@ -212,7 +212,7 @@ export class World {
     for (let dx = -LR; dx <= LR; dx++) for (let dz = -LR; dz <= LR; dz++) {
       if (dx * dx + dz * dz > LR * LR + 1) continue;
       const k = key(pcx + dx, pcz + dz);
-      if (!this.chunks.has(k)) want.push([dx * dx + dz * dz, pcx + dx, pcz + dz]);
+      if (!this.chunks.has(k)) want.push([dx * dx + dz * dz - (this.bias ? (dx * this.bias.x + dz * this.bias.z) * 2.5 : 0), pcx + dx, pcz + dz]);
     }
     want.sort((a, b) => a[0] - b[0]);
     for (const [, cx, cz] of want) {

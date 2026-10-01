@@ -406,6 +406,7 @@ export const DECOR = [
   { id: 'banco', name: 'Banco', boxes: [[0, 6, 4, 16, 8, 12, T.planks], [1, 0, 5, 3, 6, 11, T.planks], [13, 0, 5, 15, 6, 11, T.planks]] },
   { id: 'alfombra', name: 'Alfombra roja', boxes: [[0, 0, 0, 16, 1, 16, T.mg_red]] },
   { id: 'caja', name: 'Caja de madera', boxes: [[1, 0, 1, 15, 14, 15, T.crate_side]] },
+  { id: 'puesto', name: 'Puesto de venta', boxes: [[0, 0, 4, 16, 10, 12, T.planks], [0, 10, 3, 16, 11, 13, T.planks], [1, 11, 11, 2, 16, 12, T.planks], [14, 11, 11, 15, 16, 12, T.planks], [0, 15, 4, 16, 16, 13, T.mg_red]] },
 ];
 let shapeHook = null;
 export const setShapeHook = (fn) => { shapeHook = fn; };
@@ -582,6 +583,7 @@ export const ITEMS = {
   412: { name: 'Banco', icon: 'decor', decor: 6, color: 0x9a7040 },
   413: { name: 'Alfombra roja', icon: 'decor', decor: 7, color: 0xc83a3a },
   414: { name: 'Caja de madera', icon: 'decor', decor: 8, color: 0xa08050 },
+  415: { name: 'Puesto de venta', icon: 'decor', decor: 9, color: 0xd84a3a },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -822,6 +824,7 @@ export const RECIPES = [
   { out: [412, 1], in: [[23, 3]], station: 'mesa' },
   { out: [413, 4], in: [[176, 2], [236, 1]], station: 'mesa' },
   { out: [414, 1], in: [[23, 4], [256, 2]], station: 'mesa' },
+  { out: [415, 1], in: [[23, 6], [176, 2], [353, 3]], station: 'mesa' },
   { out: [236, 8], in: [[176, 1], [23, 2]], station: 'mesa' },
   { out: [237, 8], in: [[176, 1], [9, 2]], station: 'mesa' },
   { out: [239, 8], in: [[9, 4]], station: 'mesa' },

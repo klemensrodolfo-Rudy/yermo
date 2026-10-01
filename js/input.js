@@ -106,6 +106,8 @@ export class Input {
     hold('.b-photo', () => this.a.press('photo'));
     hold('.b-chat', () => this.a.press('chat'));
     hold('.b-voice', () => this.a.press('voice'));
+    let walk = false;
+    hold('.b-walk', () => { walk = !walk; this.a.setKey('KeyW', walk); root.querySelector('.b-walk').classList.toggle('lock', walk); });
     let run = false;
     hold('.b-run', () => { run = !run; this.a.setKey('ShiftLeft', run); root.querySelector('.b-run').classList.toggle('lock', run); });
   }
@@ -114,5 +116,8 @@ export class Input {
     const root = document.getElementById('touch'); if (!root) return;
     root.style.setProperty('--ts', (o.touchSize ?? 100) / 100);
     root.style.setProperty('--to', (o.touchAlpha ?? 85) / 100);
+    // botones de la barra de arriba que se muestran (la pausa siempre está)
+    for (const k of ['inv', 'map', 'wp', 'emote', 'cam', 'photo', 'voice']) { const b = root.querySelector('.b-' + k); if (b) b.style.display = (o.tbarHide || []).includes(k) ? 'none' : ''; }
+    document.body.classList.toggle('onehand', !!o.oneHand);
   }
 }

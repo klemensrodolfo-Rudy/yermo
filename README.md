@@ -128,6 +128,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v10.9 — Construcción**: sierra de formas (losa, escalón, panel y alfombra de cualquier material), 9 decoraciones (maceta, farol, mesa, silla, estante, barril, banco, alfombra, caja) y herramientas de obra (rellenar, vaciar, reemplazar, deshacer).
 
+**v11.0 — Juntos**: obras del grupo con silueta y aportes, puestos de venta que funcionan sin el dueño, pose grupal para fotos, botones táctiles a elección y modo una mano, seguir donde dejaste al abrir, carga anticipada hacia donde caminás, ahorro de batería en reposo, reflejos del cielo en vidrio y metal y destellos en minerales.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

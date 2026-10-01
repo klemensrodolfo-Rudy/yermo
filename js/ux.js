@@ -123,11 +123,12 @@ export function createUX(ctx) {
   function renderBar() {
     bar.innerHTML = `${Object.entries(FILTERS).map(([k, [n]]) => `<button data-f="${k}" class="${k === pf ? 'on' : ''}">${n}</button>`).join('')}
       <button class="vg ${vign ? 'on' : ''}">Viñeta</button><label style="display:flex;align-items:center;gap:4px;margin:0">FOV <input class="pfov" type="range" min="30" max="110" value="${Math.round(p.baseFov || 75)}"></label>
-      <button class="tm">⏱ 3 s</button><button class="sh primary">📸 Sacar (P)</button><button class="ex">✕ Salir (F2)</button>`;
+      <button class="tm">⏱ 3 s</button><button class="gp">🙌 Pose grupal</button><button class="sh primary">📸 Sacar (P)</button><button class="ex">✕ Salir (F2)</button>`;
     bar.querySelectorAll('[data-f]').forEach((b) => { b.onclick = () => { pf = b.dataset.f; renderBar(); }; });
     bar.querySelector('.vg').onclick = () => { vign = !vign; renderBar(); };
     bar.querySelector('.pfov').oninput = (e) => { p.baseFov = +e.target.value; };
     bar.querySelector('.tm').onclick = () => { countT = 3.2; };
+    bar.querySelector('.gp').onclick = () => { g.together?.groupPose('wave'); countT = 3.2; };
     bar.querySelector('.sh').onclick = () => { g.features.wantPhoto = true; };
     bar.querySelector('.ex').onclick = () => ctx.photoKey?.();
   }

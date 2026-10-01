@@ -1262,6 +1262,7 @@ export function createFeatures2(ctx) {
     return out;
   };
 
+  api.emote = (k) => doEmote(k);
   // ---------- teclas ----------
   api.key = (e) => {
     if (e.code === 'KeyJ') { openJournal(); return true; }

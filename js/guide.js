@@ -305,6 +305,19 @@ export function setupGuide(ui, getGame) {
       <p>${icon(406)} Maceta · ${icon(407)} Farol · ${icon(408)} Mesa · ${icon(409)} Silla · ${icon(410)} Estante · ${icon(411)} Barril · ${icon(412)} Banco · ${icon(413)} Alfombra roja · ${icon(414)} Caja. Se fabrican en la mesa de trabajo y se apoyan arriba de un bloque mirando hacia vos; con la sierra se giran.</p>
       <h3>Herramientas de obra</h3>
       <p>Marcá un área con la ${icon(361)} cinta métrica y abrí el ${icon(362)} plano de obra: <b>rellenar</b> con el bloque que tenés en la mano, <b>vaciar</b>, <b>reemplazar</b> el bloque que mirás por el de la mano y <b>deshacer</b> lo último (también los diseños construidos). Copiar y pegar con rotación sigue en el mismo plano.</p>`,
+    'Juntos y comodidad': () => `
+      <h3>🤝 Obras del grupo</h3>
+      <p>Guardá un diseño con el ${icon(362)} plano de obra; después, mirando el lugar, abrí el plano y elegí el diseño en <b>🤝 Obra del grupo</b>. Las obras en marcha se ven en pausa → Comunidad → Obras del grupo. Aparece una silueta verde: cualquiera que ponga el bloque correcto en su lugar suma al avance, y se lleva la cuenta de quién ayudó. Se puede marcar en el mapa.</p>
+      <h3>${icon(415)} Puesto de venta</h3>
+      <p>Fabricalo en la mesa (6 tablas, 2 telas y 3 fichas) y apoyalo en el piso. Tocalo con algo en la mano para ponerlo a la venta con el precio que quieras (hasta 9 cosas). Los demás compran con fichas aunque no estés; vos cobrás lo juntado cuando vuelvas.</p>
+      <h3>📸 Pose grupal</h3>
+      <p>En el modo foto tocá <b>Pose grupal</b>: todos los del grupo saludan a la vez y la foto se saca a los 3 segundos.</p>
+      <h3>📱 Táctil a tu gusto</h3>
+      <p>En opciones → táctil elegís qué botones se ven y podés activar el <b>modo una mano</b> (todo del lado derecho, con un botón de caminar automático).</p>
+      <h3>⚡ Más rápido y menos batería</h3>
+      <p>Al abrir el juego <b>seguís donde dejaste</b> (se puede apagar en opciones). El mundo se carga antes hacia donde caminás, y en el menú, en pausa o sin tocar nada por 30 segundos baja los cuadros por segundo para gastar menos batería.</p>
+      <h3>✨ Detalles</h3>
+      <p>El vidrio y los metales reflejan el cielo y los minerales brillan con destellos cuando estás cerca.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

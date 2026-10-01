@@ -279,6 +279,15 @@ export function createVisuals(ctx) {
     for (; i < blobs.length; i++) blobs[i].visible = false;
   }
 
+  // destellos al sacar minerales
+  api.event = (n, id) => {
+    if (n !== 'break' || !/mineral|veta|cristal|uranio|oro/i.test(BLOCKS[id]?.name || '')) return;
+    const t = p.target || { x: p.pos.x, y: p.pos.y + 1, z: p.pos.z };
+    const c = ctx.mapView?.tileColor?.[BLOCKS[id].tex?.side] || [255, 255, 255];
+    const bright = c.map((v) => Math.min(255, v * 1.7 + 40));
+    ctx.particles.burst(t.x, t.y, t.z, bright, 16, 0.9);
+    for (let i = 0; i < 6; i++) spawn(1, t.x + Math.random(), t.y + Math.random(), t.z + Math.random());
+  };
   api.update = (dt) => { windTick(dt); handLight(); ambient(dt); grade(dt); smokeTick(dt); haloTick(); embers(dt); blobTick(); ambienceTick(dt); };
   api.dispose = () => { for (const b of blobs) scene.remove(b); for (const h of halos) scene.remove(h); scene.remove(smoke); sGeo.dispose(); scene.remove(pts); geo.dispose(); canvas.style.filter = ''; uniforms.plOn.value = 0; skyUniforms.aurora.value = 0; };
   return api;

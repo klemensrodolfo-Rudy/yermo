@@ -81,7 +81,10 @@ export function setupAccess({ settings, saveSettings, flash }) {
       <label>Opacidad: <b class="toV"></b></label><input class="tal" type="range" min="25" max="100" step="5">
       <label>Sensibilidad para mirar: <b class="tlV"></b></label><input class="tse" type="range" min="40" max="220" step="10">
       <label class="check"><input type="checkbox" class="hap"> 📳 Vibrar al tocar y al recibir daño</label>
-      <label class="check"><input type="checkbox" class="fix"> 🕹 Joystick fijo (si no, aparece donde apoyás el pulgar)</label></div>
+      <label class="check"><input type="checkbox" class="fix"> 🕹 Joystick fijo (si no, aparece donde apoyás el pulgar)</label>
+      <label class="check"><input type="checkbox" class="one"> ✋ Modo una mano (sin joystick: botón 🚶 para caminar y se mira arrastrando en cualquier lado)</label>
+      <label style="margin-top:8px">Botones de arriba</label><div class="tbopts" style="display:flex;flex-wrap:wrap;gap:4px 12px"></div></div>
+    <label class="check"><input type="checkbox" id="accResume"> ▶ Al abrir la app, seguir en el mundo donde estaba</label>
     <h3 style="margin:12px 0 4px">Teclas</h3><p class="muted" style="font-size:15px;margin:0 0 6px">Tocá una acción y apretá la tecla nueva (Esc cancela).</p>
     <div id="accKeys"></div>
     <div class="row2"><button id="accReset">Teclas por defecto</button><button id="accClose" class="primary">Listo</button></div></div>`;
@@ -115,7 +118,14 @@ export function setupAccess({ settings, saveSettings, flash }) {
     $('.tsz').value = settings.touchSize ?? 100; $('.tsV').textContent = ($('.tsz').value) + '%';
     $('.tal').value = settings.touchAlpha ?? 85; $('.toV').textContent = ($('.tal').value) + '%';
     $('.tse').value = settings.touchSens ?? 100; $('.tlV').textContent = ($('.tse').value) + '%';
-    $('.hap').checked = settings.haptics !== false; $('.fix').checked = !!settings.fixedStick;
+    $('.hap').checked = settings.haptics !== false; $('.fix').checked = !!settings.fixedStick; $('.one').checked = !!settings.oneHand;
+    const tb = $('.tbopts'); tb.innerHTML = '';
+    for (const [k, n] of [['inv', '🎒 Mochila'], ['map', '🗺 Mapa'], ['wp', '📍 Marcador'], ['emote', '😀 Gestos'], ['cam', '👁 Cámara'], ['photo', '📷 Foto'], ['voice', '🎙 Voz']]) {
+      const l = document.createElement('label'); l.className = 'check'; l.style.margin = '0';
+      l.innerHTML = `<input type="checkbox" ${(settings.tbarHide || []).includes(k) ? '' : 'checked'}> ${n}`;
+      l.querySelector('input').onchange = (e) => { const s = new Set(settings.tbarHide || []); if (e.target.checked) s.delete(k); else s.add(k); tset('tbarHide', [...s]); };
+      tb.appendChild(l);
+    }
   };
   const tset = (k, v) => { settings[k] = v; saveSettings(); touchUI(); window.dispatchEvent(new Event('touchopts')); };
   $('.tsz').oninput = (e) => tset('touchSize', +e.target.value);
@@ -123,6 +133,8 @@ export function setupAccess({ settings, saveSettings, flash }) {
   $('.tse').oninput = (e) => tset('touchSens', +e.target.value);
   $('.hap').onchange = (e) => tset('haptics', e.target.checked);
   $('.fix').onchange = (e) => tset('fixedStick', e.target.checked);
+  $('.one').onchange = (e) => tset('oneHand', e.target.checked);
+  $('#accResume').onchange = (e) => { settings.resume = e.target.checked; saveSettings(); };
   $('#accBig').oninput = (e) => { settings.uiScale = +e.target.value; $('.uzV').textContent = settings.uiScale + '%'; applyLook(); };
   $('#accBig').onchange = () => saveSettings();
   $('#accContrast').onchange = (e) => { settings.contrast = e.target.checked; applyLook(); saveSettings(); };
@@ -133,7 +145,7 @@ export function setupAccess({ settings, saveSettings, flash }) {
   return {
     open(cb) {
       onClose = cb;
-      $('#accCb').value = settings.cb || ''; $('#accBig').value = settings.uiScale ?? (settings.bigui ? 118 : 100); $('.uzV').textContent = $('#accBig').value + '%'; $('#accContrast').checked = !!settings.contrast; $('#accVoice').checked = !!settings.voiceCtl;
+      $('#accCb').value = settings.cb || ''; $('#accBig').value = settings.uiScale ?? (settings.bigui ? 118 : 100); $('.uzV').textContent = $('#accBig').value + '%'; $('#accContrast').checked = !!settings.contrast; $('#accVoice').checked = !!settings.voiceCtl; $('#accResume').checked = settings.resume !== false;
       touchUI(); $('.touchOpts').hidden = !document.body.classList.contains('touch');
       renderKeys(); ov.hidden = false;
     },
