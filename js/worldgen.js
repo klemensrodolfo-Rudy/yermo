@@ -6,8 +6,8 @@ const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a
 const lerp = (a, b, t) => a + (b - a) * t;
 const mod = (a, n) => ((a % n) + n) % n;
 
-export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11, ZOO: 12, VALE: 13, ELFWOOD: 14, PEAKS: 15, MIRE: 16, ASHEN: 17 };
-export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo', 'Bioparque', 'Colinas de Valverde', 'Bosque de Lunaria', 'Montes de Hierroalto', 'Ciénaga Sombría', 'Tierras de Brasa'];
+export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11, ZOO: 12, VALE: 13, ELFWOOD: 14, PEAKS: 15, MIRE: 16, ASHEN: 17, OCEAN: 18, ISLAND: 19 };
+export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo', 'Bioparque', 'Colinas de Valverde', 'Bosque de Lunaria', 'Montes de Hierroalto', 'Ciénaga Sombría', 'Tierras de Brasa', 'Mar abierto', 'Isla'];
 export const MAGIC_BIOMES = new Set([13, 14, 15, 16, 17]);
 // El Abismo: mazmorra infinita lejos del mundo normal; cada nivel ocupa ABYSS_W bloques en x
 export const ABYSS_X = 300000, ABYSS_W = 256;
@@ -636,8 +636,24 @@ export class WorldGen {
     return { h: Math.max(4, Math.min(HEIGHT - 12, Math.round(h))), biome, urbanT: 0, cityLevel: 47, temp: biome === BIOME.PEAKS ? -0.5 : 0.1, river: riverT > 0.5 };
   }
 
+  // ---------- archipiélago: mar abierto con islas ----------
+  islandColumn(wx, wz) {
+    const ox = wx + this.ox, oz = wz + this.oz;
+    const isl = this.nCont.fbm2(ox / 170, oz / 170, 3) + smooth(110, 30, Math.hypot(wx, wz)) * 0.35; // siempre hay una isla en el inicio
+    const detail = this.nDetail.fbm2(ox / 40, oz / 40, 3);
+    const hills = Math.max(0, this.nHills.fbm2(ox / 90, oz / 90, 3));
+    const land = smooth(0.12, 0.3, isl + detail * 0.05);
+    const floor = SEA - 15 + this.nMoist.fbm2(ox / 120, oz / 120, 2) * 7 + detail * 2;
+    const top = SEA + 1 + Math.min(0.45, isl - 0.12) * 16 + hills * 11 + detail * 1.8;
+    let h = lerp(floor, top, land);
+    if (land < 0.5) h = Math.max(h, lerp(floor, SEA - 3 + detail * 2, smooth(-0.06, 0.12, isl) * 0.85)); // bajos y arrecifes
+    const biome = h > SEA ? BIOME.ISLAND : BIOME.OCEAN;
+    return { h: Math.max(4, Math.min(HEIGHT - 20, Math.round(h))), biome, urbanT: 0, cityLevel: 47, temp: 0.6 };
+  }
+
   baseColumn(wx, wz) {
     if (this.type === 'magic') return this.magicColumn(wx, wz);
+    if (this.type === 'islands') return this.islandColumn(wx, wz);
     const cx0 = wx, cz0 = wz;
     wx += this.ox; wz += this.oz;
     const cont = this.nCont.fbm2(wx / 420, wz / 420, 3);
@@ -758,6 +774,8 @@ export class WorldGen {
             case BIOME.MIRE: id = depth < 2 ? 7 : 4; break;
             case BIOME.ASHEN: id = depth === 0 ? (hash2(seed + 401, wx, wz) < 0.3 ? 6 : 205) : 205; break;
             case BIOME.SCRAPSEA: id = depth < 3 ? 192 : 4; break;
+            case BIOME.ISLAND: id = depth === 0 ? (h <= SEA + 2 ? 229 : 84) : depth < 3 ? (h <= SEA + 3 ? 229 : 4) : 2; break;
+            case BIOME.OCEAN: id = depth < 3 ? (h < SEA - 13 ? 8 : 229) : 2; break;
             case BIOME.MILITARY: id = depth === 0 ? (hash2(seed + 191, wx, wz) < 0.004 ? 182 : hash2(seed + 192, wx, wz) < 0.3 ? 8 : 5) : 4; break;
             default:
               id = depth === 0 ? (h < SEA + 1 ? 7 : 5) : 4;
@@ -765,7 +783,7 @@ export class WorldGen {
         }
         data[I(x, y, z)] = id;
       }
-      const waterId = b === BIOME.BREW || this.type === 'magic' ? (b === BIOME.ASHEN ? 55 : 47) : 17;
+      const waterId = b === BIOME.BREW || this.type === 'magic' || this.type === 'islands' ? (b === BIOME.ASHEN ? 55 : 47) : 17;
       for (let y = h + 1; y <= SEA; y++) data[I(x, y, z)] = waterId;
       if (b === BIOME.TUNDRA && h < SEA) data[I(x, SEA, z)] = 148; // lagos congelados
 
@@ -826,6 +844,7 @@ export class WorldGen {
     // --- árboles muertos y chatarra dispersa ---
     const M = 4;
     if (this.type === 'magic') this.eldraDeco(cx, cz, set, setAir, colAt);
+    else if (this.type === 'islands') this.islandDeco(cx, cz, set, setAir, colAt);
     else
     for (let wz = z0 - M; wz < z0 + CHUNK + M; wz++) for (let wx = x0 - M; wx < x0 + CHUNK + M; wx++) {
       const r = hash2(seed + 11, wx, wz);
@@ -871,6 +890,7 @@ export class WorldGen {
 
     // --- ciudad ---
     if (this.type === 'magic') { this.eldraStructures(cx, cz, set, colAt); return data; }
+    if (this.type === 'islands') { this.shipwrecks(cx, cz, set, colAt); this.lighthouses(cx, cz, set, colAt); return data; }
     this.city(data, cx, cz, cols, set, setAir, colAt, I);
     // --- búnkeres y otras estructuras ---
     this.bunkers(cx, cz, set);
@@ -887,6 +907,96 @@ export class WorldGen {
     this.undercity(cx, cz, set);
 
     return data;
+  }
+
+  // palmeras en las islas y corales en los bajos
+  islandDeco(cx, cz, set, setAir, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed, M = 4;
+    for (let wz = z0 - M; wz < z0 + CHUNK + M; wz++) for (let wx = x0 - M; wx < x0 + CHUNK + M; wx++) {
+      const c = colAt(wx, wz), r = hash2(s + 501, wx, wz), lx = wx - x0, lz = wz - z0;
+      if (c.biome === BIOME.ISLAND && r < 0.008) this.palm(set, setAir, lx, c.h + 1, lz, wx, wz);
+      else if (c.biome === BIOME.OCEAN && c.h >= SEA - 10 && c.h <= SEA - 2 && lx >= 0 && lx < 16 && lz >= 0 && lz < 16) {
+        const k = this.nMush.noise2(wx / 7, wz / 7);
+        if (k > 0.35 && r < 0.5) { const n = 1 + Math.floor(hash2(s + 502, wx, wz) * 3); for (let y = 1; y <= n; y++) set(lx, c.h + y, lz, k > 0.6 ? 231 : 230); }
+      }
+    }
+  }
+  palm(set, setAir, lx, y, lz, wx, wz) {
+    const s = this.seed, H = 5 + Math.floor(hash2(s + 503, wx, wz) * 3);
+    const dx = hash2(s + 504, wx, wz) < 0.5 ? 1 : -1;
+    let x = lx;
+    for (let k = 0; k < H; k++) { if (k === H - 2) x += dx; set(x, y + k, lz, 232); }
+    const ty = y + H;
+    setAir(x, ty, lz, 233);
+    for (const [ax, az] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      setAir(x + ax, ty, lz + az, 233); setAir(x + ax * 2, ty, lz + az * 2, 233);
+      setAir(x + ax * 3, ty - 1, lz + az * 3, 233);
+    }
+    for (const [ax, az] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) setAir(x + ax, ty - 1 + (hash2(s + 505, wx + ax, wz + az) < 0.5 ? 1 : 0), lz + az, 233);
+  }
+  // naufragios de madera en el fondo, con cofres del tesoro
+  shipwrecks(cx, cz, set, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    const S = (wx, y, wz, id) => set(wx - x0, y, wz - z0, id);
+    for (const w of this.eldraCells(cx, cz, 110, 22, 511, 0.85, (c) => c.biome === BIOME.OCEAN && c.h < SEA - 5)) {
+      const alongX = hash2(s + 514, w.gx, w.gz) < 0.5, L = 9 + Math.floor(hash2(s + 515, w.gx, w.gz) * 5), base = w.y + 1;
+      const tilt = hash2(s + 516, w.gx, w.gz) < 0.5 ? 1 : -1;
+      for (let a = -L; a <= L; a++) for (let b = -3; b <= 3; b++) {
+        const taper = Math.abs(a) > L - 4 ? Math.abs(a) - (L - 4) : 0;
+        if (Math.abs(b) > 3 - taper * 0.7) continue;
+        const wx = alongX ? w.x + a : w.x + b, wz = alongX ? w.z + b : w.z + a;
+        const shell = Math.abs(b) >= 3 - taper * 0.7 - 0.99 || Math.abs(a) === L;
+        const top = base + 4 + (b * tilt > 0 ? -1 : 0);
+        for (let y = base; y <= top; y++) {
+          const hole = hash3(s + 517, wx, y, wz) < 0.12;
+          if (y === base) S(wx, y, wz, 23);
+          else if (shell && !hole) S(wx, y, wz, Math.abs(a) % 4 === 0 ? 222 : 23);
+          else if (y === top - 1 && !hole && Math.abs(a) < L - 2) S(wx, y, wz, 23); // cubierta
+          else S(wx, y, wz, 47);
+        }
+      }
+      // mástil roto y cofres
+      const mx = alongX ? w.x - 2 : w.x, mz = alongX ? w.z : w.z - 2;
+      for (let y = base + 1; y < base + 9; y++) S(mx, y, mz, 222);
+      S(alongX ? w.x + L - 4 : w.x, base + 1, alongX ? w.z : w.z + L - 4, 228);
+      if (hash2(s + 518, w.gx, w.gz) < 0.6) S(alongX ? w.x - L + 4 : w.x + 1, base + 1, alongX ? w.z + 1 : w.z - L + 4, 228);
+    }
+  }
+  // faros en la costa de algunas islas
+  lighthouses(cx, cz, set, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    const S = (wx, y, wz, id) => set(wx - x0, y, wz - z0, id);
+    const coast = (c) => c.biome === BIOME.ISLAND && c.h > SEA && c.h <= SEA + 6;
+    for (let gx = Math.floor((x0 - 24) / 150); gx <= Math.floor((x0 + 40) / 150); gx++) for (let gz = Math.floor((z0 - 24) / 150); gz <= Math.floor((z0 + 40) / 150); gz++) {
+      if (hash2(s + 521, gx, gz) > 0.7) continue;
+      let site = null;
+      for (let k = 0; k < 24 && !site; k++) {
+        const x = Math.floor((gx + 0.2 + hash2(s + 522 + k, gx, gz) * 0.6) * 150), z = Math.floor((gz + 0.2 + hash2(s + 560 + k, gx, gz) * 0.6) * 150);
+        const c = this.column(x, z);
+        if (coast(c)) site = { x, z, y: c.h };
+      }
+      if (!site || site.x < x0 - 6 || site.x > x0 + 22 || site.z < z0 - 6 || site.z > z0 + 22) continue;
+      const { x, z, y } = site, H = 18;
+      for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) {
+        const r = Math.hypot(dx, dz);
+        if (r > 3.2) continue;
+        for (let k = y - 3; k <= y; k++) S(x + dx, k, z + dz, 9); // base
+        if (r > 2.6) { for (let k = 1; k <= 2; k++) S(x + dx, y + k, z + dz, 0); continue; }
+        for (let k = 1; k <= H; k++) {
+          const wall = r > 1.6;
+          S(x + dx, y + k, z + dz, wall ? (Math.floor((k - 1) / 3) % 2 ? 13 : 9) : 0);
+        }
+        // linterna arriba
+        S(x + dx, y + H + 1, z + dz, 9);
+        if (r > 1.6) { S(x + dx, y + H + 2, z + dz, 14); S(x + dx, y + H + 3, z + dz, 14); }
+        S(x + dx, y + H + 4, z + dz, 13);
+      }
+      S(x, y + H + 2, z, 28); S(x, y + H + 3, z, 28);
+      // escalera y puerta
+      for (let k = 1; k <= H; k++) S(x, y + k, z + 1, ladderFor(0, -1));
+      S(x, y + H + 1, z + 1, 0);
+      S(x, y + 1, z - 2, doorId(0, 'z', 0)); S(x, y + 2, z - 2, doorId(0, 'z', 1));
+    }
   }
 
   deadTree(set, setAir, lx, y, lz, wx, wz) {
@@ -1608,6 +1718,13 @@ export class WorldGen {
   }
 
   findSpawn(pref) {
+    if (this.type === 'islands') {
+      for (let r = 0; r < 600; r += 4) for (let a = 0; a < 24; a++) {
+        const wx = Math.round(Math.cos(a / 24 * Math.PI * 2) * r), wz = Math.round(Math.sin(a / 24 * Math.PI * 2) * r);
+        const c = this.column(wx, wz);
+        if (c.biome === BIOME.ISLAND && c.h > SEA + 1 && c.h <= SEA + 4) return { x: wx + 0.5, y: c.h + 2, z: wz + 0.5 };
+      }
+    }
     if (this.type === 'magic') {
       for (let r = 0; r < 600; r += 6) for (let a = 0; a < 16; a++) {
         const wx = Math.round(Math.cos(a / 16 * Math.PI * 2) * r), wz = Math.round(Math.sin(a / 16 * Math.PI * 2) * r);

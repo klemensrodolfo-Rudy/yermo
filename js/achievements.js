@@ -65,6 +65,8 @@ export const ACHIEVEMENTS = [
   { id: 'cohete', name: '¡Que empiece la fiesta!', desc: 'Lanzá un cohete de fuegos artificiales.' },
   { id: 'defensa', name: 'Muralla', desc: 'Resistí las 10 oleadas de la defensa del refugio.' },
   { id: 'unavida', name: 'Sin segundas oportunidades', desc: 'Terminá una partida de una sola vida.' },
+  { id: 'pescador', name: 'Paciencia de pescador', desc: 'Pescá algo con la caña.' },
+  { id: 'pezdorado', name: 'Pez dorado', desc: 'Pescá un pez dorado.' },
 ];
 
 export class Achievements {
@@ -116,6 +118,7 @@ export class Achievements {
     if (name === 'kill' && id === 'alpha') u('alfa');
     if (name === 'refuel') u('nafta');
     if (name === 'spell') u('hechicero');
+    if (name === 'fish') u('pescador');
     if (name === 'v9') u(id);
     if (name === 'kill' && id === 'dragon') u('dragon');
     if (name === 'kill' && id === 'ent') u('ent');

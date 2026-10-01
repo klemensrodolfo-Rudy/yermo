@@ -38,6 +38,8 @@ export const TILES = [
   // v9: Reinos de Eldra
   'basalt', 'oak_leaves', 'silver_bark', 'silver_leaves', 'elf_planks', 'stone_bricks', 'stone_bricks_moss', 'thatch', 'green_frame',
   'flowers', 'web', 'mithril_ore', 'crystal', 'gold_pile', 'rune_top', 'rune_side', 'alchemy_top', 'alchemy_side', 'light_orb', 'oak_bark',
+  // v9.3: archipiélago
+  'sand', 'palm_bark', 'palm_leaves', 'coral_red', 'coral_yellow',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -51,6 +53,7 @@ export const BIOME_TINT = [
   [122, 112, 96], [130, 122, 104], [108, 120, 78], [116, 118, 102], [120, 138, 84], [104, 146, 98],
   [126, 104, 140], [116, 124, 126], [106, 132, 100], [126, 114, 94], [112, 116, 92], [128, 128, 128], [134, 128, 82],
   [96, 152, 88], [108, 150, 124], [116, 128, 110], [92, 108, 84], [140, 112, 92],
+  [100, 140, 120], [92, 168, 80],
 ];
 // banderas por tile para el shader: 1 variación completa (rota/espeja por bloque), 2 sólo espejo, 4 agua que fluye,
 // 8 lava, 16 se mece con el viento, 32 remolino (portal), 64 llama que titila
@@ -58,6 +61,8 @@ export const TILE_FLAGS = new Uint8Array(256);
 {
   const set = (names, f) => names.split(' ').forEach((n) => { if (T[n] != null) TILE_FLAGS[T[n]] |= f; });
   set('leaves', 16);
+  set('sand coral_red coral_yellow', 1);
+  set('palm_leaves', 16);
   set('bedrock stone deepstone dirt ash mud gravel coal_ore scrap_ore copper_ore uranium_ore trinitite grass_top deadgrass_top snow_top sand_toxic rubble abyss mycelium_top concrete asphalt asphalt_under track camo mush_cap_blue mush_cap_purple log_top ice oak_barrel_top', 1);
   set('brick concrete_cracked planks log_side grass_side deadgrass_side snow_side mycelium_side rust metal_plate hull sandbag tile_white crate_side crate_top farmland mush_stem bar_top cloth', 2);
   set('clean_water toxic_water', 4);
@@ -306,6 +311,12 @@ def(223, { name: 'Guarida del dragón', tex: tx(T.basalt), hardness: 3, tool: 'p
 def(224, { name: 'Torre del mago', tex: tx(T.stone_bricks), hardness: 3, tool: 'pick', drop: 210, marker: 'mage', hidden: true });
 def(225, { name: 'Plaza de la aldea', tex: tx(T.stone_bricks), hardness: 3, tool: 'pick', drop: 210, marker: 'village', hidden: true });
 def(227, { name: 'Núcleo del refugio', tex: { top: T.lamp, side: T.metal_plate, bottom: T.metal_plate }, hardness: 4, tool: 'pick', light: 10 });
+def(228, { name: 'Cofre del tesoro', tex: { top: T.chest_top, side: T.chest_side, bottom: T.chest_top, front: T.chest_front }, hardness: 1.5, tool: 'axe', drop: 0, loot: 'treasure' });
+def(229, { name: 'Arena', tex: tx(T.sand), hardness: 0.5, tool: 'shovel' });
+def(230, { name: 'Coral rojo', tex: tx(T.coral_red), hardness: 0.8, tool: 'pick' });
+def(231, { name: 'Coral amarillo', tex: tx(T.coral_yellow), hardness: 0.8, tool: 'pick' });
+def(232, { name: 'Palmera', tex: { top: T.log_top, side: T.palm_bark, bottom: T.log_top }, hardness: 1.5, tool: 'axe', drop: 15 });
+def(233, { name: 'Hojas de palmera', tex: tx(T.palm_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[403, 1, 0.15]] });
 def(226, { name: 'Cofre antiguo', tex: { top: T.chest_top, side: T.chest_side, bottom: T.chest_top, front: T.chest_front }, hardness: 1.5, tool: 'axe', drop: 0, loot: 'eldra' });
 def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12, portal: true });
 
@@ -500,6 +511,14 @@ export const ITEMS = {
   395: { name: 'Huevo de Pascua', icon: 'egg', food: 3 },
   396: { name: 'Caramelo', icon: 'candy', food: 2 },
   397: { name: 'Regalo', icon: 'gift', gift: true },
+  // v9.3: mares
+  398: { name: 'Caña de pescar', icon: 'rod', rod: true, durability: 120 },
+  399: { name: 'Pescado crudo', icon: 'fish', color: 0x8aa8c0, food: 2 },
+  400: { name: 'Pescado asado', icon: 'fish', color: 0xc08a50, food: 7 },
+  401: { name: 'Tanque de buceo', icon: 'tank', armor: 'head', def: 0.05, air: 9, durability: 600 },
+  402: { name: 'Velero', icon: 'sailboat', vehicle: 'ship' },
+  403: { name: 'Coco', icon: 'coconut', food: 3, thirst: 6 },
+  404: { name: 'Pez dorado', icon: 'fish', color: 0xf0c040, food: 4 },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -535,6 +554,7 @@ LOOT_TABLES.med.push([330, 1, 2, 0.5]);
 LOOT_TABLES.normal.push([353, 1, 4, 0.25], [357, 3, 8, 0.12], [355, 1, 1, 0.06], [366, 1, 1, 0.01], [367, 1, 1, 0.02], [368, 1, 1, 0.025], [360, 1, 1, 0.03]);
 LOOT_TABLES.lab.push([367, 1, 1, 0.2], [366, 1, 1, 0.08], [358, 1, 3, 0.3]);
 LOOT_TABLES.eldra = [[353, 2, 8, 0.7], [387, 1, 3, 0.6], [380, 1, 3, 0.5], [385, 1, 4, 0.5], [378, 1, 2, 0.35], [379, 1, 2, 0.3], [386, 1, 1, 0.25], [381, 1, 1, 0.15], [384, 1, 2, 0.2], [375, 1, 1, 0.03], [376, 1, 1, 0.03], [377, 1, 1, 0.03]];
+LOOT_TABLES.treasure = [[353, 10, 30, 1], [218, 1, 3, 0.6], [397, 1, 1, 0.3], [401, 1, 1, 0.25], [398, 1, 1, 0.3], [375, 1, 1, 0.05], [394, 2, 6, 0.4], [14, 2, 6, 0.3]];
 LOOT_TABLES.military = [[332, 6, 14, 0.7], [358, 1, 3, 0.5], [333, 1, 1, 0.15], [334, 1, 1, 0.1], [302, 1, 1, 0.1], [367, 1, 1, 0.3], [366, 1, 1, 0.12], [339, 1, 2, 0.4], [306, 1, 1, 0.3]];
 LOOT_TABLES.abyss = [[353, 3, 10, 0.8], [261, 1, 4, 0.6], [313, 1, 1, 0.15], [306, 1, 2, 0.5], [332, 5, 12, 0.5], [358, 1, 3, 0.4], [348, 1, 1, 0.05], [366, 1, 1, 0.08], [302, 1, 1, 0.1], [303, 1, 1, 0.1]];
 LOOT_TABLES.brew.push([350, 1, 1, 0.3], [327, 1, 3, 0.2]);
@@ -710,6 +730,11 @@ export const RECIPES = [
   { out: [392, 1], in: [[388, 5], [384, 1]], station: 'mesa' },
   { out: [393, 1], in: [[260, 4], [259, 4], [14, 1]], station: 'mesa', bp: 'electricidad' },
   { out: [227, 1], in: [[260, 4], [28, 1], [27, 2]], station: 'mesa' },
+  { out: [398, 1], in: [[256, 3], [336, 1]], station: 'mesa' },
+  { out: [400, 1], in: [[399, 1], [257, 1]], station: 'horno' },
+  { out: [400, 1], in: [[399, 1]], station: 'fogata' },
+  { out: [401, 1], in: [[260, 3], [14, 1], [336, 2]], station: 'mesa' },
+  { out: [402, 1], in: [[23, 16], [336, 4], [260, 2]], station: 'mesa' },
   { out: [394, 4], in: [[257, 2], [259, 1]], station: 'mesa' },
   { out: [370, 1], in: [[209, 2], [387, 1], [327, 2]], station: 'runas', bp: 'magia' },
   { out: [371, 1], in: [[209, 2], [387, 2], [257, 3]], station: 'runas', bp: 'magia' },

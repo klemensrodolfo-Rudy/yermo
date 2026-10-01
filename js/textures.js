@@ -853,6 +853,32 @@ HD.tile_white = (t) => {
   });
   crackLine(t, 1);
 };
+// ---------- v9.3: archipiélago ----------
+HD.sand = (t) => t.fill((x, y) => {
+  const n = t.fbm(x, y, 6, 3), r = Math.sin((x + n * 9) * 0.45 + y * 0.12) * 0.5 + 0.5;
+  t.H(x, y, 0.4 + r * 0.3 + n * 0.2); t.S(x, y, 0.05);
+  if (t.rnd() < 0.02) return [250, 246, 230];
+  return scl([226, 206, 152], 0.9 + r * 0.06 + n * 0.12 + (t.rnd() - 0.5) * 0.07);
+});
+HD.palm_bark = (t) => t.fill((x, y) => {
+  const ring = (y % 6) / 6, edge = ring > 0.82;
+  t.H(x, y, edge ? 0.2 : 0.5 + ring * 0.4); t.S(x, y, 0.05);
+  return scl(edge ? [92, 70, 44] : [150, 118, 78], 0.85 + ring * 0.2 + (t.rnd() - 0.5) * 0.08 + Math.sin(x * 0.8) * 0.03);
+});
+HD.palm_leaves = (t) => t.fill((x, y) => {
+  const fr = Math.abs(((x + y * 0.5) % 8) - 4), vein = fr < 0.7;
+  if (fr > 3.2 && t.rnd() < 0.7) return { c: [60, 90, 40], a: 0 };
+  t.M(x, y, 160); t.H(x, y, vein ? 0.9 : 0.5);
+  return scl(vein ? [170, 190, 90] : [84, 150, 60], 1 - fr * 0.06 + (t.rnd() - 0.5) * 0.08);
+});
+const coral = (c1, c2) => (t) => t.fill((x, y) => {
+  const c = t.cells(x, y, 6, 37, 1);
+  if (c.f1 < 0.18) { t.H(x, y, 0.1); t.E(x, y, 0.15); return scl(c2, 0.7); }
+  t.H(x, y, 1 - c.f1); t.S(x, y, 0.2);
+  return scl(mixc(c1, c2, c.rid * 0.5), 0.8 + (1 - c.f1) * 0.35 + (t.rnd() - 0.5) * 0.06);
+});
+HD.coral_red = coral([232, 92, 104], [150, 40, 72]);
+HD.coral_yellow = coral([240, 200, 70], [190, 120, 40]);
 // ---------- v9: Reinos de Eldra ----------
 HD.basalt = (t) => t.fill((x, y) => {
   const col = Math.floor(x / 8), seam = x % 8 === 0 || (y + col * 11) % 16 === 0;
@@ -1257,6 +1283,11 @@ export function drawIcon(canvas, id, atlas) {
     case 'flower': for (let y = 8; y < 15; y++) put(8, y, '#4a7a2a'); put(7, 11, '#5a8a34'); put(6, 10, '#5a8a34'); lump(0xe8e0ff, 8, 6, [3, 3]); put(8, 6, '#ffe070'); break;
     case 'shield': for (let y = 2; y < 15; y++) for (let x = 3; x < 13; x++) { const w = y < 10 ? 5 : 5 - (y - 9); if (Math.abs(x - 7.5) < w) put(x, y, rgb(Math.abs(x - 7.5) > w - 1.2 || y === 2 ? 0x9aa0a8 : it.color, 1 + (7.5 - x) * 0.03)); } put(7, 7, '#d8b040'); put(8, 7, '#d8b040'); break;
     case 'mithril_ingot': ingot(0xd8e8f0); break;
+    case 'rod': for (let i = 2; i < 14; i++) put(i, 15 - i, rgb(0x8a6a40, 1 + (i % 2) * 0.1)); for (let y = 2; y < 12; y++) put(13, y, '#e8e8e8'); put(13, 12, '#d83a3a'); put(13, 13, '#f0f0f0'); break;
+    case 'fish': { const c = it.color; for (let y = 5; y < 12; y++) for (let x = 3; x < 12; x++) if (Math.hypot((x - 7) / 4.5, (y - 8.5) / 3) < 1) put(x, y, rgb(c, 1.2 - (y - 5) * 0.06)); for (let y = 6; y < 11; y++) put(12 + Math.abs(y - 8.5) * 0.6 | 0, y, rgb(c, 0.8)); put(5, 7, '#111111'); break; }
+    case 'tank': for (let y = 3; y < 14; y++) for (let x = 5; x < 11; x++) if (y > 4 || Math.abs(x - 7.5) < 2) put(x, y, rgb(0xe8c040, x < 7 ? 1.25 : 1)); for (let y = 1; y < 4; y++) put(8, y, '#5a5e64'); put(7, 1, '#5a5e64'); break;
+    case 'sailboat': for (let y = 10; y < 14; y++) for (let x = 1 + (y - 10); x < 15 - (y - 10); x++) put(x, y, rgb(0x7a5a38, y === 10 ? 1.3 : 1)); for (let y = 1; y < 10; y++) put(8, y, '#5a4028'); for (let y = 2; y < 9; y++) for (let x = 9; x < 9 + (9 - y) * 0.7; x++) put(Math.floor(x), y, '#f0ece0'); for (let y = 3; y < 9; y++) for (let x = 7 - (y - 3) * 0.6; x < 8; x++) put(Math.floor(x), y, '#e0dcd0'); break;
+    case 'coconut': lump(0x6a4a2a, 8, 9, [4.5, 4.5]); put(7, 7, '#3a2a1a'); put(9, 7, '#3a2a1a'); put(8, 9, '#3a2a1a'); break;
     case 'drone': for (let x = 4; x < 12; x++) for (let y = 7; y < 10; y++) put(x, y, rgb(0xd8dce0, y === 7 ? 1.2 : 0.9)); put(7, 9, '#6ab0ff'); put(8, 9, '#6ab0ff');
       for (const [cx, cy] of [[3, 5], [12, 5]]) { for (let x = cx - 2; x <= cx + 2; x++) put(x, cy, '#3a3e44'); put(cx, cy + 1, '#5a5e64'); put(cx, cy + 2, '#5a5e64'); } break;
     case 'rocket': for (let y = 4; y < 13; y++) for (let x = 6; x < 10; x++) put(x, y, rgb(y % 3 === 0 ? 0xf0f0f0 : 0xd83a3a, x === 6 ? 1.2 : 1)); put(7, 3, '#e8c040'); put(8, 3, '#e8c040'); put(7, 2, '#e8c040'); for (let y = 13; y < 16; y++) put(8, y, '#8a6a40'); break;

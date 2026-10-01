@@ -1274,6 +1274,7 @@ export const VEHICLE_TYPES = {
   car: { name: 'Auto de chatarra', speed: 18, accel: 3, turn: 1.7, hw: 0.9, step: 1.05, eye: 0.35, tank: 90, use: 0.3, hp: 140, seats: 2, storage: 9, ram: 1, item: 340 },
   truck: { name: 'Camión', speed: 12, accel: 2, turn: 1.1, hw: 1.2, step: 1.05, eye: 1.0, tank: 140, use: 0.4, hp: 260, seats: 4, storage: 27, ram: 2, item: 341 },
   racecar: { name: 'Auto de carrera', speed: 27, accel: 5, turn: 1.9, hw: 0.9, step: 0.55, eye: 0.05, tank: 70, use: 0.45, hp: 90, seats: 1, storage: 0, ram: 1, item: 344 },
+  ship: { name: 'Velero', speed: 14, accel: 2.5, turn: 1.3, hw: 1.3, step: 0.55, eye: 1.2, tank: 0, use: 0, hp: 160, seats: 3, storage: 18, boat: true, item: 402 },
   boat: { name: 'Bote', speed: 10, accel: 3, turn: 1.8, hw: 0.8, step: 0.55, eye: 0.3, tank: 0, use: 0, hp: 80, seats: 2, storage: 0, boat: true, item: 345 },
   heli: { name: 'Helicóptero', speed: 17, accel: 2.5, turn: 1.6, hw: 0.9, step: 1.05, eye: 0.5, tank: 120, use: 0.5, hp: 120, seats: 2, storage: 9, fly: true, item: 364 },
   cart: { name: 'Vagoneta', speed: 12, accel: 3, turn: 0, hw: 0.45, step: 1.05, eye: 0.2, tank: 0, use: 0, hp: 60, seats: 1, storage: 0, rail: true, item: 365 },
@@ -1354,6 +1355,16 @@ function vehicleModel(type) {
     g.add(m.group);
     B(0.55, 0.12, 0.55, M(0x5a3a1a), 0, VT.saddleY, 0.05); // montura
     g.userData.legs = m.parts.legs;
+    return g;
+  }
+  if (type === 'ship') {
+    const wood = M(0x7a5a38), dark = M(0x5a4028), sail = M(0xf0ece0), red = M(0xb83a2a);
+    B(2.4, 0.3, 5.2, dark, 0, 0.3, 0); B(0.16, 0.9, 5.2, wood, 1.2, 0.75, 0); B(0.16, 0.9, 5.2, wood, -1.2, 0.75, 0);
+    B(2.4, 0.9, 0.16, wood, 0, 0.75, 2.6); B(1.6, 0.8, 0.16, wood, 0, 0.75, -2.7); B(0.9, 0.7, 0.16, wood, 0, 0.75, -3.0);
+    B(2.3, 0.1, 5.0, wood, 0, 0.62, 0); B(0.2, 0.12, 5.22, red, 1.22, 1.22, 0); B(0.2, 0.12, 5.22, red, -1.22, 1.22, 0);
+    B(0.16, 5.5, 0.16, dark, 0, 3.4, -2.3); B(0.1, 0.1, 1.4, dark, 0, 2.0, -1.6);
+    B(0.06, 3.2, 1.3, sail, 0, 3.7, -1.6); B(0.06, 1.4, 0.8, sail, 0, 4.4, -2.75);
+    B(0.04, 0.4, 0.6, red, 0, 6.3, -2.1);
     return g;
   }
   if (type === 'boat') {

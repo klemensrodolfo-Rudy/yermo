@@ -209,6 +209,10 @@ export function setupGuide(ui, getGame) {
       <p>Cada oleada rechazada da fichas a todos; resistir las 10 da 40 fichas y un regalo. Entre oleada y oleada hay 20 s para reparar. Online la maneja el anfitrión y todos ven la barra del núcleo. No está en modo chicos.</p>
       <h3>☠ Una sola vida</h3>
       <p>Modo de juego al crear el mundo. Si morís, se terminó: ves tus puntos (días × 100 + criaturas × 10 + logros × 25) y el mundo se borra. Las criaturas se hacen más fuertes cada 3 días. Tus partidas quedan en <b>🏆 Ranking</b> (menú); si entraste con tu cuenta en ☁ Mundo del grupo, también salen en el ranking de todos.</p>`,
+    'Mares y archipiélago': () => `
+      <p>Tipo de mundo <b>🏝 Archipiélago</b>: mar abierto con islas de arena y palmeras, arrecifes de coral, <b>naufragios</b> en el fondo con ${icon(228)} cofres del tesoro y <b>faros</b> en la costa (subí por la escalera de adentro).</p>
+      <p>${icon(398)} <b>Caña de pescar</b> (3 ramas y un cuero): clic derecho apuntando al agua para tirar la línea. Cuando el corcho se hunde y dice <b>«¡Pica!»</b>, clic derecho rápido. Sale ${icon(399)} pescado (asalo en el horno o la fogata), a veces un ${icon(404)} pez dorado, fichas, regalos o un tanque de buceo. En mar abierto y con lluvia pican más.</p>
+      <p>${icon(401)} <b>Tanque de buceo</b> (va en la cabeza): aguantás 90 s bajo el agua. ${icon(402)} <b>Velero</b>: más rápido que el bote, 3 asientos y 18 lugares de carga. ${icon(403)} <b>Cocos</b>: caen de las hojas de palmera, quitan el hambre y la sed.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

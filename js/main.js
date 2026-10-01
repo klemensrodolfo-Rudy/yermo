@@ -22,6 +22,7 @@ import { createFeatures2, TAME } from './features2.js';
 import { createEldra } from './eldra.js';
 import { setupAccess, createExtras } from './extras.js';
 import { createModes, openRanking } from './modes.js';
+import { createSea } from './sea.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -579,7 +580,7 @@ async function renderCloud() {
     for (const w of worlds) {
       const row = document.createElement('div'); row.className = 'world';
       const d = new Date(w.updated_at);
-      row.innerHTML = `<div><b></b><small>${w.playing ? `<b>🟢 jugando: ${w.playing.replace(/[<>&]/g, '')}</b> · ` : '⚪ nadie conectado · '}${w.world_type === 'brew' ? '🍺 ' : w.world_type === 'magic' ? '🧙 ' : w.world_type === 'base' ? '🧰 ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · ${w.players} miembro${w.players == 1 ? '' : 's'}${w.owner === Cloud.user.id ? ' · 👑 tuyo' : ''}</small></div><button class="play">Entrar</button><button class="cfg" title="Código, miembros y opciones">⚙</button>`;
+      row.innerHTML = `<div><b></b><small>${w.playing ? `<b>🟢 jugando: ${w.playing.replace(/[<>&]/g, '')}</b> · ` : '⚪ nadie conectado · '}${w.world_type === 'brew' ? '🍺 ' : w.world_type === 'magic' ? '🧙 ' : w.world_type === 'islands' ? '🏝 ' : w.world_type === 'base' ? '🧰 ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · ${w.players} miembro${w.players == 1 ? '' : 's'}${w.owner === Cloud.user.id ? ' · 👑 tuyo' : ''}</small></div><button class="play">Entrar</button><button class="cfg" title="Código, miembros y opciones">⚙</button>`;
       row.querySelector('b').textContent = w.name;
       row.querySelector('.play').onclick = () => { row.querySelector('.play').disabled = true; enterCloud(w.id).catch((e) => { cloudMsg(e.message); row.querySelector('.play').disabled = false; }); };
       row.querySelector('.cfg').onclick = () => cloudWorldCfg(w);
@@ -962,6 +963,7 @@ async function startGame(meta, hello, cloudInfo) {
     if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80].forEach((id) => inv.add(id, 64));
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'magic') [[385, 6], [353, 10], [379, 1], [26, 8]].forEach(([id, n]) => inv.add(id, n));
+    else if (meta.worldType === 'islands') [[398, 1], [402, 1], [403, 4], [26, 8], [267, 1]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'base') [[268, 1], [269, 1], [270, 1], [276, 1], [26, 32], [272, 16], [329, 1], [306, 4], [360, 1], [339, 2], [24, 1]].forEach(([id, n]) => inv.add(id, n));
   }
   // mundo cervecero: siempre arrancás con un balde (también los que se unen online y los mundos ya creados)
@@ -1003,8 +1005,9 @@ async function startGame(meta, hello, cloudInfo) {
   const E = game.eldra = createEldra(fctx);
   const X = game.extras = createExtras(fctx);
   const MD = game.modes = createModes(fctx);
+  const SEAM = game.sea = createSea(fctx);
   const useF2 = player.onUseItem;
-  player.onUseItem = (...a) => X.onUseItem(...a) || E.onUseItem(...a) || useF2(...a);
+  player.onUseItem = (...a) => SEAM.onUseItem(...a) || X.onUseItem(...a) || E.onUseItem(...a) || useF2(...a);
   const blockF2 = player.onUseBlock;
   player.onUseBlock = (...a) => MD.onUseBlock(...a) || blockF2(...a);
   sim.onMarker = (...a) => E.onMarker(...a) || F2.onMarker(...a) || F.onMarker(...a);
@@ -1055,7 +1058,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1079,7 +1082,7 @@ async function showMenu() {
   for (const w of worlds) {
     const row = document.createElement('div'); row.className = 'world';
     const d = new Date(w.lastPlayed);
-    row.innerHTML = `<div><b></b><small>${w.worldType === 'brew' ? '🍺 Cervecero · ' : w.worldType === 'magic' ? '🧙 Eldra · ' : w.worldType === 'base' ? '🧰 Base · ' : ''}${w.mode === 'creative' ? 'Creativo' : w.mode === 'hardcore' ? '☠ Una sola vida' : 'Supervivencia'} · semilla ${w.seed} · ${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0, 5)}</small></div>
+    row.innerHTML = `<div><b></b><small>${w.worldType === 'brew' ? '🍺 Cervecero · ' : w.worldType === 'magic' ? '🧙 Eldra · ' : w.worldType === 'islands' ? '🏝 Archipiélago · ' : w.worldType === 'base' ? '🧰 Base · ' : ''}${w.mode === 'creative' ? 'Creativo' : w.mode === 'hardcore' ? '☠ Una sola vida' : 'Supervivencia'} · semilla ${w.seed} · ${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0, 5)}</small></div>
       <button class="play">Jugar</button><button class="del" title="Borrar mundo">✕</button>`;
     row.querySelector('b').textContent = w.name;
     row.querySelector('.play').onclick = () => startGame(w);
@@ -1115,6 +1118,7 @@ const SEED_PRESETS = [
   { id: 'settlement', seed: 3, type: 'normal', spawn: 'settlement', name: '🏘 Asentamiento', desc: 'Arrancás dentro de un pueblo de sobrevivientes con su líder, que da misiones y comercia.' },
   { id: 'circuit', seed: 1, type: 'normal', spawn: 'circuit', name: '🏁 Autódromo', desc: 'Arrancás en los boxes de un autódromo abandonado: autos, motos, carreras y el instructor.' },
   { id: 'base', seed: 556, type: 'base', mode: 'creative', name: '🧰 Base equipada', desc: 'Arrancás en una base con todo listo: helicóptero, bote, autos, motos, camión, tren y vagoneta sobre vías, monturas, taller y cofres llenos. Todos los planos aprendidos. Viene en Creativo, pero podés elegir Supervivencia.' },
+  { id: 'islas', seed: 11, type: 'islands', name: '🏝 Archipiélago', desc: 'Mar abierto con islas de arena y palmeras, corales, naufragios con cofres del tesoro y faros. Arrancás con caña de pescar y un velero: pescá, buceá (con tanque de buceo) y navegá entre islas.' },
   { id: 'eldra', seed: 7, type: 'magic', name: '🧙 Reinos de Eldra', desc: 'Mundo medieval y mágico: colinas de medianos, bosques élficos de árboles de plata, montes enanos con mithril, ciénagas con arañas y un dragón en las Tierras de Brasa. Orcos de noche, trolls que se vuelven piedra con el sol, magos, báculos, anillos y pociones. Sin historia: explorá a tu ritmo.' },
   { id: 'zoo', seed: 5, type: 'normal', spawn: 'zoo', name: '🦁 Bioparque', desc: 'Arrancás en la entrada de un zoológico abandonado: leones, jirafas, elefantes, cebras, gorilas, pingüinos, hipopótamos y más andan sueltos. Algunos se domestican y se montan.' },
   { id: 'custom', name: '✏ Personalizada…', desc: 'Escribí tu propia semilla (número o palabra). La misma semilla genera siempre el mismo mundo.' },
@@ -1130,7 +1134,7 @@ $('#wSeedSel').onchange = () => {
 };
 $('#wSeedSel').onchange();
 $('#createWorld').onclick = () => {
-  const name = $('#wName').value.trim() || ($('#wType').value === 'brew' ? 'Cervecería del yermo' : $('#wType').value === 'magic' ? 'Reinos de Eldra' : 'Yermo sin nombre');
+  const name = $('#wName').value.trim() || ($('#wType').value === 'brew' ? 'Cervecería del yermo' : $('#wType').value === 'magic' ? 'Reinos de Eldra' : $('#wType').value === 'islands' ? 'Archipiélago' : 'Yermo sin nombre');
   const preset = SEED_PRESETS.find((x) => x.id === $('#wSeedSel').value);
   const s = preset.id === 'custom' ? $('#wSeed').value.trim() : '';
   const seed = preset.seed ?? (s ? (/^-?\d+$/.test(s) ? parseInt(s) : [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7)) : (Math.random() * 2e9) | 0);
@@ -1447,7 +1451,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '9.2 · 2026-10-02';
+const VERSION = '9.3 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1507,6 +1511,7 @@ function loop(now) {
   game.eldra?.update(dt);
   game.extras?.update(dt);
   game.modes?.update(dt);
+  game.sea?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';

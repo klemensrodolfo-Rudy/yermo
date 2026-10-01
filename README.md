@@ -91,6 +91,10 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 - 🛡 **Defensa del refugio** cooperativa: un núcleo que hay que proteger de 10 oleadas de mutantes (orcos y trolls en Eldra), con premios por oleada.
 - ☠ **Una sola vida**: modo roguelike, criaturas cada vez más fuertes, puntaje al morir y **ranking** local y en la nube.
 
+**v9.3 — Archipiélago**
+- 🏝 Tipo de mundo con mar abierto, islas con palmeras, corales, naufragios con cofres del tesoro y faros.
+- 🎣 Pesca con caña (hay que reaccionar cuando pica), peces dorados y premios; 🤿 tanque de buceo; ⛵ velero con carga; cocos.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.
