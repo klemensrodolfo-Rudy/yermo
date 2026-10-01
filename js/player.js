@@ -584,7 +584,7 @@ export class Player {
         if (BLOCKS[hand.id].seat) fi = (fi + 2) % 4;
         placeId = ORIENTED[hand.id][fi];
       }
-      if (hand.id === 116) { if (t.face[1] !== 0 || !SOLID[t.id]) return; placeId = [116, 117, 118, 119].find((i) => BLOCKS[i].wall2[0] === t.face[0] && BLOCKS[i].wall2[1] === t.face[2]); }
+      if (BLOCKS[hand.id]?.wallSet) { if (t.face[1] !== 0 || !SOLID[t.id]) return; placeId = BLOCKS[hand.id].wallSet.find((i) => BLOCKS[i].wall2[0] === t.face[0] && BLOCKS[i].wall2[1] === t.face[2]); }
       if (hand.id === 126 && (facingIndex(this.yaw) % 2 === 1)) placeId = 127;
       if (SOLID[placeId] && this.overlapsMe(px, py, pz)) return;
       if (this.world.setBlock(px, py, pz, placeId)) {

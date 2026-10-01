@@ -703,7 +703,8 @@ export function createFeatures2(ctx) {
       if (c.type !== 'sign' || !c.text) continue;
       const [x, y, z] = p3(k);
       if (Math.hypot(x - p.pos.x, z - p.pos.z) > 40) continue;
-      if (w.getBlock(x, y, z) !== 191 && w.getBlock(x, y, z) !== -1) continue;
+      const sb = w.getBlock(x, y, z), wallSign = BLOCKS[sb]?.wall2 && BLOCKS[sb]?.container === 'sign';
+      if (sb !== 191 && sb !== -1 && !wallSign) continue;
       seen.add(k);
       let s = signs.get(k);
       if (s && s.text === c.text) continue;
@@ -715,8 +716,9 @@ export function createFeatures2(ctx) {
       x2.fillStyle = '#f0e0c0'; x2.font = '44px VT323, monospace'; x2.textAlign = 'center'; x2.textBaseline = 'middle';
       const words = c.text.split(' '); const lines = ['']; for (const wd of words) { if ((lines[lines.length - 1] + ' ' + wd).length > 22) lines.push(wd); else lines[lines.length - 1] = (lines[lines.length - 1] + ' ' + wd).trim(); }
       lines.slice(0, 2).forEach((l, i, a) => x2.fillText(l, 256, 64 + (i - (a.length - 1) / 2) * 44));
-      const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true }));
-      spr.scale.set(2, 0.5, 1); spr.position.set(x + 0.5, y + 1.45, z + 0.5);
+      let spr;
+      if (wallSign) { const [fx, fz] = BLOCKS[sb].wall2; spr = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.43), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true })); spr.position.set(x + 0.5 - fx * 0.43, y + 0.5, z + 0.5 - fz * 0.43); spr.rotation.y = Math.atan2(fx, fz); }
+      else { spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true })); spr.scale.set(2, 0.5, 1); spr.position.set(x + 0.5, y + 1.45, z + 0.5); }
       scene.add(spr);
       signs.set(k, { spr, text: c.text });
     }

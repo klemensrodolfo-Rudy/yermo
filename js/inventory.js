@@ -26,6 +26,7 @@ export class Inventory {
           if (q != null) this.slots[i].q = q;
           if (extra.dur != null) this.slots[i].dur = extra.dur; else if (ITEMS[id]?.durability) this.slots[i].dur = ITEMS[id].durability;
           if (extra.note != null) this.slots[i].note = extra.note;
+          if (extra.art != null) this.slots[i].art = extra.art;
           if (label != null) this.slots[i].label = label;
           n -= k;
         }

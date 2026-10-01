@@ -167,6 +167,15 @@ export function setupGuide(ui, getGame) {
       <li>${icon(426)} <b>Brochette de pescado</b>: recuperás vida.</li>
       <li>${icon(427)} <b>Té de hierbas</b> (flores y una botella): más defensa.</li>
       <li>${icon(428)} <b>Pizza del yermo</b>: pegás más fuerte.</li></ul>`,
+    'Hogar': () => `
+      <h3>Camas</h3>
+      <p>${icon(1129)} ${icon(1130)} ${icon(1131)} Camas roja, azul y verde (tela y tablas de roble). Cada cama donde dormís queda anotada (hasta 6): cuando morís podés <b>elegir en cuál aparecer</b>.</p>
+      <h3>Cocina y muebles</h3>
+      <p>${icon(1132)} La <b>cocina</b> sirve para cocinar como el horno de barro. ${icon(1133)} Mesada con pileta y ${icon(1134)} biblioteca de roble. En la mesa de trabajo: ${icon(429)} sillón, ${icon(430)} mesa de luz, ${icon(431)} florero, macetas con ${icon(432)} cactus, ${icon(433)} helecho y ${icon(434)} hongo, ${icon(435)} cajonera y ${icon(436)} perchero (se apoyan arriba de un bloque; con la sierra se giran).</p>
+      <h3>Tus dibujos en la pared</h3>
+      <p>Pintá un ${icon(247)} lienzo, hacé un ${icon(437)} <b>marco</b> y usalo sobre el lienzo: te llevás una copia del dibujo como ${icon(438)} cuadro para colgar en cualquier pared. Si lo rompés, vuelve con el dibujo.</p>
+      <h3>Carteles de pared</h3>
+      <p>${icon(1139)} Se cuelgan en la pared y el texto se lee sobre la placa (clic derecho para escribirlo).</p>`,
     'Peligros y clima': () => `
       <p><b>Estaciones</b>: primavera, verano, otoño e invierno (3 días cada una). Cambian la temperatura y la velocidad de los cultivos; en invierno nieva.</p>
       <p><b>Tormenta eléctrica</b>: caen rayos donde hay cielo abierto (prefieren lo alto y lo metálico) y prenden fuego. <b>Tornado</b>: un embudo que arrastra, levanta y rompe cosas livianas; bajo techo estás a salvo.</p>

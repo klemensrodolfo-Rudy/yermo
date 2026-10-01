@@ -88,15 +88,17 @@ export function createCreative(ctx) {
       if (c.type !== 'canvas' || !c.px) continue;
       const [x, y, z] = k.split(',').map(Number);
       if (Math.hypot(x - p.pos.x, z - p.pos.z) > 48) continue;
-      if (w.getBlock(x, y, z) !== 247) continue;
+      const blk = w.getBlock(x, y, z), framed = blk >= 1135 && blk <= 1138;
+      if (blk !== 247 && !framed) continue;
       seen.add(k);
-      const key = c.px + c.face;
+      const key = c.px + c.face + framed;
       let s = paints.get(k);
       if (s && s.key === key) continue;
       if (s) { scene.remove(s.mesh); s.mesh.material.map.dispose(); s.mesh.material.dispose(); }
       const [fx, fz] = c.face || [0, 1];
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(0.94, 0.94), new THREE.MeshBasicMaterial({ map: canvasTex(c.px), transparent: true }));
-      mesh.position.set(x + 0.5 + fx * 0.505, y + 0.5, z + 0.5 + fz * 0.505);
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(framed ? 0.66 : 0.94, framed ? 0.66 : 0.94), new THREE.MeshBasicMaterial({ map: canvasTex(c.px), transparent: true }));
+      const off = framed ? -0.432 : 0.505;
+      mesh.position.set(x + 0.5 + fx * off, y + 0.5, z + 0.5 + fz * off);
       mesh.rotation.y = Math.atan2(fx, fz);
       scene.add(mesh); paints.set(k, { mesh, key });
     }

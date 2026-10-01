@@ -54,6 +54,8 @@ export const TILES = [
   'red_sand', 'red_sandstone', 'clay_ochre', 'clay_white', 'salt_top', 'salt_side', 'salt_crystal', 'geyser_top', 'thermal_top', 'quartz_ore', 'obsidian', 'stalactite', 'stalagmite', 'glow_mushroom', 'cave_crystal', 'quartz_block', 'quartz_lamp',
   // v12.3: mecanismos y cocina
   'floodgate', 'bigbattery_side', 'bigbattery_top', 'turbine', 'streetlamp_off', 'streetlamp_on', 'hanglamp_off', 'hanglamp_on', 'waterer', 'clay_oven_front', 'clay_oven_side', 'clay_oven_top',
+  // v12.4: hogar
+  'bed_red', 'bed_blue', 'bed_green', 'pillow', 'stove_top', 'stove_front', 'sink_top', 'counter_side', 'bookshelf_oak', 'frame_wood', 'cactus_side', 'fern', 'sofa', 'drawer_front', 'vase',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -241,7 +243,7 @@ defOriented(111, { name: 'Silla', tex: tx(T.planks), opaque: false, hardness: 1,
 def(115, { name: 'Estante con libros', tex: { top: T.planks, side: T.bookshelf, bottom: T.planks }, hardness: 1.2, tool: 'axe', drop: 23, dropCount: 3, extra: [[337, 1, 0.3]] });
 [[116, [1, 0]], [117, [-1, 0]], [118, [0, 1]], [119, [0, -1]]].forEach(([id, wall]) => {
   const b = { '1,0': [0, 2, 1, 1, 14, 15], '-1,0': [15, 2, 1, 16, 14, 15], '0,1': [1, 2, 0, 15, 14, 1], '0,-1': [1, 2, 15, 15, 14, 16] }[wall.join(',')];
-  def(id, { name: 'Cuadro', tex: tx(T.painting), solid: false, opaque: false, render: 'box', box: [b], hardness: 0.3, drop: 116, wall2: wall, hidden: id !== 116 });
+  def(id, { name: 'Cuadro', tex: tx(T.painting), solid: false, opaque: false, render: 'box', box: [b], hardness: 0.3, drop: 116, wall2: wall, wallSet: [116, 117, 118, 119], hidden: id !== 116 });
 });
 [['rojo', T.glass_red], ['verde', T.glass_green], ['azul', T.glass_blue], ['amarillo', T.glass_yellow], ['violeta', T.glass_purple], ['naranja', T.glass_orange]].forEach(([n, t], i) =>
   def(120 + i, { name: 'Vidrio ' + n, tex: tx(t), opaque: false, alpha: true, hardness: 0.3, drop: 0, tinted: true }));
@@ -450,6 +452,17 @@ def(1125, { name: 'Lámpara colgante', tex: tx(T.hanglamp_off), solid: false, op
 def(1126, { name: 'Lámpara colgante', tex: tx(T.hanglamp_on), solid: false, opaque: false, render: 'box', box: [[7.5, 8, 7.5, 8.5, 16, 8.5, T.cable], [4, 2, 4, 12, 8, 12]], hardness: 0.6, elec: 'device', powerOff: 1125, drop: 1125, light: 14, hidden: true });
 def(1127, { name: 'Regador de huerta', tex: tx(T.waterer), solid: false, opaque: false, render: 'box', box: [[6, 0, 6, 10, 5, 10], [2, 5, 7, 14, 6, 9], [7, 5, 2, 9, 6, 14]], hardness: 0.5 });
 def(1128, { name: 'Horno de barro', tex: { top: T.clay_oven_top, side: T.clay_oven_side, bottom: T.clay_oven_side, front: T.clay_oven_front }, hardness: 2, tool: 'pick', station: 'cocina', light: 8 });
+// ---------- v12.4: hogar ----------
+[[1129, 'roja', T.bed_red], [1130, 'azul', T.bed_blue], [1131, 'verde', T.bed_green]].forEach(([id, n, tl]) =>
+  def(id, { name: 'Cama ' + n, tex: tx(tl), opaque: false, render: 'box', box: [[0, 0, 0, 2, 4, 2, T.planks_oak], [14, 0, 0, 16, 4, 2, T.planks_oak], [0, 0, 14, 2, 4, 16, T.planks_oak], [14, 0, 14, 16, 4, 16, T.planks_oak], [0, 3, 0, 16, 8, 16], [2, 8, 10, 14, 10, 15, T.pillow], [0, 3, 15, 16, 14, 16, T.planks_oak]], coll: [[0, 0, 0, 1, 0.56, 1]], hardness: 1, tool: 'axe', bed: true }));
+def(1132, { name: 'Cocina', tex: { top: T.stove_top, side: T.counter_side, bottom: T.metal_plate, front: T.stove_front }, hardness: 2, tool: 'pick', station: 'cocina' });
+def(1133, { name: 'Mesada con pileta', tex: { top: T.sink_top, side: T.counter_side, bottom: T.planks }, hardness: 1.5, tool: 'axe' });
+def(1134, { name: 'Biblioteca de roble', tex: { top: T.planks_oak, side: T.bookshelf_oak, bottom: T.planks_oak }, hardness: 1.2, tool: 'axe', extra: [[337, 1, 0.2]] });
+const WALL_BOX = { '1,0': [0, 2, 1, 1, 14, 15], '-1,0': [15, 2, 1, 16, 14, 15], '0,1': [1, 2, 0, 15, 14, 1], '0,-1': [1, 2, 15, 15, 14, 16] };
+const SIGN_BOX = { '1,0': [0, 4, 1, 1, 12, 15], '-1,0': [15, 4, 1, 16, 12, 15], '0,1': [1, 4, 0, 15, 12, 1], '0,-1': [1, 4, 15, 15, 12, 16] };
+const WALLS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+WALLS.forEach((wall, i) => def(1135 + i, { name: 'Cuadro con tu dibujo', tex: tx(T.frame_wood), solid: false, opaque: false, render: 'box', box: [WALL_BOX[wall.join(',')]], hardness: 0.3, drop: 0, wall2: wall, container: 'canvas', frame: true, hidden: true }));
+WALLS.forEach((wall, i) => def(1139 + i, { name: 'Cartel de pared', tex: tx(T.sign), solid: false, opaque: false, render: 'box', box: [SIGN_BOX[wall.join(',')]], hardness: 0.5, tool: 'axe', drop: 1139, wall2: wall, container: 'sign', wallSet: [1139, 1140, 1141, 1142], hidden: i > 0 }));
 export const V121 = { sandstone: 1036, tuff: 1037, stone_pol: 1038, stone_carv: 1039, deepstone_pol: 1040, deepstone_brk: 1041, deepstone_carv: 1042, sandstone_pol: 1043, sandstone_brk: 1044, sandstone_carv: 1045, basalt_pol: 1046, basalt_brk: 1047, basalt_carv: 1048, tuff_pol: 1049, tuff_brk: 1050, tuff_carv: 1051, glass_cyan: 1052, glass_sky: 1053, glass_pink: 1054, glass_white: 1055, glass_smoke: 1056, glass_lime: 1057, planks_oak: 1058, planks_palm: 1059, fence_wood: 1060, fence_oak: 1061, fence_palm: 1062, fence_elf: 1063, door_wood: 1064, door_oak: 1072, door_palm: 1080, door_elf: 1088, ruin_wall: 1096, old_tiles: 1097, rusty_sign: 1098, pipes: 1099, hanging_cables: 1100, broken_glass: 1101 };
 export const CONC_COLORS = [1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035];
 
@@ -520,6 +533,14 @@ export const DECOR = [
   { id: 'alfombra', name: 'Alfombra roja', boxes: [[0, 0, 0, 16, 1, 16, T.mg_red]] },
   { id: 'caja', name: 'Caja de madera', boxes: [[1, 0, 1, 15, 14, 15, T.crate_side]] },
   { id: 'puesto', name: 'Puesto de venta', boxes: [[0, 0, 4, 16, 10, 12, T.planks], [0, 10, 3, 16, 11, 13, T.planks], [1, 11, 11, 2, 16, 12, T.planks], [14, 11, 11, 15, 16, 12, T.planks], [0, 15, 4, 16, 16, 13, T.mg_red]] },
+  { id: 'sillon', name: 'Sillón', boxes: [[1, 0, 2, 15, 6, 14, T.sofa], [1, 6, 11, 15, 14, 14, T.sofa], [0, 0, 2, 2, 10, 14, T.sofa], [14, 0, 2, 16, 10, 14, T.sofa]] },
+  { id: 'mesaluz', name: 'Mesa de luz', boxes: [[3, 0, 3, 13, 10, 13, T.drawer_front], [6, 10, 6, 10, 11, 10, T.metal_plate], [7, 11, 7, 9, 15, 9, T.light_orb]] },
+  { id: 'florero', name: 'Florero', boxes: [[6, 0, 6, 10, 7, 10, T.vase], [5, 7, 5, 11, 13, 11, T.flowers]] },
+  { id: 'cactus', name: 'Maceta con cactus', boxes: [[5, 0, 5, 11, 5, 11, T.brick], [6.5, 5, 6.5, 9.5, 15, 9.5, T.cactus_side], [9.5, 8, 7, 12, 10, 9, T.cactus_side], [11, 10, 7, 12, 13, 9, T.cactus_side]] },
+  { id: 'helecho', name: 'Maceta con helecho', boxes: [[5, 0, 5, 11, 5, 11, T.brick], [2, 5, 2, 14, 13, 14, T.fern]] },
+  { id: 'hongo', name: 'Maceta con hongo', boxes: [[5, 0, 5, 11, 5, 11, T.brick], [7, 5, 7, 9, 10, 9, T.mush_stem], [4, 10, 4, 12, 13, 12, T.mush_cap_blue]] },
+  { id: 'cajonera', name: 'Cajonera', boxes: [[1, 0, 4, 15, 15, 16, T.drawer_front]] },
+  { id: 'perchero', name: 'Perchero', boxes: [[7, 0, 7, 9, 16, 9, T.planks_oak], [5, 0, 5, 11, 1, 11, T.planks_oak], [4, 12, 7.5, 12, 13, 8.5, T.planks_oak], [3, 6, 6, 7, 12, 10, T.cloth]] },
 ];
 let shapeHook = null;
 export const setShapeHook = (fn) => { shapeHook = fn; };
@@ -711,6 +732,17 @@ export const ITEMS = {
   426: { name: 'Brochette de pescado', icon: 'fish', color: 0xd8904a, food: 8, buff: 'acido' },
   427: { name: 'Té de hierbas', icon: 'potion', color: 0x8ab84a, thirst: 8, buff: 'coraza' },
   428: { name: 'Pizza del yermo', icon: 'cooked', food: 12, buff: 'coraje' },
+  // v12.4: hogar (decoración nueva: tipos 10 a 17 del bloque 255)
+  429: { name: 'Sillón', icon: 'decor', decor: 10, color: 0x8a3a3a },
+  430: { name: 'Mesa de luz', icon: 'decor', decor: 11, color: 0x8a6a40 },
+  431: { name: 'Florero', icon: 'decor', decor: 12, color: 0x6ab0d8 },
+  432: { name: 'Maceta con cactus', icon: 'decor', decor: 13, color: 0x5a9a4a },
+  433: { name: 'Maceta con helecho', icon: 'decor', decor: 14, color: 0x4a8a3a },
+  434: { name: 'Maceta con hongo', icon: 'decor', decor: 15, color: 0x3a8ad8 },
+  435: { name: 'Cajonera', icon: 'decor', decor: 16, color: 0x9a7a50 },
+  436: { name: 'Perchero', icon: 'decor', decor: 17, color: 0x7a5a36 },
+  437: { name: 'Marco', icon: 'decor', color: 0xc89a5a, frame: true },
+  438: { name: 'Cuadro con tu dibujo', icon: 'decor', color: 0xe8d8b0, stack: 1, artwork: true },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -806,6 +838,23 @@ export const RECIPES = [
   { out: [59, 6], in: [[9, 3]], station: 'mesa' },
   { out: [60, 6], in: [[23, 3]], station: 'mesa' },
   { out: [9, 4], in: [[8, 2], [6, 2]], station: 'mesa' },
+  // v12.4: hogar
+  { out: [1129, 1], in: [[176, 3], [1058, 3]], station: 'mesa' },
+  { out: [1130, 1], in: [[176, 3], [1058, 3], [122, 1]], station: 'mesa' },
+  { out: [1131, 1], in: [[176, 3], [1058, 3], [121, 1]], station: 'mesa' },
+  { out: [1132, 1], in: [[260, 4], [257, 2]], station: 'mesa' },
+  { out: [1133, 1], in: [[1058, 3], [260, 1]], station: 'mesa' },
+  { out: [1134, 1], in: [[1058, 4], [337, 1]], station: 'mesa' },
+  { out: [1139, 2], in: [[23, 2], [256, 1]], station: null },
+  { out: [429, 1], in: [[176, 3], [23, 2]], station: 'mesa' },
+  { out: [430, 1], in: [[1058, 2], [416, 1]], station: 'mesa' },
+  { out: [431, 1], in: [[14, 1], [214, 2]], station: 'mesa' },
+  { out: [432, 1], in: [[13, 1], [248, 1]], station: 'mesa' },
+  { out: [433, 1], in: [[13, 1], [206, 2]], station: 'mesa' },
+  { out: [434, 1], in: [[13, 1], [327, 2]], station: 'mesa' },
+  { out: [435, 1], in: [[1058, 4]], station: 'mesa' },
+  { out: [436, 1], in: [[1058, 2], [176, 1]], station: 'mesa' },
+  { out: [437, 2], in: [[1058, 2], [256, 2]], station: 'mesa' },
   // v12.3: mecanismos y cocina
   { out: [1118, 2], in: [[260, 3], [12, 2]], station: 'mesa' },
   { out: [1120, 1], in: [[244, 2], [259, 3], [416, 2]], station: 'mesa' },
