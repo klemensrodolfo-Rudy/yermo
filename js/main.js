@@ -751,6 +751,12 @@ async function startGame(meta, hello) {
     if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80].forEach((id) => inv.add(id, 64));
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
   }
+  // mundo cervecero: siempre arrancás con un balde (también los que se unen online y los mundos ya creados)
+  if (meta.worldType === 'brew' && meta.mode !== 'creative' && ![277, 278, 279, 280].some((id) => inv.count(id) > 0) && !meta.bucketGift) {
+    inv.add(277, 1);
+    if (!meta.remote) meta.bucketGift = true;
+    setTimeout(() => flash('Tenés un balde en la mochila: llenalo en el arroyo para la olla de la cervecería'), 2500);
+  }
   game.tutorial = new Tutorial(game, ui, sfx);
   // reglas del mundo: radiación y animales mutantes de día (se pueden cambiar en la pausa)
   game.applyRules = () => {
@@ -1204,7 +1210,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '7.5 · 2026-10-01';
+const VERSION = '7.6 · 2026-10-01';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
