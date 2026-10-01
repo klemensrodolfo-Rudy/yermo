@@ -722,6 +722,7 @@ export class Mobs {
   update(dt, players, daylight) {
     if (this.authority) this.spawn(dt, players, daylight);
     for (const m of [...this.list.values()]) {
+      if (this.kids && this.authority && m.def.hostile && !m.def.neutral && !m.owner) { this.remove(m); continue; }
       if (this.authority) this.think(m, dt, players, daylight);
       else {
         m.pos.lerp(m.target, Math.min(1, dt * 10));
@@ -1022,7 +1023,7 @@ export class Mobs {
     for (const m of this.list.values()) count[m.type]++;
     const p = players[Math.floor(Math.random() * players.length)];
     // horda nocturna: oleadas alrededor de los jugadores
-    if (this.horde) {
+    if (this.horde && !this.kids) {
       const hostiles = count.ghoul + count.rat + count.wolf;
       if (hostiles < 30) for (let i = 0; i < 3; i++) {
         const a = Math.random() * Math.PI * 2, dd = 18 + Math.random() * 10;

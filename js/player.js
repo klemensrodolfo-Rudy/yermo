@@ -109,6 +109,7 @@ export class Player {
     for (const k in this.buffs) this.buffs[k] = Math.max(0, this.buffs[k] - dt);
     this.drunk = Math.max(0, this.drunk - dt / 60);
     if (this.creative || this.dead) return;
+    if (this.kids) { this.hunger = 20; this.thirst = 20; this.targetTemp = 20; this.temp = 20; this.disease.infeccion = 0; this.disease.intoxicacion = 0; }
     const a = this.acc;
     const moving = Math.hypot(this.vel.x, this.vel.z) > 1;
     const intox = this.disease.intoxicacion > 0;

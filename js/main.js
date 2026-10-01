@@ -20,6 +20,7 @@ import { Input } from './input.js';
 import { createFeatures } from './features.js';
 import { createFeatures2, TAME } from './features2.js';
 import { createEldra } from './eldra.js';
+import { setupAccess, createExtras } from './extras.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -377,6 +378,7 @@ function applySettings() {
   try { localStorage.setItem('yermo-settings', JSON.stringify(settings)); } catch { /* sin almacenamiento */ }
 }
 applySettings();
+const access = setupAccess({ settings, flash: (m) => flash(m), saveSettings: () => { try { localStorage.setItem('yermo-settings', JSON.stringify(settings)); } catch { /* sin almacenamiento */ } } });
 
 function colorsAt(t) {
   const sunH = Math.sin((t - 0.25) * Math.PI * 2);
@@ -915,6 +917,7 @@ async function startGame(meta, hello, cloudInfo) {
     game?.tutorial?.event(n, id); game?.ach.event(n, id, player);
     if (n === 'kill' && game) game.meta.kills = { ...(game.meta.kills || {}), [id]: ((game.meta.kills || {})[id] || 0) + 1 };
     game?.features2?.event(n, id);
+    game?.extras?.event(n, id);
   };
   player.onBreakStage = setCrack;
   player.onStation = (st) => openInventory(st);
@@ -968,11 +971,12 @@ async function startGame(meta, hello, cloudInfo) {
   game.tutorial = new Tutorial(game, ui, sfx);
   // reglas del mundo: radiación y animales mutantes de día (se pueden cambiar en la pausa)
   game.applyRules = () => {
-    const r = Object.assign({ rad: true, dayMobs: true, armed: false }, game.meta.rules);
+    const r = Object.assign({ rad: true, dayMobs: true, armed: false, kids: false, realTime: false }, game.meta.rules);
     game.meta.rules = r;
-    mobs.noArmed = !r.armed;
-    if (!r.armed && isAuthority()) for (const m of [...mobs.list.values()]) if (m.def.ranged && m.def.human) mobs.remove(m);
-    player.noRad = !r.rad;
+    mobs.noArmed = !r.armed || r.kids;
+    if (mobs.noArmed && isAuthority()) for (const m of [...mobs.list.values()]) if (m.def.ranged && m.def.human) mobs.remove(m);
+    mobs.kids = player.kids = !!r.kids;
+    player.noRad = !r.rad || r.kids;
     if (player.noRad) { player.rad = 0; player.radExposure = 0; }
     mobs.peacefulDay = !r.dayMobs;
     $('#rad').hidden = player.noRad;
@@ -994,8 +998,9 @@ async function startGame(meta, hello, cloudInfo) {
   const F = game.features = createFeatures(fctx);
   const F2 = game.features2 = createFeatures2(fctx);
   const E = game.eldra = createEldra(fctx);
+  const X = game.extras = createExtras(fctx);
   const useF2 = player.onUseItem;
-  player.onUseItem = (...a) => E.onUseItem(...a) || useF2(...a);
+  player.onUseItem = (...a) => X.onUseItem(...a) || E.onUseItem(...a) || useF2(...a);
   sim.onMarker = (...a) => E.onMarker(...a) || F2.onMarker(...a) || F.onMarker(...a);
   player.onInteractMob = (m, h) => E.onInteractMob(m, h) || F2.onInteractMob(m, h) || F.onInteractMob(m, h);
   player.onGun = F.onGun;
@@ -1044,7 +1049,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1125,7 +1130,7 @@ $('#createWorld').onclick = () => {
   const seed = preset.seed ?? (s ? (/^-?\d+$/.test(s) ? parseInt(s) : [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7)) : (Math.random() * 2e9) | 0);
   const meta = { id: 'w' + Date.now().toString(36), name, seed, mode: $('#wMode').value, worldType: $('#wType').value, renderDist: +$('#optDist').value || QUALITY[settings.quality].dist };
   if (preset.spawn) meta.spawnPref = preset.spawn;
-  meta.rules = { rad: $('#wRad').checked, dayMobs: $('#wDay').checked, armed: $('#wArmed').checked };
+  meta.rules = { rad: $('#wRad').checked, dayMobs: $('#wDay').checked, armed: $('#wArmed').checked, kids: $('#wKids').checked, realTime: $('#wReal').checked };
   if ($('#wTut').checked) meta.tutorial = { step: 0, done: false };
   $('#newForm').hidden = true;
   startGame(meta);
@@ -1196,7 +1201,8 @@ function setPause(p) {
     $('#optName').value = game.player.name;
     const rules = game.meta.rules || {}, canRules = !net.isClient;
     $('#optRad').checked = rules.rad !== false; $('#optDay').checked = rules.dayMobs !== false; $('#optArmed').checked = !!rules.armed;
-    $('#optRad').disabled = $('#optDay').disabled = $('#optArmed').disabled = !canRules;
+    $('#optKids').checked = !!rules.kids; $('#optReal').checked = !!rules.realTime;
+    $('#optRad').disabled = $('#optDay').disabled = $('#optArmed').disabled = $('#optKids').disabled = $('#optReal').disabled = !canRules;
     $('#rulesInfo').textContent = canRules ? '' : '(las decide el anfitrión)';
   }
 }
@@ -1245,11 +1251,15 @@ function renamePlayer() {
 }
 $('#optNameOk').onclick = renamePlayer;
 $('#optName').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); renamePlayer(); $('#optName').blur(); } });
-const RULE_MSG = { rad: ['☢ Radiación activada', 'Radiación desactivada'], dayMobs: ['Los animales mutantes vuelven a atacar de día', 'De día los animales mutantes ya no atacan'], armed: ['🔫 Vuelven los bandidos, piratas y soldados', 'Sin humanos armados en este mundo'] };
+const RULE_MSG = { rad: ['☢ Radiación activada', 'Radiación desactivada'], dayMobs: ['Los animales mutantes vuelven a atacar de día', 'De día los animales mutantes ya no atacan'], armed: ['🔫 Vuelven los bandidos, piratas y soldados', 'Sin humanos armados en este mundo'], kids: ['🧸 Modo chicos: sin monstruos, sin hambre ni sed y sin radiación', 'Modo chicos desactivado'], realTime: ['🕐 Hora real: el día y la noche siguen tu reloj, y la estación es la de verdad', 'El tiempo vuelve a correr a ritmo de juego'] };
 const setRule = (k, v) => { if (!game || net.isClient) return; game.meta.rules = { ...(game.meta.rules || {}), [k]: v }; game.applyRules(); flash(RULE_MSG[k][v ? 0 : 1]); };
 $('#optRad').onchange = (e) => setRule('rad', e.target.checked);
 $('#optDay').onchange = (e) => setRule('dayMobs', e.target.checked);
 $('#optArmed').onchange = (e) => setRule('armed', e.target.checked);
+$('#optKids').onchange = (e) => setRule('kids', e.target.checked);
+$('#optReal').onchange = (e) => setRule('realTime', e.target.checked);
+$('#accBtn').onclick = () => { $('#pause').hidden = true; access.open(() => { $('#pause').hidden = false; }); };
+$('#openAccess').onclick = () => access.open();
 // paquetes de texturas: plantilla para editar y carga de un PNG propio (se guarda en el navegador)
 function usePack(url, save) {
   const img = new Image();
@@ -1430,7 +1440,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '9.0 · 2026-10-02';
+const VERSION = '9.1 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1488,6 +1498,7 @@ function loop(now) {
   game.features.update(dt);
   game.features2.update(dt);
   game.eldra?.update(dt);
+  game.extras?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';

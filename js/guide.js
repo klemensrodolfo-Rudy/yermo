@@ -192,6 +192,17 @@ export function setupGuide(ui, getGame) {
       <p>La barra <b>✦ maná</b> se recarga sola, y mucho más rápido al lado de un ${icon(219)} <b>altar de runas</b>. Con el ${icon(386)} <b>Tomo de hechizos</b> (lo vende el mago) aprendés a fabricar en el altar:</p>
       <p>${icon(370)} <b>Luz</b>: crea un orbe de luz · ${icon(371)} <b>Fuego</b>: bola de fuego que quema · ${icon(372)} <b>Curación</b>: +8 de vida y cura el veneno · ${icon(373)} <b>Escudo</b>: 20 s recibiendo mucho menos daño · ${icon(374)} <b>Viento</b>: empuja a las criaturas y te eleva.</p>
       <p>Los <b>anillos</b> funcionan con sólo llevarlos en la mochila: ${icon(375)} rapidez, ${icon(376)} visión nocturna y ${icon(377)} sigilo (los monstruos no te ven hasta que estás muy cerca). En la ${icon(220)} <b>mesa de alquimia</b> se hacen ${icon(378)} pociones de vida y ${icon(379)} de maná con ${icon(380)} flores de luna.</p>`,
+    'Dron y fechas especiales': () => `
+      <h3>${icon(393)} Dron compañero</h3>
+      <p>Se fabrica en la mesa de trabajo (plano de Electricidad): 4 lingotes de acero, 4 de cobre y un vidrio. Clic derecho con el dron en la mano para desplegarlo o guardarlo. Vuela sobre tu hombro y:</p>
+      <ul><li>acerca lo que está tirado en el piso (imán),</li><li>cada pocos segundos busca <b>minerales y cofres</b> cerca y te marca el más cercano con un rayo azul,</li><li>te avisa si se acerca una criatura hostil (su luz se pone roja).</li></ul>
+      <h3>Hora real y estaciones</h3>
+      <p>Con la regla <b>🕐 Hora real</b> el día y la noche siguen el reloj de tu celu o compu, y la estación es la verdadera del hemisferio sur (primavera en septiembre, verano en diciembre…).</p>
+      <h3>Fechas especiales (según el calendario real)</h3>
+      <p>🎃 <b>Noche de brujas</b> (25 al 31 de octubre): los monstruos usan calabazas y sueltan ${icon(396)} caramelos · 🎄 <b>Navidad</b> (20 al 26 de diciembre): nieve y ${icon(397)} regalos escondidos · 🎆 <b>Año nuevo</b> y 🇦🇷 <b>25 de mayo / 9 de julio</b>: fuegos artificiales de noche · 🥚 <b>Pascua</b>: ${icon(395)} huevos de chocolate escondidos · 🤝 <b>Día del amigo</b>: un regalo para cada uno.</p>
+      <p>${icon(394)} <b>Cohetes</b>: 2 carbones y un lingote de cobre dan 4. Clic derecho para lanzar uno cuando quieras.</p>
+      <h3>Accesibilidad</h3>
+      <p>En el menú y en la pausa: <b>🎮 Controles y accesibilidad</b> para cambiar las teclas, corregir los colores para daltonismo (deuteranopía, protanopía, tritanopía), agrandar la letra y los íconos o usar alto contraste. La regla <b>🧸 Modo chicos</b> saca los monstruos, el hambre, la sed y la radiación.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

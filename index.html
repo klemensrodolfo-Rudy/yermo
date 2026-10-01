@@ -307,6 +307,7 @@
     <button id="openCloud" style="width:100%;margin-top:6px">☁ Mundo del grupo (en la nube, sin códigos)</button>
     <div class="menuRow"><button id="joinWorld">Unirse a partida online</button><button id="openLobby">Partidas públicas</button></div>
     <div class="menuRow"><button id="openSkin">Personaje</button><button id="openGuide">Guía</button></div>
+    <button id="openAccess" style="width:100%;margin-top:6px">🎮 Controles y accesibilidad</button>
     <button id="installApp" style="width:100%;margin-top:6px" hidden>📲 Instalar YERMO (pantalla completa, sin la barra)</button>
     <p id="installHint" class="muted" style="font-size:15px;margin:6px 0 0" hidden></p>
     <div id="joinForm" hidden>
@@ -336,6 +337,8 @@
       <label class="check"><input type="checkbox" id="wRad" checked> ☢ Radiación (cráteres, uranio, lluvia ácida, agua tóxica)</label>
       <label class="check"><input type="checkbox" id="wDay" checked> 🦂 Animales mutantes que atacan de día (escorpiones, cuervos, lobos, ratas, hongos)</label>
       <label class="check"><input type="checkbox" id="wArmed"> 🔫 Humanos armados (bandidos, piratas y soldados que disparan y asaltan tu base)</label>
+      <label class="check"><input type="checkbox" id="wKids"> 🧸 Modo chicos (sin monstruos ni animales que ataquen, sin hambre, sed ni radiación)</label>
+      <label class="check"><input type="checkbox" id="wReal"> 🕐 Hora real (día, noche y estación según tu reloj)</label>
       <div class="row"><button id="cancelNew">Cancelar</button><button id="createWorld" class="primary">Crear mundo</button></div>
     </div>
   </div>
@@ -413,6 +416,8 @@
     <label class="check"><input type="checkbox" id="optRad"> ☢ Radiación</label>
     <label class="check"><input type="checkbox" id="optDay"> 🦂 Animales mutantes atacan de día</label>
     <label class="check"><input type="checkbox" id="optArmed"> 🔫 Humanos armados (bandidos, piratas, soldados)</label>
+    <label class="check"><input type="checkbox" id="optKids"> 🧸 Modo chicos</label>
+    <label class="check"><input type="checkbox" id="optReal"> 🕐 Hora real</label>
     <label for="optQuality">Calidad gráfica</label>
     <select id="optQuality"><option value="bajo">Baja (PC lenta)</option><option value="medio">Media</option><option value="alto">Alta</option></select>
     <label>Texturas <small id="packInfo" class="muted"></small></label>
@@ -433,6 +438,7 @@
     <button id="resume" class="primary">Volver al juego</button>
     <div class="row2"><button id="pauseGuide">Guía</button><button id="tutBtn">Saltar tutorial</button></div>
     <button id="achBtn">Logros</button>
+    <button id="accBtn">🎮 Controles y accesibilidad</button>
     <button id="pauseHost">Abrir a amigos (online)</button>
     <div id="hostCode" hidden>Código de la sala<span id="hostCodeVal">-----</span><button id="copyCode">Copiar código</button><div class="muted" style="margin-top:6px">Tus amigos lo ingresan en «Unirse a partida online».</div></div>
     <button id="saveQuit">Guardar y salir al menú</button>

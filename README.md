@@ -81,6 +81,12 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 - **Magia**: barra de maná ✦ que se recarga sola (más rápido junto a un altar de runas). Báculos de luz, fuego, curación, escudo y viento; anillos de rapidez, visión nocturna y sigilo (funcionan en la mochila); pociones de vida y maná en la mesa de alquimia. El mago de la torre vende el Tomo de hechizos.
 - Comercio con medianos, enanos, elfas y magos (se paga con fichas de oro). Espadas de hierro y élficas, escudo, cota y herramientas de mithril, yelmo de escamas de dragón.
 
+**v9.1 — Accesibilidad, fechas reales y dron**
+- 🎮 **Controles y accesibilidad**: teclas configurables, corrección de color para daltonismo, letra grande y alto contraste.
+- 🧸 **Modo chicos** (regla del mundo): sin monstruos, sin hambre, sed ni radiación.
+- 🕐 **Hora real** (regla): día, noche y estación según tu reloj. **Fechas especiales** reales: noche de brujas, Navidad, año nuevo, Pascua, fiestas patrias y día del amigo.
+- 🛸 **Dron compañero**: imán de ítems, escáner de minerales y cofres y alerta de criaturas. **Cohetes** de fuegos artificiales y regalos.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

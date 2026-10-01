@@ -18,6 +18,7 @@ export const TAME = {
   horse: { food: [385, 282], veh: 'mhorse', name: 'caballo', hint: 'dale manzanas o cebada' },
 };
 import { EMOTES } from './net.js';
+import { realSeason } from './extras.js';
 import { BEERS } from './npc.js';
 
 const $ = (s) => document.querySelector(s);
@@ -93,7 +94,7 @@ export function createFeatures2(ctx) {
   const auth = () => ctx.isAuthority();
   const story = meta.worldType !== 'magic'; // Reinos de Eldra: sin historia principal
   const day = () => meta.nights || 0;
-  const season = () => SEASONS[Math.floor(day() / SEASON_DAYS) % 4];
+  const season = () => SEASONS[meta.rules?.realTime ? realSeason() : Math.floor(day() / SEASON_DAYS) % 4];
   g.season = season;
   const inAbyss = () => p.pos.x >= ABYSS_X - 64;
   const give = (id, n, extra) => p.give(id, n, extra);

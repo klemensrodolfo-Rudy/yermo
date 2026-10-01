@@ -1257,6 +1257,12 @@ export function drawIcon(canvas, id, atlas) {
     case 'flower': for (let y = 8; y < 15; y++) put(8, y, '#4a7a2a'); put(7, 11, '#5a8a34'); put(6, 10, '#5a8a34'); lump(0xe8e0ff, 8, 6, [3, 3]); put(8, 6, '#ffe070'); break;
     case 'shield': for (let y = 2; y < 15; y++) for (let x = 3; x < 13; x++) { const w = y < 10 ? 5 : 5 - (y - 9); if (Math.abs(x - 7.5) < w) put(x, y, rgb(Math.abs(x - 7.5) > w - 1.2 || y === 2 ? 0x9aa0a8 : it.color, 1 + (7.5 - x) * 0.03)); } put(7, 7, '#d8b040'); put(8, 7, '#d8b040'); break;
     case 'mithril_ingot': ingot(0xd8e8f0); break;
+    case 'drone': for (let x = 4; x < 12; x++) for (let y = 7; y < 10; y++) put(x, y, rgb(0xd8dce0, y === 7 ? 1.2 : 0.9)); put(7, 9, '#6ab0ff'); put(8, 9, '#6ab0ff');
+      for (const [cx, cy] of [[3, 5], [12, 5]]) { for (let x = cx - 2; x <= cx + 2; x++) put(x, cy, '#3a3e44'); put(cx, cy + 1, '#5a5e64'); put(cx, cy + 2, '#5a5e64'); } break;
+    case 'rocket': for (let y = 4; y < 13; y++) for (let x = 6; x < 10; x++) put(x, y, rgb(y % 3 === 0 ? 0xf0f0f0 : 0xd83a3a, x === 6 ? 1.2 : 1)); put(7, 3, '#e8c040'); put(8, 3, '#e8c040'); put(7, 2, '#e8c040'); for (let y = 13; y < 16; y++) put(8, y, '#8a6a40'); break;
+    case 'egg': lump(0x8a5a2a, 8, 8.5, [4, 5.2]); for (let x = 5; x < 12; x++) put(x, 8, '#e8c040'); put(6, 6, '#c08a5a'); break;
+    case 'candy': for (let y = 6; y < 11; y++) for (let x = 5; x < 11; x++) if (Math.hypot(x - 7.5, y - 8) < 3) put(x, y, rgb((x + y) % 2 ? 0xf06a2a : 0xf8e8d8)); put(3, 7, '#f06a2a'); put(4, 8, '#f06a2a'); put(3, 9, '#f06a2a'); put(12, 7, '#f06a2a'); put(11, 8, '#f06a2a'); put(12, 9, '#f06a2a'); break;
+    case 'gift': for (let y = 6; y < 14; y++) for (let x = 3; x < 13; x++) put(x, y, rgb(x === 7 || x === 8 || y === 9 ? 0xe8c040 : 0xc83a3a, y === 6 ? 1.2 : 1)); put(6, 5, '#e8c040'); put(5, 4, '#e8c040'); put(9, 5, '#e8c040'); put(10, 4, '#e8c040'); break;
     case 'apple': lump(0xc83a2a, 8, 9, [4.5, 4.2]); put(6, 7, '#ff9a8a'); put(8, 4, '#5a3a1a'); put(9, 3, '#4a8a2a'); put(10, 3, '#4a8a2a'); break;
     case 'tome': for (let y = 3; y < 14; y++) for (let x = 3; x < 13; x++) put(x, y, rgb(x === 3 || x === 12 ? 0x3a1a4a : y === 3 || y === 13 ? 0xd8b040 : 0x5a2a7a)); for (let y = 6; y < 11; y++) put(8, y, '#9ad8ff'); put(7, 8, '#9ad8ff'); put(9, 8, '#9ad8ff'); break;
     case 'crystal': for (let y = 2; y < 15; y++) { const w = y < 6 ? (y - 1) : (15 - y) * 0.45; for (let x = 8 - w; x <= 8 + w; x++) put(Math.round(x), y, rgb(x < 8 ? 0xb0a0ff : 0x7a6ad8, 1)); } put(7, 5, '#ffffff'); break;

@@ -61,6 +61,8 @@ export const ACHIEVEMENTS = [
   { id: 'troll', name: 'Amanecer', desc: 'Mirá cómo un troll se vuelve piedra con el sol.' },
   { id: 'dragon', name: 'Matadragones', desc: 'Derrotá al Dragón de Brasa.' },
   { id: 'ent', name: 'Leñador arrepentido', desc: 'Derrotá a un Ent enojado.' },
+  { id: 'dron', name: 'Copiloto', desc: 'Desplegá un dron compañero.' },
+  { id: 'cohete', name: '¡Que empiece la fiesta!', desc: 'Lanzá un cohete de fuegos artificiales.' },
 ];
 
 export class Achievements {

@@ -493,6 +493,12 @@ export const ITEMS = {
   390: { name: 'Pico de mithril', icon: 'pick', color: 'mithril', tool: 'pick', tier: 3, speed: 11, durability: 1600 },
   391: { name: 'Hacha de mithril', icon: 'axe', color: 'mithril', tool: 'axe', tier: 3, speed: 11, durability: 1600, weapon: 9 },
   392: { name: 'Yelmo de escamas', icon: 'helmet', color: 0x7a3a2a, armor: 'head', def: 0.3, radRes: 0.3, durability: 900 },
+  // v9.1
+  393: { name: 'Dron compañero', icon: 'drone', stack: 1 },
+  394: { name: 'Cohete de fuegos artificiales', icon: 'rocket', firework: true },
+  395: { name: 'Huevo de Pascua', icon: 'egg', food: 3 },
+  396: { name: 'Caramelo', icon: 'candy', food: 2 },
+  397: { name: 'Regalo', icon: 'gift', gift: true },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -701,6 +707,8 @@ export const RECIPES = [
   { out: [391, 1], in: [[384, 3], [209, 2]], station: 'mesa' },
   { out: [389, 1], in: [[384, 8]], station: 'mesa' },
   { out: [392, 1], in: [[388, 5], [384, 1]], station: 'mesa' },
+  { out: [393, 1], in: [[260, 4], [259, 4], [14, 1]], station: 'mesa', bp: 'electricidad' },
+  { out: [394, 4], in: [[257, 2], [259, 1]], station: 'mesa' },
   { out: [370, 1], in: [[209, 2], [387, 1], [327, 2]], station: 'runas', bp: 'magia' },
   { out: [371, 1], in: [[209, 2], [387, 2], [257, 3]], station: 'runas', bp: 'magia' },
   { out: [372, 1], in: [[209, 2], [387, 2], [380, 3]], station: 'runas', bp: 'magia' },
