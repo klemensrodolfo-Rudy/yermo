@@ -29,7 +29,7 @@ self.onmessage = (e) => {
     }
     const r = buildMesh(m.vol, tintAt);
     const t = [];
-    for (const part of [r.solid, r.water]) for (const k of ['pos', 'uv', 'lit', 'inf', 'tint', 'idx']) t.push(part[k].buffer);
+    for (const part of [r.solid, r.water]) for (const k of ['pos', 'uv', 'lit', 'inf', 'tint', 'lcol', 'idx']) t.push(part[k].buffer);
     self.postMessage({ type: 'mesh', job: m.job, cx: m.cx, cz: m.cz, version: m.version, mesh: r }, t);
   }
 };

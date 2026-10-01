@@ -94,12 +94,12 @@ const uniforms = {
   snow: { value: 0 }, cloudOff: { value: new THREE.Vector2() }, cloudCov: { value: 0.45 },
 };
 const vert = /* glsl */`
-  attribute vec4 lit; attribute vec4 tinf; attribute vec4 tint;
+  attribute vec4 lit; attribute vec4 tinf; attribute vec4 tint; attribute vec3 lcol;
   uniform float time; uniform vec2 wind;
   varying vec2 vUv; varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
-  flat varying vec4 vInf; flat varying float vLc;
+  flat varying vec4 vInf; varying vec3 vLcol;
   void main() {
-    vUv = uv; vLit = lit; vInf = tinf; vTint = tint.rgb * 2.0; vLc = tint.a * 255.0 / 32.0;
+    vUv = uv; vLit = lit; vInf = tinf; vTint = tint.rgb * 2.0; vLcol = lcol;
     vec3 p = position;
     vec4 wp = modelMatrix * vec4(p, 1.0);
     // plantas: la parte de arriba se mece con el viento
@@ -146,7 +146,7 @@ const frag = (water) => /* glsl */`
   varying vec2 vUv;
   float vh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
   float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(vh(i), vh(i + vec2(1.0, 0.0)), f.x), mix(vh(i + vec2(0.0, 1.0)), vh(i + vec2(1.0, 1.0)), f.x), f.y); } varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
-  flat varying vec4 vInf; flat varying float vLc;
+  flat varying vec4 vInf; varying vec3 vLcol;
   const float SZ = 768.0;
   vec3 lightCol(float id) {
     int i = int(id + 0.5);
@@ -246,7 +246,7 @@ const frag = (water) => /* glsl */`
     // relieve: diferencia entre la luz con y sin la normal de la textura
     float relief = 1.0 + (max(dot(Np, Ls), 0.0) - max(dot(N, Ls), 0.0)) * 1.4 * (0.4 + 0.6 * vLit.x);
     float reliefV = 1.0 + (dot(Np, V) - dot(N, V)) * 0.8;
-    vec3 light = skyTint * sky * mix(1.0, moonLight, 1.0 - daylight) * relief + lightCol(vLc) * blk * 1.35 * reliefV;
+    vec3 light = skyTint * sky * mix(1.0, moonLight, 1.0 - daylight) * relief + vLcol * blk * 1.35 * reliefV;
     // faros
     if (hlOn > 0.5) {
       vec3 Lh = vWorld - hlPos; float dh = length(Lh);
@@ -279,7 +279,7 @@ const frag = (water) => /* glsl */`
       vec3 Hh = normalize(Ls + V);
       float sp = pow(max(dot(Np, Hh), 0.0), 16.0 + spec * 64.0) * spec * (0.3 + spec);
       col += vec3(1.0, 0.93, 0.8) * sp * sky * shadowF * 1.6;
-      col += lightCol(vLc) * pow(max(dot(Np, V), 0.0), 24.0) * spec * blk * 0.35;
+      col += vLcol * pow(max(dot(Np, V), 0.0), 24.0) * spec * blk * 0.35;
     }
     // píxeles que brillan solos (minerales, lava, lámparas, hongos)
     if (emis > 0.0) {
@@ -1684,7 +1684,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '10.5 · 2026-10-02';
+const VERSION = '10.6 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles

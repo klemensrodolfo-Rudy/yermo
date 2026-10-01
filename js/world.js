@@ -128,6 +128,7 @@ export class World {
     g.setAttribute('lit', new THREE.BufferAttribute(d.lit, 4, true));
     g.setAttribute('tinf', new THREE.BufferAttribute(d.inf, 4, false));
     g.setAttribute('tint', new THREE.BufferAttribute(d.tint, 4, true));
+    if (d.lcol) g.setAttribute('lcol', new THREE.BufferAttribute(d.lcol, 3, true));
     g.setIndex(new THREE.BufferAttribute(d.idx, 1));
     g.computeBoundingSphere();
   }

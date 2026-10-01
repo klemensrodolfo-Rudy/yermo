@@ -10,6 +10,10 @@ const TS = ATLAS.res / ATLAS.size;
 const tileU = (t) => ((t % ATLAS.cols) * ATLAS.cell + ATLAS.pad) / ATLAS.size;
 const tileV = (t) => (Math.floor(t / ATLAS.cols) * ATLAS.cell + ATLAS.pad) / ATLAS.size;
 const WHITE = new Uint8Array([128, 128, 128, 0, 128, 128, 128, 0, 128, 128, 128, 0, 128, 128, 128, 0]);
+// color de cada tipo de luz (ver LCOL en blocks.js), en 0-255
+const LPAL = [[255, 179, 102], [140, 255, 102], [204, 128, 255], [179, 217, 255], [255, 77, 56], [255, 128, 46], [102, 230, 255], [255, 242, 217]];
+const WARM = new Uint8Array([255, 179, 102, 255, 179, 102, 255, 179, 102, 255, 179, 102]);
+const flatCol = (id) => { const c = LPAL[id] || LPAL[0]; return new Uint8Array([...c, ...c, ...c, ...c]); };
 
 // Cara: normal, 4 vértices (orden CCW visto desde fuera), ejes tangentes u/v para muestreo AO
 const FACES = [
@@ -74,9 +78,9 @@ function bfs(vol, L, q, qh, qt, C) {
 }
 
 class Buf {
-  constructor() { this.pos = []; this.uv = []; this.lit = []; this.inf = []; this.tint = []; this.idx = []; this.n = 0; }
+  constructor() { this.pos = []; this.uv = []; this.lit = []; this.inf = []; this.tint = []; this.lcol = []; this.idx = []; this.n = 0; }
   // inf: [tile, banderas, cara (0-5; 6 planta; 7 antorcha), 0] · tint: color del bioma por vértice (128 = neutro)
-  quad(p, uv, lit, flip, tile = 0, face = 6, tint = WHITE, noVar = false) {
+  quad(p, uv, lit, flip, tile = 0, face = 6, tint = WHITE, noVar = false, lcol = WARM) {
     const b = this.n;
     const flags = noVar ? TILE_FLAGS[tile] & ~3 : TILE_FLAGS[tile];
     for (let k = 0; k < 4; k++) {
@@ -85,6 +89,7 @@ class Buf {
       this.lit.push(lit[k * 4], lit[k * 4 + 1], lit[k * 4 + 2], lit[k * 4 + 3]);
       this.inf.push(tile, flags, face, 0);
       this.tint.push(tint[k * 4], tint[k * 4 + 1], tint[k * 4 + 2], tint[k * 4 + 3]);
+      this.lcol.push(lcol[k * 3], lcol[k * 3 + 1], lcol[k * 3 + 2]);
     }
     if (flip) this.idx.push(b + 1, b + 2, b + 3, b + 1, b + 3, b);
     else this.idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
@@ -93,7 +98,7 @@ class Buf {
   out() {
     return {
       pos: new Float32Array(this.pos), uv: new Float32Array(this.uv),
-      lit: new Uint8Array(this.lit), inf: new Uint8Array(this.inf), tint: new Uint8Array(this.tint), idx: this.n > 65000 ? new Uint32Array(this.idx) : new Uint16Array(this.idx),
+      lit: new Uint8Array(this.lit), inf: new Uint8Array(this.inf), tint: new Uint8Array(this.tint), lcol: new Uint8Array(this.lcol), idx: this.n > 65000 ? new Uint32Array(this.idx) : new Uint16Array(this.idx),
     };
   }
 }
@@ -105,7 +110,7 @@ export function buildMesh(vol, tintAt) {
   computeLight(vol, sky, blk, lc);
 
   const solid = new Buf(), water = new Buf();
-  const P = new Float32Array(12), UV = new Float32Array(8), LIT = new Uint8Array(16), TINT = new Uint8Array(16);
+  const P = new Float32Array(12), UV = new Float32Array(8), LIT = new Uint8Array(16), TINT = new Uint8Array(16), LC = new Uint8Array(12);
 
   const get = (x, y, z) => (y < 0 ? 1 : y >= HEIGHT ? 0 : vol[x + z * W + y * WW]);
   const li = (x, y, z) => x + z * W + y * WW;
@@ -199,16 +204,19 @@ export function buildMesh(vol, tintAt) {
           const j = li(X, Y, Z);
           if (OPAQUE[vol[j]]) return;
           ss += sky[j]; sb += blk[j]; cnt++;
+          if (blk[j]) { const c = LPAL[lc[j]]; const wgt = blk[j] * blk[j]; cr += c[0] * wgt; cg += c[1] * wgt; cb += c[2] * wgt; cw += wgt; }
         };
+        let cr = 0, cg = 0, cb = 0, cw = 0;
         if (ny >= HEIGHT) { ss = 15; sb = 0; cnt = 1; }
         else {
           const j = ny >= 0 ? li(nx, ny, nz) : -1;
-          if (j >= 0) { ss += sky[j]; sb += Math.max(blk[j], OPAQUE[vol[j]] ? 0 : 0); cnt++; }
+          if (j >= 0) { ss += sky[j]; sb += Math.max(blk[j], OPAQUE[vol[j]] ? 0 : 0); cnt++; if (blk[j]) { const c = LPAL[lc[j]]; const wgt = blk[j] * blk[j]; cr += c[0] * wgt; cg += c[1] * wgt; cb += c[2] * wgt; cw += wgt; } }
           if (!o1) add(s1x, s1y, s1z);
           if (!o2) add(s2x, s2y, s2z);
           if (!oc) add(cx_, cy_, cz_);
         }
         if (cnt === 0) cnt = 1;
+        if (cw) { LC[k * 3] = cr / cw; LC[k * 3 + 1] = cg / cw; LC[k * 3 + 2] = cb / cw; } else LC.set(LPAL[0], k * 3);
         LIT[k * 4] = Math.round(ss / cnt * 17);
         LIT[k * 4 + 1] = liq === 3 ? 255 : Math.round(sb / cnt * 17);
         LIT[k * 4 + 2] = Math.round((0.45 + ao * 0.55 / 3) * 255);
@@ -219,7 +227,7 @@ export function buildMesh(vol, tintAt) {
         aoSum[k] = ao + (ss + sb) / cnt * 0.01;
       }
       const flip = aoSum[0] + aoSum[2] < aoSum[1] + aoSum[3];
-      (r === 3 && liq !== 3 ? water : solid).quad(P, UV, LIT, flip, tile, f, TINT);
+      (r === 3 && liq !== 3 ? water : solid).quad(P, UV, LIT, flip, tile, f, TINT, false, LC);
     }
   }
   return { solid: solid.out(), water: water.out() };
@@ -260,7 +268,7 @@ function boxes(buf, x, y, z, b, s, bl, opaqueAt, tintAt, lcol = 0) {
         if (tintAt) TINT.set(tintAt(x + px, z + pz), k * 4); else TINT.set([128, 128, 128], k * 4);
         TINT[k * 4 + 3] = lcol * 32;
       }
-      buf.quad(P, UV, LIT, false, tile, f, TINT, true);
+      buf.quad(P, UV, LIT, false, tile, f, TINT, true, flatCol(lcol));
     });
   }
 }
@@ -279,12 +287,12 @@ function cross(buf, x, y, z, b, s, bl, tintAt, lcol = 0) {
   for (const [[ax, az], [bx, bz]] of planes) {
     const pts = [[ax, 0, az], [bx, 0, bz], [bx, 1, bz], [ax, 1, az]];
     for (let k = 0; k < 4; k++) { P[k * 3] = x + pts[k][0]; P[k * 3 + 1] = y + pts[k][1]; P[k * 3 + 2] = z + pts[k][2]; }
-    buf.quad(P, UV, LIT, false, tile, 6, TINT);
+    buf.quad(P, UV, LIT, false, tile, 6, TINT, false, flatCol(lcol));
     // cara trasera
     const P2 = new Float32Array(12), UV2 = new Float32Array(8);
     const order = [1, 0, 3, 2];
     for (let k = 0; k < 4; k++) { const o = order[k]; P2.set([P[o * 3], P[o * 3 + 1], P[o * 3 + 2]], k * 3); UV2.set([UV[k * 2], UV[k * 2 + 1]], k * 2); }
-    buf.quad(P2, UV2, LIT, false, tile, 6, TINT);
+    buf.quad(P2, UV2, LIT, false, tile, 6, TINT, false, flatCol(lcol));
   }
 }
 
