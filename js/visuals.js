@@ -159,8 +159,9 @@ export function createVisuals(ctx) {
     uniforms.cloudOff.value.copy(co); uniforms.cloudCov.value = skyUniforms.clouds.value;
     // la nieve se acumula mientras nieva y se derrite despacio después
     const snowing = W && W.type === 'snow' ? W.k : 0;
-    const cold = g.gen.column(Math.floor(p.pos.x), Math.floor(p.pos.z)).biome === BIOME.TUNDRA;
-    uniforms.snow.value = Math.max(0, Math.min(1, uniforms.snow.value + (snowing > 0.3 ? dt / 80 : -dt / (cold ? 600 : 120))));
+    const bHere = g.gen.column(Math.floor(p.pos.x), Math.floor(p.pos.z)).biome, cold = bHere === BIOME.TUNDRA;
+    const mesaWinter = g.season?.().name === 'Invierno' && (bHere === BIOME.CANYON || bHere === BIOME.PEAKS) && p.pos.y > 64;
+    uniforms.snow.value = Math.max(0, Math.min(1, uniforms.snow.value + (snowing > 0.3 || mesaWinter ? dt / 80 : -dt / (cold ? 600 : 120))));
   }
 
   // ---------- humo de fogatas y fuego ----------

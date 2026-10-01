@@ -41,6 +41,7 @@ import { createHome } from './home.js';
 import { createNews } from './news.js';
 import { createWildlife } from './wildlife.js';
 import { createQol } from './qol.js';
+import { createWorld13 } from './world13.js';
 import { createTreasure } from './treasure.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
@@ -1263,6 +1264,7 @@ async function startGame(meta, hello, cloudInfo) {
   game.news = createNews(fctx);
   const WL = game.wildlife = createWildlife(fctx);
   game.qol = createQol(fctx);
+  const W13 = game.world13 = createWorld13(fctx);
   const TR = game.treasure = createTreasure(fctx);
   const useTR = player.onUseItem;
   player.onUseItem = (...a) => TR.onUseItem(...a) || useTR(...a);
@@ -1277,7 +1279,7 @@ async function startGame(meta, hello, cloudInfo) {
   const blockF2 = player.onUseBlock;
   player.onUseBlock = (...a) => LE.onUseBlock(...a) || CR.onUseBlock(...a) || MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
   sim.onMarker = (...a) => E.onMarker(...a) || F2.onMarker(...a) || F.onMarker(...a);
-  player.onInteractMob = (m, h) => WL.onInteractMob(m, h) || LE.onInteractMob(m, h) || NA.onInteractMob(m, h) || E.onInteractMob(m, h) || F2.onInteractMob(m, h) || F.onInteractMob(m, h);
+  player.onInteractMob = (m, h) => W13.onInteractMob(m, h) || WL.onInteractMob(m, h) || LE.onInteractMob(m, h) || NA.onInteractMob(m, h) || E.onInteractMob(m, h) || F2.onInteractMob(m, h) || F.onInteractMob(m, h);
   player.onGun = F.onGun;
   player.onReadNote = F.readNote;
   player.onLever = (x, y, z) => sim.toggleLever(x, y, z);
@@ -1329,7 +1331,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); game.news?.dispose(); game.wildlife?.dispose(); game.treasure?.dispose(); game.qol?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); game.news?.dispose(); game.wildlife?.dispose(); game.treasure?.dispose(); game.qol?.dispose(); game.world13?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1762,7 +1764,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '13.0 · 2026-10-02';
+const VERSION = '13.1 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1857,6 +1859,7 @@ function loop(now) {
   game.treasure?.update(dt);
   game.wildlife?.update(dt);
   game.qol?.update(dt);
+  game.world13?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
@@ -1998,6 +2001,7 @@ function loop(now) {
   for (const mk of game.life?.markers() || []) markers.push(mk);
   for (const mk of game.together?.markers() || []) markers.push(mk);
   for (const mk of game.qol?.markers() || []) markers.push(mk);
+  for (const mk of game.world13?.markers() || []) markers.push(mk);
   mapView.update(dt, world, player, game.qol ? game.qol.filter(markers) : markers, bigMap);
 
   // HUD

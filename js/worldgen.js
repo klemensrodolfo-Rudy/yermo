@@ -928,7 +928,7 @@ export class WorldGen {
 
     // --- ciudad ---
     if (this.type === 'magic') { this.eldraStructures(cx, cz, set, colAt); return data; }
-    if (this.type === 'islands') { this.shipwrecks(cx, cz, set, colAt); this.lighthouses(cx, cz, set, colAt); return data; }
+    if (this.type === 'islands') { this.shipwrecks(cx, cz, set, colAt); this.lighthouses(cx, cz, set, colAt); this.sunkenRuins(cx, cz, set, colAt); return data; }
     this.city(data, cx, cz, cols, set, setAir, colAt, I);
     // --- búnkeres y otras estructuras ---
     this.bunkers(cx, cz, set);
@@ -1030,7 +1030,7 @@ export class WorldGen {
         if (r > 1.6) { S(x + dx, y + H + 2, z + dz, 14); S(x + dx, y + H + 3, z + dz, 14); }
         S(x + dx, y + H + 4, z + dz, 13);
       }
-      S(x, y + H + 2, z, 28); S(x, y + H + 3, z, 28);
+      S(x, y + H + 2, z, 1146); S(x, y + H + 3, z, 1146);
       // escalera y puerta
       for (let k = 1; k <= H; k++) S(x, y + k, z + 1, ladderFor(0, -1));
       S(x, y + H + 1, z + 1, 0);
@@ -1401,6 +1401,33 @@ export class WorldGen {
   }
 
   // v12.8: pueblo fantasma en el fondo de los cañones: casillas de madera vacías alrededor de una calle de tierra
+  // v13.1: ruinas de un templo hundido en el fondo del mar: columnas rotas, piso de piedra, cofres y luces
+  sunkenRuins(cx, cz, set, colAt) {
+    const CELL = 130, x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    for (let gx = Math.floor((x0 - 20) / CELL); gx <= Math.floor((x0 + 36) / CELL); gx++) for (let gz = Math.floor((z0 - 20) / CELL); gz <= Math.floor((z0 + 36) / CELL); gz++) {
+      if (hash2(s + 901, gx, gz) > 0.55) continue;
+      const x = Math.floor((gx + 0.25 + hash2(s + 902, gx, gz) * 0.5) * CELL), z = Math.floor((gz + 0.25 + hash2(s + 903, gx, gz) * 0.5) * CELL);
+      if (x + 12 < x0 || x - 12 > x0 + 15 || z + 12 < z0 || z - 12 > z0 + 15) continue;
+      const c = this.column(x, z);
+      if (c.biome !== BIOME.OCEAN || c.h > SEA - 7) continue;
+      const y = c.h, L = (wx, yy, wz, id) => set(wx - x0, yy, wz - z0, id);
+      for (let dx = -8; dx <= 8; dx++) for (let dz = -8; dz <= 8; dz++) {
+        const r = Math.max(Math.abs(dx), Math.abs(dz));
+        if (r > 8) continue;
+        if (hash3(s + 904, x + dx, y, z + dz) < 0.82) L(x + dx, y, z + dz, (dx + dz) % 2 ? 210 : 211);
+        // columnas en el borde, rotas a distinta altura
+        if (r === 7 && (dx % 3 === 0 || dz % 3 === 0) && Math.abs(dx) !== Math.abs(dz)) {
+          const hgt = 2 + Math.floor(hash2(s + 905, x + dx, z + dz) * 6);
+          for (let k = 1; k <= hgt; k++) L(x + dx, y + k, z + dz, k === hgt ? 1045 : 1044);
+        }
+      }
+      // altar con cofres y luces
+      for (const [ax, az] of [[0, 0], [2, 0], [-2, 0]]) L(x + ax, y + 1, z + az, ax === 0 ? 228 : 1117);
+      for (const [ax, az] of [[3, 3], [-3, -3], [3, -3], [-3, 3]]) { L(x + ax, y + 1, z + az, hash2(s + 906 + ax, gx, gz) < 0.5 ? 230 : 231); }
+      L(x, y + 1, z + 4, 1144);
+    }
+  }
+
   // busca (una sola vez por celda) un lugar plano dentro de un cañón
   ghostSite(cxg, czg, CELL) {
     this.ghostCache = this.ghostCache || new Map();

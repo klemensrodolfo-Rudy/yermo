@@ -154,6 +154,10 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Caravanas, faros y estaciones': () => `
+      <p><b>🐐 Caravanas</b>: de día, cada tanto pasa una caravana de comerciantes con sus cabras. Hablá con el que va adelante: si la escoltás hasta su destino (sin alejarte mucho) te pagan <b>25 fichas</b> y un regalo. A mitad de camino suele haber una emboscada.</p>
+      <p><b>🗼 Faros</b>: en el archipiélago, de noche el faro gira un haz de luz que se ve de lejos. <b>🏛 Ruinas hundidas</b>: en el mar abierto hay templos sumergidos con columnas rotas, luces y cofres del tesoro (llevá tanque de buceo).</p>
+      <p><b>Estaciones</b>: en invierno las mesetas altas de los cañones y los montes se cubren de nieve; después de llover, el <b>salar se inunda</b> con una capa de agua que refleja el cielo como un espejo; y los <b>géiseres</b> son más activos de noche.</p>`,
     'Cielo, mapa y fotos': () => `
       <p><b>🌑 Eclipses</b>: muy de vez en cuando, cerca del mediodía, la luna tapa el sol: se hace casi de noche un rato y se ven las estrellas. <b>🌠 Lluvias de estrellas</b>: algunas noches el cielo se llena de estrellas fugaces.</p>
       <p><b>🗺 Mapa grande</b>: arriba hay filtros para mostrar u ocultar lugares, gente, tus marcas, tesoros, tus camas y los géiseres.</p>

@@ -772,7 +772,8 @@ export class Mobs {
     if (this.authority) this.spawn(dt, players, daylight);
     for (const m of [...this.list.values()]) {
       if (this.kids && this.authority && m.def.hostile && !m.def.neutral && !m.owner) { this.remove(m); continue; }
-      if (this.authority) this.think(m, dt, players, daylight);
+      if (this.authority && m.puppet && !m.dying) m.puppet(m, dt);
+      else if (this.authority) this.think(m, dt, players, daylight);
       else {
         m.pos.lerp(m.target, Math.min(1, dt * 10));
         let dy = m.targetYaw - m.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); m.yaw += dy * Math.min(1, dt * 10);

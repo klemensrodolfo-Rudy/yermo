@@ -56,7 +56,8 @@ export function createGeo(ctx) {
       const dx = G.x + 0.5 - p.pos.x, dz = G.z + 0.5 - p.pos.z;
       if (dx * dx + dz * dz > 80 * 80) continue;
       if (w.getBlock(G.x, G.y, G.z) !== GEYSER) { if (w.getBlock(G.x, G.y, G.z) >= 0) list.delete(k); continue; }
-      const cyc = (t + G.phase) % G.period, near = dx * dx + dz * dz < 40 * 40;
+      const nightK = g.time > 0.8 || g.time < 0.2 ? 0.55 : 1;
+      const cyc = (t + G.phase) % (G.period * nightK), near = dx * dx + dz * dz < 40 * 40;
       if (cyc < 4.5) {
         // erupción: columna de agua y vapor
         if (near) {
