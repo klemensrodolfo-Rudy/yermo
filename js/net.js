@@ -4,6 +4,7 @@
 //    elige a un jugador como autoridad para la simulación; si se va, pasa a otro.
 import * as THREE from 'three';
 import { patternTex, scaleBoxUV } from './entities.js';
+import { LIQ } from './blocks.js';
 
 const PREFIX = 'yermo-v4-';
 let PeerCtor = null;
@@ -129,7 +130,26 @@ export class Avatar {
     this.swing = Math.max(0, (this.swing || 0) - dt * 4);
     this.head.rotation.x = -this.pitch;
     this.group.position.copy(this.pos); if (this.riding) this.group.position.y += 0.35;
-    this.group.rotation.y = this.yaw;
+    this.group.rotation.order = 'YXZ';
+    this.group.rotation.y = this.yaw; this.group.rotation.x = 0;
+    // posturas: saltando o cayendo, y nadando
+    const vy = (this.pos.y - (this.lastY ?? this.pos.y)) / Math.max(dt, 0.001); this.lastY = this.pos.y;
+    this.vyS = (this.vyS || 0) + (vy - (this.vyS || 0)) * Math.min(1, dt * 10);
+    const W = Avatar.world, t = performance.now() / 1000;
+    let swim = false;
+    if (W && !this.riding) { const b = W.getBlock(Math.floor(this.pos.x), Math.floor(this.pos.y + 0.9), Math.floor(this.pos.z)); swim = LIQ[b] === 1 || LIQ[b] === 2; }
+    this.arms[0].rotation.z = 0; this.arms[1].rotation.z = 0;
+    if (swim) {
+      this.group.rotation.x = walking ? -1.15 : -0.25;
+      this.arms[0].rotation.x = -2.4 + Math.sin(t * 5) * 1.3; this.arms[1].rotation.x = -2.4 - Math.sin(t * 5) * 1.3;
+      this.legs[0].rotation.x = Math.sin(t * 11) * 0.45; this.legs[1].rotation.x = -Math.sin(t * 11) * 0.45;
+      this.group.position.y -= 0.35;
+    } else if (!this.riding && Math.abs(this.vyS) > 2) {
+      const up = this.vyS > 0;
+      this.arms[0].rotation.x = up ? -2.6 : -3.0; this.arms[1].rotation.x = up ? -2.6 : -3.0;
+      this.arms[0].rotation.z = -0.35; this.arms[1].rotation.z = 0.35;
+      this.legs[0].rotation.x = up ? -0.7 : 0.25; this.legs[1].rotation.x = up ? 0.25 : -0.25;
+    }
     this.group.visible = !this.dead && this.seen;
     this.animEmote(dt);
   }

@@ -90,6 +90,8 @@ const uniforms = {
   plPos: { value: new THREE.Vector3() }, plOn: { value: 0 }, plCol: { value: new THREE.Color(1, 0.72, 0.42) }, plR: { value: 10 },
   // viento (dirección × fuerza) y lluvia, para plantas, hojas y agua
   wind: { value: new THREE.Vector2(0.3, 0.1) }, rain: { value: 0 },
+  // nieve acumulada y sombras de nubes sobre el terreno
+  snow: { value: 0 }, cloudOff: { value: new THREE.Vector2() }, cloudCov: { value: 0.45 },
 };
 const vert = /* glsl */`
   attribute vec4 lit; attribute vec4 tinf; attribute vec4 tint;
@@ -140,8 +142,10 @@ const frag = (water) => /* glsl */`
   uniform float fogHeight; uniform float moonLight;
   uniform vec3 hlPos; uniform vec3 hlDir; uniform float hlOn;
   uniform vec3 plPos; uniform float plOn; uniform vec3 plCol; uniform float plR;
-  uniform vec2 wind; uniform float rain;
-  varying vec2 vUv; varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
+  uniform vec2 wind; uniform float rain; uniform float snow; uniform vec2 cloudOff; uniform float cloudCov;
+  varying vec2 vUv;
+  float vh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(vh(i), vh(i + vec2(1.0, 0.0)), f.x), mix(vh(i + vec2(0.0, 1.0)), vh(i + vec2(1.0, 1.0)), f.x), f.y); } varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
   flat varying vec4 vInf; flat varying float vLc;
   const float SZ = 768.0;
   vec3 lightCol(float id) {
@@ -227,6 +231,13 @@ const frag = (water) => /* glsl */`
       Np = normalize(Tt * im * nxy.x + Bt * im * nxy.y + N * sqrt(max(0.0, 1.0 - dot(nxy, nxy))));
     }
     float sky = pow(vLit.x, 1.4) * daylight;
+    // sombras de las nubes que pasan
+    if (cloudCov > 0.05 && vLit.x > 0.4 && daylight > 0.3) {
+      vec2 cp = vWorld.xz * 0.011 + cloudOff * 4.0;
+      float cn = vn(cp) * 0.65 + vn(cp * 2.3 + 7.0) * 0.35;
+      float cs = smoothstep(1.0 - cloudCov * 0.85, 1.05 - cloudCov * 0.5, cn);
+      sky *= 1.0 - cs * 0.42;
+    }
     float shadowF = 1.0;
     if (shadowOn > 0.5 && vLit.x > 0.6 && vDepth < 80.0) { shadowF = shadowAt(vWorld + vec3(0.0, 0.02, 0.0)); sky *= mix(0.5, 1.0, shadowF); }
     float blk = pow(vLit.y, 1.25);
@@ -249,6 +260,20 @@ const frag = (water) => /* glsl */`
     }
     light = max(light, vec3(0.035, 0.035, 0.05));
     vec3 col = tex.rgb * light * vLit.z * vLit.w;
+    ${water ? '' : `
+    // nieve acumulada arriba de los bloques expuestos al cielo
+    if (snow > 0.01 && face == 2 && vLit.x > 0.75 && (flags & 12) == 0) {
+      float edge = vn(vWorld.xz * 3.0) * 0.5 + vn(vWorld.xz * 9.0) * 0.5;
+      float cover = smoothstep(1.0 - snow, 1.0 - snow + 0.15, edge * 0.85 + 0.15);
+      col = mix(col, vec3(0.92, 0.95, 1.0) * light * vLit.z, cover * 0.92);
+    }
+    // con lluvia, lo que está al aire libre se ve mojado: más oscuro y con brillo
+    if (rain > 0.05 && vLit.x > 0.6 && (flags & 12) == 0) {
+      float wet = rain * smoothstep(0.6, 0.95, vLit.x);
+      col *= 1.0 - wet * 0.2;
+      float fr = pow(1.0 - max(dot(N, normalize(cameraPosition - vWorld)), 0.0), 4.0);
+      col += fogColor * wet * fr * 0.25;
+    }`}
     // brillo especular: sol (o luna) y antorchas
     if (spec > 0.01) {
       vec3 Hh = normalize(Ls + V);
@@ -261,15 +286,19 @@ const frag = (water) => /* glsl */`
       float fl = (flags & 8) != 0 ? 0.85 + 0.15 * sin(time * 2.0 + h * 6.0) : 1.0;
       col = mix(col, tex.rgb * 1.15 * fl, emis * (0.55 + 0.45 * (1.0 - daylight * vLit.x * 0.6)));
     }
+    vec3 glint = vec3(0.0); float glintA = 0.0;
     ${water ? `
-    col += vec3(0.05,0.12,0.0) * (0.5 + 0.5*sin(vWorld.x*0.7 + time*1.3) * sin(vWorld.z*0.6 - time));
+    if (tex.g > tex.b * 1.15) col += vec3(0.05,0.12,0.0) * (0.5 + 0.5*sin(vWorld.x*0.7 + time*1.3) * sin(vWorld.z*0.6 - time)); // sólo el agua tóxica
     if (waterFx > 0.5) {
       // reflejo del cielo (Fresnel) y brillo del sol con olas
       vec3 Nw = normalize(vec3(sin(vWorld.x*1.7 + time*1.6)*0.06, 1.0, cos(vWorld.z*1.9 - time*1.3)*0.06) + (Np - N) * 0.5);
       float fres = pow(1.0 - max(dot(V, Nw), 0.0), 3.0);
       col = mix(col, fogColor * (0.4 + daylight * 0.8), fres * 0.6 * vLit.x);
-      float spw = pow(max(dot(reflect(-sunDir, Nw), V), 0.0), 80.0) * daylight * vLit.x;
-      col += vec3(1.0, 0.9, 0.7) * spw * 0.9;
+      float low = 1.0 - clamp(sunDir.y * 2.5, 0.0, 1.0);
+      float spw = pow(max(dot(reflect(-sunDir, Nw), V), 0.0), mix(80.0, 14.0, low)) * vLit.x * smoothstep(-0.08, 0.05, sunDir.y);
+      vec3 gold = mix(vec3(1.0, 0.8, 0.5), vec3(1.0, 0.3, 0.06), low);
+      // el reflejo del sol se suma después de la niebla, así se ve hasta el horizonte
+      glint = gold; glintA = min(1.0, spw * (2.0 + low * 2.0)) * mix(0.7, 0.85, low) + pow(max(dot(reflect(-sunDir, Nw), V), 0.0), 9.0) * low * 0.45 * vLit.x * smoothstep(-0.08, 0.05, sunDir.y);
     }
     // espuma donde el agua corre o cae
     { vec2 fw = vTint.xy - 1.0; bool fallF = vTint.z > 1.5 && face != 2 && face != 3;
@@ -306,7 +335,7 @@ const frag = (water) => /* glsl */`
     vec3 Vf = normalize(vWorld - cameraPosition);
     vec3 fc = fogColor + vec3(1.0, 0.75, 0.45) * pow(max(dot(Vf, sunDir), 0.0), 8.0) * 0.35 * daylight;
     fc = mix(fc, uwCol * (0.35 + daylight * 0.65), underwater);
-    gl_FragColor = vec4(mix(col, fc, fog), ${water ? 'min(0.92, tex.a + 0.08)' : '1.0'});
+    gl_FragColor = vec4(mix(mix(col, fc, fog), glint * 1.15, clamp(glintA * (1.0 - underwater), 0.0, 0.9)), ${water ? 'min(0.92, tex.a + 0.08)' : '1.0'});
     #include <colorspace_fragment>
   }`;
 const materials = {
@@ -1655,7 +1684,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '10.4 · 2026-10-02';
+const VERSION = '10.5 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1839,8 +1868,14 @@ function loop(now) {
   setHand(hand ? hand.id : 0);
   const sw = player.swing;
   const hsp = Math.hypot(player.vel.x, player.vel.z);
-  handGroup.position.set(Math.sin(now / 180) * 0.012 * hsp / 4, Math.abs(Math.cos(now / 180)) * 0.015 * hsp / 4 - sw * 0.1, -sw * 0.05);
-  handGroup.rotation.set(-Math.sin(sw * Math.PI) * 0.5, Math.sin(sw * Math.PI) * 0.2, 0);
+  // la mano se queda un poquito atrás cuando girás (inercia)
+  const lag = game.handLag || (game.handLag = { yaw: player.yaw, pitch: player.pitch, x: 0, y: 0 });
+  let dyaw = player.yaw - lag.yaw; dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
+  lag.x += (Math.max(-0.08, Math.min(0.08, dyaw * 0.9)) - lag.x) * Math.min(1, dt * 10); lag.y += (Math.max(-0.06, Math.min(0.06, (player.pitch - lag.pitch) * 0.9)) - lag.y) * Math.min(1, dt * 10);
+  lag.yaw = player.yaw; lag.pitch = player.pitch;
+  const air = player.onGround || player.riding ? 0 : Math.max(-0.05, Math.min(0.05, -player.vel.y * 0.006));
+  handGroup.position.set(Math.sin(now / 180) * 0.012 * hsp / 4 + lag.x * 0.6, Math.abs(Math.cos(now / 180)) * 0.015 * hsp / 4 - sw * 0.1 - lag.y * 0.5 + air, -sw * 0.05);
+  handGroup.rotation.set(-Math.sin(sw * Math.PI) * 0.5 + lag.y, Math.sin(sw * Math.PI) * 0.2 + lag.x, -lag.x * 0.6);
   const hl = 0.35 + handLight.value * 0.65;
   handMat.color.setScalar(hl); armMat.color.setHex(0x4a3b2c).multiplyScalar(hl);
   if (handMesh && handMesh.material !== handMat) handMesh.material.color.setScalar(hl);

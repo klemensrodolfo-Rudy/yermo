@@ -1,8 +1,9 @@
 // Visual v10: luz de la antorcha en la mano, partículas ambientales (luciérnagas, hojas, polvo, burbujas),
 // color por bioma y momento del día, auroras en lugares fríos y opciones de cámara.
 import * as THREE from 'three';
-import { BLOCKS, ITEMS, LIQ, LIQ_LEVEL, EMIT, LCOL, RENDER } from './blocks.js';
+import { BLOCKS, ITEMS, LIQ, LIQ_LEVEL, EMIT, LCOL, RENDER, SOLID } from './blocks.js';
 import { BIOME } from './worldgen.js';
+import { Avatar } from './net.js';
 
 // color por bioma: [saturación, contraste, brillo, tono]
 const GRADE = {
@@ -19,6 +20,7 @@ export function createVisuals(ctx) {
   const p = g.player, w = g.world;
   const api = {};
   const canvas = ctx.renderer.domElement;
+  Avatar.world = w;
 
   // ---------- opciones de cámara ----------
   settings.fov = settings.fov ?? 75; settings.bob = settings.bob ?? true; settings.invertY = !!settings.invertY;
@@ -153,6 +155,11 @@ export function createVisuals(ctx) {
     uniforms.wind.value.set(wind.x, wind.z);
     if (W) { W.wx = wind.x; W.wz = wind.z; }
     const co = skyUniforms.cloudOff.value; co.x += (0.006 + wind.x * 0.03) * dt; co.y += (0.002 + wind.z * 0.03) * dt;
+    uniforms.cloudOff.value.copy(co); uniforms.cloudCov.value = skyUniforms.clouds.value;
+    // la nieve se acumula mientras nieva y se derrite despacio después
+    const snowing = W && W.type === 'snow' ? W.k : 0;
+    const cold = g.gen.column(Math.floor(p.pos.x), Math.floor(p.pos.z)).biome === BIOME.TUNDRA;
+    uniforms.snow.value = Math.max(0, Math.min(1, uniforms.snow.value + (snowing > 0.3 ? dt / 80 : -dt / (cold ? 600 : 120))));
   }
 
   // ---------- humo de fogatas y fuego ----------
@@ -160,7 +167,7 @@ export function createVisuals(ctx) {
   const sGeo = new THREE.BufferGeometry(); sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3)); sGeo.setAttribute('color', new THREE.BufferAttribute(sCol, 3));
   const smoke = new THREE.Points(sGeo, new THREE.PointsMaterial({ size: 0.9, map: glowTex, vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false }));
   smoke.frustumCulled = false; scene.add(smoke);
-  let sNext = 0, sources = [], lights = [], scanAcc = 3, puffAcc = 0;
+  let sNext = 0, sources = [], lights = [], lava = [], scanAcc = 3, puffAcc = 0, emberAcc = 0;
   // halos alrededor de las luces (de noche o en lugares oscuros)
   const PAL = [[1, 0.65, 0.3], [0.5, 1, 0.35], [0.75, 0.45, 1], [0.6, 0.8, 1], [1, 0.25, 0.2], [1, 0.45, 0.15], [0.35, 0.9, 1], [1, 0.95, 0.85]];
   const halos = [];
@@ -181,10 +188,11 @@ export function createVisuals(ctx) {
     if (scanAcc > 2.5) {
       scanAcc = 0; sources = [];
       const x0 = Math.floor(p.pos.x), y0 = Math.floor(p.pos.y), z0 = Math.floor(p.pos.z);
-      lights = [];
+      lights = []; lava = [];
       for (let dx = -18; dx <= 18; dx++) for (let dz = -18; dz <= 18; dz++) for (let dy = -6; dy <= 6; dy++) {
         const b = w.getBlock(x0 + dx, y0 + dy, z0 + dz);
         if ((b === 108 || b === 181) && sources.length < 24) sources.push([x0 + dx + 0.5, y0 + dy + (b === 108 ? 0.6 : 0.9), z0 + dz + 0.5]);
+        if (LIQ[b] === 3 && lava.length < 30 && w.getBlock(x0 + dx, y0 + dy + 1, z0 + dz) === 0) lava.push([x0 + dx, y0 + dy + 0.9, z0 + dz]);
         if (b > 0 && EMIT[b] >= 10 && !LIQ[b] && lights.length < 48) lights.push([x0 + dx + 0.5, y0 + dy + (RENDER[b] === 2 ? 0.75 : 0.5), z0 + dz + 0.5, LCOL[b], EMIT[b], RENDER[b] === 2 || b === 108 || b === 181]);
       }
     }
@@ -242,7 +250,36 @@ export function createVisuals(ctx) {
     });
     sfx.setWind(Math.min(1, g.wind?.k ?? 0.3));
   }
-  api.update = (dt) => { windTick(dt); handLight(); ambient(dt); grade(dt); smokeTick(dt); haloTick(); ambienceTick(dt); };
-  api.dispose = () => { for (const h of halos) scene.remove(h); scene.remove(smoke); sGeo.dispose(); scene.remove(pts); geo.dispose(); canvas.style.filter = ''; uniforms.plOn.value = 0; skyUniforms.aurora.value = 0; };
+  // ---------- brasas que saltan de la lava ----------
+  function embers(dt) {
+    if (!lava.length || !pts.visible) return;
+    emberAcc += dt;
+    while (emberAcc > 0.12) { emberAcc -= 0.12; const L = lava[Math.floor(Math.random() * lava.length)]; spawn(5, L[0] + Math.random(), L[1], L[2] + Math.random()); }
+  }
+
+  // ---------- sombras redondas bajo criaturas y objetos ----------
+  const shadowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(0.6, 'rgba(0,0,0,0.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+  const blobGeo = new THREE.PlaneGeometry(1, 1); blobGeo.rotateX(-Math.PI / 2);
+  const blobs = [];
+  for (let i = 0; i < 40; i++) { const m = new THREE.Mesh(blobGeo, new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, opacity: 1 })); m.visible = false; m.renderOrder = 1; scene.add(m); blobs.push(m); }
+  const ground = (x, y, z) => { for (let k = 0; k < 10; k++) { const b = w.getBlock(Math.floor(x), Math.floor(y) - k, Math.floor(z)); if (b === -1) return null; if (SOLID[b]) return Math.floor(y) - k + 1; } return null; };
+  function blobTick() {
+    let i = 0;
+    const put = (x, y, z, r) => {
+      if (i >= blobs.length) return;
+      const gy = ground(x, y + 0.3, z); if (gy == null) return;
+      const hgt = y - gy, b = blobs[i++];
+      b.visible = true; b.position.set(x, gy + 0.02, z);
+      const s = r * 2.2 * (1 + hgt * 0.08); b.scale.set(s, 1, s);
+      b.material.opacity = Math.max(0, 0.9 - hgt * 0.12) * (0.5 + uniforms.daylight.value * 0.5);
+    };
+    for (const m of g.mobs.list.values()) { if (m.dying || m.pos.distanceTo(p.pos) > 30) continue; put(m.pos.x, m.pos.y, m.pos.z, Math.max(0.3, m.def.hw * (m.baby ? 0.6 : 1))); }
+    for (const d of g.drops.list.values()) { if (d.pos.distanceTo(p.pos) > 16) continue; put(d.pos.x, d.pos.y, d.pos.z, 0.18); }
+    if (g.features?.thirdPerson && !p.riding) put(p.pos.x, p.pos.y, p.pos.z, 0.35);
+    for (; i < blobs.length; i++) blobs[i].visible = false;
+  }
+
+  api.update = (dt) => { windTick(dt); handLight(); ambient(dt); grade(dt); smokeTick(dt); haloTick(); embers(dt); blobTick(); ambienceTick(dt); };
+  api.dispose = () => { for (const b of blobs) scene.remove(b); for (const h of halos) scene.remove(h); scene.remove(smoke); sGeo.dispose(); scene.remove(pts); geo.dispose(); canvas.style.filter = ''; uniforms.plOn.value = 0; skyUniforms.aurora.value = 0; };
   return api;
 }
