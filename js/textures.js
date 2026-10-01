@@ -1242,6 +1242,84 @@ HD.broken_glass = (t) => {
     else if (Math.abs(Math.sin(a * 5)) < 0.06) t.P(x, y, [230, 236, 236], 200);
   }
 };
+// v12.2: cañones, salar, géiseres, cuevas
+HD.red_sand = (t) => t.fill((x, y) => { const n = t.fbm(x, y, 8, 3, 2); t.H(x, y, 0.4 + n * 0.3 + t.rnd() * 0.1); return scl([196, 104, 58], 0.86 + n * 0.18 + (t.rnd() - 0.5) * 0.12); });
+HD.red_sandstone = (t) => t.fill((x, y) => {
+  const n = t.fbm(x, y, 4, 3, 3), band = Math.floor((y + n * 6) / 5) % 3;
+  t.H(x, y, 0.5 + n * 0.3 - (band === 1 ? 0.15 : 0));
+  return scl(band === 0 ? [184, 92, 54] : band === 1 ? [160, 76, 46] : [204, 120, 72], 0.9 + n * 0.12 + (t.rnd() - 0.5) * 0.05);
+});
+HD.clay_ochre = (t) => t.fill((x, y) => { const n = t.fbm(x, y, 4, 3, 5); t.H(x, y, 0.55 + n * 0.2); return scl([204, 150, 72], 0.9 + n * 0.12 + Math.sin(y * 0.9 + n * 3) * 0.03); });
+HD.clay_white = (t) => t.fill((x, y) => { const n = t.fbm(x, y, 4, 3, 6); t.H(x, y, 0.55 + n * 0.2); return scl([222, 208, 186], 0.92 + n * 0.1 + Math.sin(y * 0.9 + n * 3) * 0.03); });
+HD.salt_top = (t) => t.fill((x, y) => {
+  const c = t.cells(x, y, 4, 8, 0.7), e = c.f2 - c.f1, ridge = e < 0.08;
+  t.H(x, y, ridge ? 0.95 : 0.5 + c.f1 * 0.2); t.S(x, y, 0.3);
+  return scl([238, 236, 228], ridge ? 1.04 : 0.9 + c.rid * 0.08 + (t.rnd() - 0.5) * 0.04);
+});
+HD.salt_side = (t) => t.fill((x, y) => {
+  if (y < 6) { t.H(x, y, 0.7); return scl([236, 234, 226], 0.92 + t.rnd() * 0.08); }
+  const n = t.fbm(x, y, 8, 3, 2); t.H(x, y, 0.4 + n * 0.3); return scl([214, 196, 150], 0.86 + n * 0.16 + (t.rnd() - 0.5) * 0.1);
+});
+const spikes = (cols, n, up, glow) => (t) => {
+  t.clear();
+  for (let i = 0; i < n; i++) {
+    const cx = 5 + i * (22 / Math.max(1, n - 1)) + (t.rnd() - 0.5) * 3, hgt = 14 + t.rnd() * 16, w = 2 + t.rnd() * 2.5;
+    for (let k = 0; k < hgt; k++) {
+      const ww = w * (1 - k / hgt), y = up ? 31 - k : k;
+      for (let x = Math.floor(cx - ww); x <= Math.ceil(cx + ww); x++) {
+        const s = (x - cx) / Math.max(0.5, ww);
+        if (Math.abs(s) > 1) continue;
+        t.P(x, y, scl(cols[i % cols.length], 0.8 + (1 - Math.abs(s)) * 0.35 - (s > 0.3 ? 0.15 : 0)), 255);
+        if (glow) t.E(x, y, 0.5 + (1 - Math.abs(s)) * 0.5);
+      }
+    }
+  }
+};
+HD.salt_crystal = spikes([[244, 240, 236], [230, 236, 244]], 3, true, false);
+HD.stalactite = spikes([[120, 114, 108], [104, 100, 96]], 3, false, false);
+HD.stalagmite = spikes([[120, 114, 108], [132, 126, 118]], 2, true, false);
+HD.cave_crystal = spikes([[186, 120, 255], [150, 90, 240], [210, 160, 255]], 3, true, true);
+HD.geyser_top = (t) => t.fill((x, y) => {
+  const r = Math.hypot(x - 15.5, y - 15.5), n = t.fbm(x, y, 4, 3, 7);
+  if (r < 4.5) { t.H(x, y, 0); return scl([30, 26, 24], 0.8 + n * 0.3); }
+  if (r < 9) { t.H(x, y, 0.8 - (r - 4.5) * 0.05); return scl([220, 196, 110], 0.85 + n * 0.25); }
+  t.H(x, y, 0.5 + n * 0.3); return scl([150, 140, 124], 0.85 + n * 0.2);
+});
+HD.thermal_top = (t) => t.fill((x, y) => {
+  const n = t.fbm(x, y, 4, 4, 9), c = t.cells(x, y, 5, 3, 1), crack = c.f2 - c.f1 < 0.06;
+  t.H(x, y, crack ? 0.1 : 0.5 + n * 0.3);
+  if (crack) return [120, 60, 30];
+  return scl(mixc([196, 166, 104], [176, 128, 84], n), 0.82 + c.rid * 0.16);
+});
+HD.quartz_ore = (t) => { HD.stone(t); for (let i = 0; i < 6; i++) { const cx = 4 + t.rnd() * 24, cy = 4 + t.rnd() * 24; for (let k = 0; k < 7; k++) { const x = cx + (t.rnd() - 0.5) * 6, y = cy + (t.rnd() - 0.5) * 6; t.P(x, y, [246, 242, 252]); t.P(x + 1, y, [220, 214, 236]); t.H(x, y, 1); t.S(x, y, 0.8); } } };
+HD.obsidian = (t) => t.fill((x, y) => {
+  const c = t.cells(x, y, 3, 2, 0.9), n = t.fbm(x, y, 4, 3, 4), e = c.f2 - c.f1, shine = (x + y * 0.6 + n * 8) % 11 < 1.2;
+  t.H(x, y, e < 0.05 ? 0.2 : 0.7); t.S(x, y, 0.9);
+  if (shine) return [104, 84, 140];
+  return scl(mixc([26, 20, 34], [54, 36, 70], c.rid), 0.85 + n * 0.3);
+});
+HD.glow_mushroom = (t) => {
+  t.clear();
+  for (const [cx, base, h, r] of [[9, 31, 12, 5], [21, 31, 18, 6], [15, 31, 7, 3.5]]) {
+    for (let y = base; y > base - h; y--) for (let x = cx - 1; x <= cx; x++) t.P(x, y, [200, 220, 214]);
+    for (let y = -r; y <= 1; y++) for (let x = -r; x <= r; x++) {
+      if (Math.hypot(x, y * 1.4) > r) continue;
+      const X = cx + x, Y = base - h + y;
+      t.P(X, Y, (x * 7 + y * 3) % 5 === 0 ? [220, 255, 250] : [60, 210, 230]); t.E(X, Y, 0.9);
+    }
+  }
+};
+HD.quartz_block = (t) => t.fill((x, y) => {
+  const n = t.fbm(x, y, 4, 2, 3), v = t.anoise(x, y, 2, 8, 4);
+  t.H(x, y, x === 0 || y === 0 ? 0.9 : 0.7); t.S(x, y, 0.45);
+  return scl([238, 234, 244], (x === 31 || y === 31 ? 0.82 : 0.94) + n * 0.06 - Math.max(0, v - 0.7) * 0.2);
+});
+HD.quartz_lamp = (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), grid = x % 8 === 0 || y % 8 === 0;
+  if (e < 2 || grid) { t.H(x, y, 0.8); t.S(x, y, 0.5); return [200, 196, 210]; }
+  t.H(x, y, 0.5); t.E(x, y, 1);
+  return scl([255, 250, 236], 0.95 + t.rnd() * 0.05);
+});
 // v12: hormigón de colores
 const concColor = (c) => (t) => {
   t.fill((x, y) => {
@@ -1375,7 +1453,7 @@ export function applyPack(atlasCanvas, img) {
 }
 
 // ---------- Íconos ----------
-const TOOL_COL = { wood: 0x8a6e48, scrap: 0x9a5a30, steel: 0xc8ccd2, iron: 0x9aa0a8, elf: 0xb8f0d0, mithril: 0xe0f0ff, light: 0xfff0a0, fire: 0xff6a2a, heal: 0x6aff8a, shield: 0x6ab0ff, wind: 0xe0f8ff };
+const TOOL_COL = { wood: 0x8a6e48, scrap: 0x9a5a30, steel: 0xc8ccd2, iron: 0x9aa0a8, elf: 0xb8f0d0, mithril: 0xe0f0ff, obsidian: 0x4a3a66, light: 0xfff0a0, fire: 0xff6a2a, heal: 0x6aff8a, shield: 0x6ab0ff, wind: 0xe0f8ff };
 const PIX = {
   stick: ['........', '......#.', '.....#..', '....#...', '...#....', '..#.....', '.#......', '........'],
   pick: ['.hhhhh..', 'h....hh.', '....#.h.', '...#....', '..#.....', '.#......', '#.......', '........'],
@@ -1455,6 +1533,7 @@ export function drawIcon(canvas, id, atlas) {
     case 'flower': for (let y = 8; y < 15; y++) put(8, y, '#4a7a2a'); put(7, 11, '#5a8a34'); put(6, 10, '#5a8a34'); lump(0xe8e0ff, 8, 6, [3, 3]); put(8, 6, '#ffe070'); break;
     case 'shield': for (let y = 2; y < 15; y++) for (let x = 3; x < 13; x++) { const w = y < 10 ? 5 : 5 - (y - 9); if (Math.abs(x - 7.5) < w) put(x, y, rgb(Math.abs(x - 7.5) > w - 1.2 || y === 2 ? 0x9aa0a8 : it.color, 1 + (7.5 - x) * 0.03)); } put(7, 7, '#d8b040'); put(8, 7, '#d8b040'); break;
     case 'mithril_ingot': ingot(0xd8e8f0); break;
+    case 'gem': { const c = it.color; for (let y = 4; y < 13; y++) for (let x = 4; x < 12; x++) { const d = Math.abs(x - 7.5) + Math.abs(y - 8.5) * 0.9; if (d < 4.5) put(x, y, rgb(c, 1.15 - d * 0.06 - (x > 8 ? 0.12 : 0))); } put(6, 6, '#ffffff'); put(7, 5, '#ffffff'); break; }
     case 'saw': for (let x = 3; x < 13; x++) for (let y = 7; y < 11; y++) put(x, y, rgb(0xb8bcc4, y === 7 ? 1.25 : 1)); for (let x = 3; x < 13; x += 2) put(x, 11, '#9a9ea6'); for (let y = 5; y < 12; y++) put(13, y, '#8a6a40'); put(14, 5, '#8a6a40'); put(14, 11, '#8a6a40'); break;
     case 'decor': { const c = it.color; for (let y = 4; y < 14; y++) for (let x = 3; x < 13; x++) if (y > 9 || (x > 4 && x < 11)) put(x, y, rgb(c, y === 4 || y === 10 ? 1.2 : 1 - (y - 4) * 0.02)); put(7, 6, '#ffffff'); break; }
     case 'rod': for (let i = 2; i < 14; i++) put(i, 15 - i, rgb(0x8a6a40, 1 + (i % 2) * 0.1)); for (let y = 2; y < 12; y++) put(13, y, '#e8e8e8'); put(13, 12, '#d83a3a'); put(13, 13, '#f0f0f0'); break;

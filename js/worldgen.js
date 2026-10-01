@@ -6,8 +6,8 @@ const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a
 const lerp = (a, b, t) => a + (b - a) * t;
 const mod = (a, n) => ((a % n) + n) % n;
 
-export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11, ZOO: 12, VALE: 13, ELFWOOD: 14, PEAKS: 15, MIRE: 16, ASHEN: 17, OCEAN: 18, ISLAND: 19 };
-export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo', 'Bioparque', 'Colinas de Valverde', 'Bosque de Lunaria', 'Montes de Hierroalto', 'Ciénaga Sombría', 'Tierras de Brasa', 'Mar abierto', 'Isla'];
+export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11, ZOO: 12, VALE: 13, ELFWOOD: 14, PEAKS: 15, MIRE: 16, ASHEN: 17, OCEAN: 18, ISLAND: 19, CANYON: 20, SALT: 21, GEYSER: 22 };
+export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo', 'Bioparque', 'Colinas de Valverde', 'Bosque de Lunaria', 'Montes de Hierroalto', 'Ciénaga Sombría', 'Tierras de Brasa', 'Mar abierto', 'Isla', 'Cañones rojos', 'Salar', 'Campo de géiseres'];
 export const MAGIC_BIOMES = new Set([13, 14, 15, 16, 17]);
 // El Abismo: mazmorra infinita lejos del mundo normal; cada nivel ocupa ABYSS_W bloques en x
 export const ABYSS_X = 300000, ABYSS_W = 256;
@@ -49,6 +49,9 @@ export class WorldGen {
     this.nCave = new Simplex(seed + 6);
     this.nCave2 = new Simplex(seed + 7);
     this.nRuin = new Simplex(seed + 8);
+    this.nCanyon = new Simplex(seed + 15);
+    this.nSalt = new Simplex(seed + 16);
+    this.nGeyser = new Simplex(seed + 17);
     // desplazamiento por semilla: el ruido simplex vale ~0 en el origen
     this.ox = (hash2(seed, 1, 2) - 0.5) * 200000;
     this.oz = (hash2(seed, 3, 4) - 0.5) * 200000;
@@ -699,6 +702,19 @@ export class WorldGen {
     if (scrapT > 0) h = lerp(h, SEA - 0.6 + detail * 2.2, scrapT);
     const milT = smooth(0.45, 0.56, this.nMil.fbm2(wx / 650, wz / 650, 2)) * (1 - urbanT) * (1 - brewT) * (1 - scrapT) * (1 - mushT);
     if (milT > 0) h = lerp(h, 48 + cont * 3 + detail * 1.5, milT);
+    // v12.2: cañones rojos (mesetas escalonadas con cañadones), salar (llano blanco) y campo de géiseres
+    const rest = (1 - urbanT) * (1 - brewT) * (1 - tundraT) * (1 - mushT) * (1 - scrapT) * (1 - milT);
+    const canT = smooth(0.4, 0.52, this.nCanyon.fbm2(wx / 560, wz / 560, 2)) * rest;
+    if (canT > 0) {
+      const cv = Math.abs(this.nCanyon.fbm2(wx / 110 + 40, wz / 110, 2));
+      const wall = smooth(0.05, 0.2, cv);
+      const ch = cv < 0.02 ? SEA - 2 : 50 + detail * 1.5 + Math.round(wall * 7 + this.nDetail.noise2(wx / 40, wz / 40) * 0.6) * 4;
+      h = lerp(h, ch, canT);
+    }
+    const saltT = smooth(0.44, 0.56, this.nSalt.fbm2(wx / 540, wz / 540, 2)) * rest * (1 - canT);
+    if (saltT > 0) h = lerp(h, this.nDetail.noise2(wx / 13, wz / 13) > 0.6 ? SEA - 1 : SEA + 1 + Math.max(0, detail) * 0.6, saltT);
+    const geyT = smooth(0.46, 0.56, this.nGeyser.fbm2(wx / 500, wz / 500, 2)) * rest * (1 - canT) * (1 - saltT);
+    if (geyT > 0) h = lerp(h, 52 + cont * 3 + detail * 4, geyT);
 
     let biome = BIOME.FOREST;
     if (urbanT > 0.5) biome = BIOME.CITY;
@@ -707,6 +723,9 @@ export class WorldGen {
     else if (mushT > 0.5) biome = BIOME.MUSHROOM;
     else if (scrapT > 0.5) biome = BIOME.SCRAPSEA;
     else if (milT > 0.5) biome = BIOME.MILITARY;
+    else if (canT > 0.5) biome = BIOME.CANYON;
+    else if (saltT > 0.5) biome = BIOME.SALT;
+    else if (geyT > 0.5) biome = BIOME.GEYSER;
     else if (swampT > 0.5) biome = BIOME.SWAMP;
     else if (desertT > 0.5) biome = BIOME.DESERT;
 
@@ -752,6 +771,7 @@ export class WorldGen {
       for (let y = 0; y <= h; y++) {
         let id;
         if (y === 0 || (y < 3 && hash3(seed, wx, y, wz) < 0.5)) id = 1;
+        else if (b === BIOME.CANYON && y > 36 && y >= h - 34) { const bd = mod(y + Math.round(this.nDetail.noise2(wx / 50, wz / 50) * 3), 11); id = h - y === 0 && h < 54 ? 1102 : bd < 4 ? 1103 : bd < 6 ? 1104 : bd === 6 ? 1105 : 1103; }
         else if (y < h - 4) id = y < 18 + this.nDetail.noise2(wx / 30, wz / 30) * 4 ? 3 : 2;
         else {
           const depth = h - y;
@@ -774,6 +794,8 @@ export class WorldGen {
             case BIOME.MIRE: id = depth < 2 ? 7 : 4; break;
             case BIOME.ASHEN: id = depth === 0 ? (hash2(seed + 401, wx, wz) < 0.3 ? 6 : 205) : 205; break;
             case BIOME.SCRAPSEA: id = depth < 3 ? 192 : 4; break;
+            case BIOME.SALT: id = depth === 0 ? (h > SEA ? 1106 : 229) : depth < 3 ? 229 : 2; break;
+            case BIOME.GEYSER: { const r = hash2(seed + 611, wx, wz), pt = this.nDetail.noise2(wx / 9, wz / 9); id = depth === 0 ? (pt > 0.5 && r < 0.8 ? 1109 : r < 0.04 ? 205 : 1037) : depth < 4 ? 1037 : 2; break; }
             case BIOME.ISLAND: id = depth === 0 ? (h <= SEA + 2 ? 229 : 84) : depth < 3 ? (h <= SEA + 3 ? 229 : 4) : 2; break;
             case BIOME.OCEAN: id = depth < 3 ? (h < SEA - 13 ? 8 : 229) : 2; break;
             case BIOME.MILITARY: id = depth === 0 ? (hash2(seed + 191, wx, wz) < 0.004 ? 182 : hash2(seed + 192, wx, wz) < 0.3 ? 8 : 5) : 4; break;
@@ -783,7 +805,7 @@ export class WorldGen {
         }
         data[I(x, y, z)] = id;
       }
-      const waterId = b === BIOME.BREW || this.type === 'magic' || this.type === 'islands' ? (b === BIOME.ASHEN ? 55 : 47) : 17;
+      const waterId = b === BIOME.BREW || b === BIOME.SALT || b === BIOME.GEYSER || b === BIOME.CANYON || this.type === 'magic' || this.type === 'islands' ? (b === BIOME.ASHEN ? 55 : 47) : 17;
       for (let y = h + 1; y <= SEA; y++) data[I(x, y, z)] = waterId;
       if (b === BIOME.TUNDRA && h < SEA) data[I(x, SEA, z)] = 148; // lagos congelados
 
@@ -809,7 +831,19 @@ export class WorldGen {
         const n2 = this.nCave2.noise3(wx / 42, y / 26, wz / 42);
         let carve = n1 * n1 + n2 * n2 < 0.011;
         if (!carve && y < 36) carve = this.nCave.noise3(wx / 70 + 50, y / 34, wz / 70) > 0.58;
-        if (carve) data[I(x, y, z)] = y < 9 ? (this.nCave2.noise2(wx / 60, wz / 60) > 0.15 ? 55 : 17) : 0;
+        if (carve) data[I(x, y, z)] = y < 9 ? (this.nCave2.noise2(wx / 60, wz / 60) > 0.15 ? 55 : 17) : y < 15 && this.nCave2.noise2(wx / 50 + 90, wz / 50) > 0.35 ? 47 : 0;
+      }
+      // v12.2: cuevas con vida (estalactitas, estalagmitas, hongos que brillan, cristales) y costra de obsidiana sobre la lava
+      if (this.type !== 'islands') for (let y = 5; y < topCarve; y++) {
+        const i = I(x, y, z), cur = data[i];
+        if (cur === 55 && y === 8 && data[i + 256] === 0 && hash3(seed + 605, wx, y, wz) < 0.18) { data[i] = 1111; continue; }
+        if (cur !== 0) continue;
+        const below = data[i - 256], above = data[i + 256], r = hash3(seed + 601, wx, y, wz);
+        if (below === 2 || below === 3) {
+          if (r < 0.022) data[i] = 1113;
+          else if (y < 42 && r < 0.04) data[i] = 1114;
+          else if (y < 26 && r < 0.047) data[i] = 1115;
+        } else if ((above === 2 || above === 3) && r > 0.965) data[i] = 1112;
       }
     }
 
@@ -820,6 +854,7 @@ export class WorldGen {
       { id: 19, n: 10, maxY: 70, size: 6 },
       { id: 20, n: 7, maxY: 48, size: 6 },
       { id: 21, n: 3, maxY: 24, size: 4 },
+      { id: 1110, n: 4, maxY: 60, size: 5 },
     ];
     if (this.type === 'magic') { for (const v of veins) if (v.id === 21) v.id = 216; veins.push({ id: 217, n: 2, maxY: 40, size: 3 }); }
     for (const v of veins) for (let k = 0; k < v.n; k++) {
@@ -852,7 +887,10 @@ export class WorldGen {
       const c = colAt(wx, wz);
       if (c.h <= SEA) continue;
       const dens = c.biome === BIOME.FOREST ? 0.015 : c.biome === BIOME.SWAMP ? 0.008 : c.biome === BIOME.DESERT ? 0.0015 : c.biome === BIOME.BREW ? 0.004 : c.biome === BIOME.TUNDRA ? 0.004 : 0;
-      if (c.biome === BIOME.MUSHROOM) { if (r < 0.011) this.giantMushroom(set, setAir, wx - x0, c.h + 1, wz - z0, wx, wz); continue; }
+      if (c.biome === BIOME.MUSHROOM) { if (r < 0.011) this.giantMushroom(set, setAir, wx - x0, c.h + 1, wz - z0, wx, wz); else if (r < 0.016) setAir(wx - x0, c.h + 1, wz - z0, 1114); continue; }
+      if (c.biome === BIOME.SALT) { if (r < 0.006 && c.h > SEA) { setAir(wx - x0, c.h + 1, wz - z0, 1107); if (r < 0.003) setAir(wx - x0 + 1, c.h + 1, wz - z0, 1107); } continue; }
+      if (c.biome === BIOME.GEYSER) { if (r < 0.0035 && c.h > SEA) { const lx = wx - x0, lz = wz - z0; set(lx, c.h, lz, 1108); for (const [a, bb] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) set(lx + a, c.h, lz + bb, 1109); } else if (r > 0.0195) { const lx = wx - x0, lz = wz - z0; setAir(lx, c.h + 1, lz, 205); } continue; }
+      if (c.biome === BIOME.CANYON) { if (r < 0.0015) this.deadTree(set, setAir, wx - x0, c.h + 1, wz - z0, wx, wz); continue; }
       if (c.biome === BIOME.CIRCUIT || c.biome === BIOME.ZOO || c.base) continue;
       if (c.biome === BIOME.CITY) continue;
       const lx = wx - x0, lz = wz - z0;
@@ -1351,9 +1389,12 @@ export class WorldGen {
 
   giantMushroom(set, setAir, lx, y, lz, wx, wz) {
     const s = this.seed;
-    const hgt = 5 + Math.floor(hash2(s + 151, wx, wz) * 6);
+    // v12.2: uno de cada cuatro es gigante (hasta 17 de alto), con hongos que brillan debajo del sombrero
+    const huge = hash2(s + 154, wx, wz) < 0.25;
+    const hgt = huge ? 10 + Math.floor(hash2(s + 151, wx, wz) * 8) : 5 + Math.floor(hash2(s + 151, wx, wz) * 6);
     const cap = hash2(s + 152, wx, wz) < 0.5 ? 145 : 146;
-    const r = 2 + Math.floor(hash2(s + 153, wx, wz) * 2);
+    const r = huge ? 4 + Math.floor(hash2(s + 153, wx, wz) * 2) : 2 + Math.floor(hash2(s + 153, wx, wz) * 2);
+    if (huge) { for (const [a, b] of [[1, 0], [0, 1], [1, 1]]) for (let i = 0; i < hgt; i++) set(lx + a, y + i, lz + b, 144); for (const [a, b] of [[2, 2], [-1, -1], [2, -1], [-1, 2]]) setAir(lx + a, y, lz + b, 1114); }
     for (let i = 0; i < hgt; i++) set(lx, y + i, lz, 144);
     for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) {
       const d = Math.hypot(dx, dz);

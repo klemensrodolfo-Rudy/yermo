@@ -374,7 +374,7 @@ export class Player {
     const vy = this.vel.y;
     const hitY = this.moveAxis('y', vy * dt);
     this.onGround = hitY && vy < 0;
-    if (this.onGround && !this.flying && !liquid && !this.onLadder && vy < -12) {
+    if (this.onGround && !this.flying && !liquid && !this.onLadder && vy < -12 && !(this.softLand > performance.now())) {
       const dmg = Math.round(vy * vy / 56 - 3.5 - (R ? 2 : 0));
       if (dmg > 0) this.damage(dmg, 'caída');
     }

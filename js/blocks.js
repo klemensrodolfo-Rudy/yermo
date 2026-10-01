@@ -50,6 +50,8 @@ export const TILES = [
   'conc_rojo', 'conc_naranja', 'conc_amarillo', 'conc_lima', 'conc_verde', 'conc_cian', 'conc_celeste', 'conc_azul', 'conc_violeta', 'conc_rosa', 'conc_negro', 'conc_blanco',
   // v12.1: materiales
   'sandstone', 'tuff', 'stone_pol', 'stone_carv', 'deepstone_pol', 'deepstone_carv', 'deepstone_brk', 'sandstone_pol', 'sandstone_carv', 'sandstone_brk', 'basalt_pol', 'basalt_carv', 'basalt_brk', 'tuff_pol', 'tuff_carv', 'tuff_brk', 'glass_cyan', 'glass_sky', 'glass_pink', 'glass_white', 'glass_smoke', 'glass_lime', 'planks_oak', 'planks_palm', 'door_wood', 'door_oak', 'door_palm', 'door_elf', 'old_tiles', 'rusty_sign', 'hanging_cables', 'broken_glass',
+  // v12.2: mundo
+  'red_sand', 'red_sandstone', 'clay_ochre', 'clay_white', 'salt_top', 'salt_side', 'salt_crystal', 'geyser_top', 'thermal_top', 'quartz_ore', 'obsidian', 'stalactite', 'stalagmite', 'glow_mushroom', 'cave_crystal', 'quartz_block', 'quartz_lamp',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -64,6 +66,7 @@ export const BIOME_TINT = [
   [126, 104, 140], [116, 124, 126], [106, 132, 100], [126, 114, 94], [112, 116, 92], [128, 128, 128], [134, 128, 82],
   [96, 152, 88], [108, 150, 124], [116, 128, 110], [92, 108, 84], [140, 112, 92],
   [100, 140, 120], [92, 168, 80],
+  [150, 118, 84], [140, 136, 120], [124, 126, 96],
 ];
 // banderas por tile para el shader: 1 variación completa (rota/espeja por bloque), 2 sólo espejo, 4 agua que fluye,
 // 8 lava, 16 se mece con el viento, 32 remolino (portal), 64 llama que titila
@@ -80,6 +83,9 @@ export const TILE_FLAGS = new Uint8Array(1024);
   set('barley0 barley1 barley2 barley3 hops0 hops1 hops2 hops3 potato0 potato1 potato2 potato3 branches', 16);
   set('portal', 32);
   set('fire flame', 64);
+  set('red_sand salt_top thermal_top tuff sandstone obsidian', 1);
+  set('red_sandstone clay_ochre clay_white quartz_block', 2);
+  set('glow_mushroom', 16);
 }
 
 export const AIR = 0;
@@ -415,6 +421,23 @@ doorSet(1064, 'Puerta de madera', T.door_wood, 'axe', 1.5);
 doorSet(1072, 'Puerta de roble', T.door_oak, 'axe', 1.5);
 doorSet(1080, 'Puerta de palmera', T.door_palm, 'axe', 1.5);
 doorSet(1088, 'Puerta élfica', T.door_elf, 'axe', 1.5);
+// ---------- v12.2: mundo ----------
+def(1102, { name: 'Arena roja', tex: tx(T.red_sand), hardness: 0.5, tool: 'shovel' });
+def(1103, { name: 'Arenisca roja', tex: tx(T.red_sandstone), hardness: 1.2, tool: 'pick', tier: 1 });
+def(1104, { name: 'Arcilla ocre', tex: tx(T.clay_ochre), hardness: 1, tool: 'shovel' });
+def(1105, { name: 'Arcilla blanca', tex: tx(T.clay_white), hardness: 1, tool: 'shovel' });
+def(1106, { name: 'Costra de sal', tex: { top: T.salt_top, side: T.salt_side, bottom: T.sand }, hardness: 0.6, tool: 'shovel', drop: 422 });
+def(1107, { name: 'Cristal de sal', tex: tx(T.salt_crystal), solid: false, opaque: false, render: 'cross', hardness: 0.2, drop: 422, dropCount: 2 });
+def(1108, { name: 'Géiser', tex: { top: T.geyser_top, side: T.tuff, bottom: T.tuff }, hardness: 3, tool: 'pick', tier: 1, drop: 1037 });
+def(1109, { name: 'Tierra termal', tex: { top: T.thermal_top, side: T.tuff, bottom: T.tuff }, hardness: 0.8, tool: 'shovel', drop: 1037 });
+def(1110, { name: 'Mineral de cuarzo', tex: tx(T.quartz_ore), hardness: 3, tool: 'pick', tier: 2, drop: 416, dropCount: 2 });
+def(1111, { name: 'Obsidiana', tex: tx(T.obsidian), hardness: 9, tool: 'pick', tier: 3 });
+def(1112, { name: 'Estalactita', tex: tx(T.stalactite), solid: false, opaque: false, render: 'cross', hardness: 0.6, tool: 'pick', drop: 0 });
+def(1113, { name: 'Estalagmita', tex: tx(T.stalagmite), solid: false, opaque: false, render: 'cross', hardness: 0.6, tool: 'pick', drop: 0 });
+def(1114, { name: 'Hongo brillante', tex: tx(T.glow_mushroom), solid: false, opaque: false, render: 'cross', hardness: 0, light: 9 });
+def(1115, { name: 'Cristal de cueva', tex: tx(T.cave_crystal), solid: false, opaque: false, render: 'cross', hardness: 0.8, tool: 'pick', light: 8, drop: 416 });
+def(1116, { name: 'Bloque de cuarzo', tex: tx(T.quartz_block), hardness: 2, tool: 'pick', tier: 1 });
+def(1117, { name: 'Lámpara de cuarzo', tex: tx(T.quartz_lamp), hardness: 1, tool: 'pick', light: 15 });
 export const V121 = { sandstone: 1036, tuff: 1037, stone_pol: 1038, stone_carv: 1039, deepstone_pol: 1040, deepstone_brk: 1041, deepstone_carv: 1042, sandstone_pol: 1043, sandstone_brk: 1044, sandstone_carv: 1045, basalt_pol: 1046, basalt_brk: 1047, basalt_carv: 1048, tuff_pol: 1049, tuff_brk: 1050, tuff_carv: 1051, glass_cyan: 1052, glass_sky: 1053, glass_pink: 1054, glass_white: 1055, glass_smoke: 1056, glass_lime: 1057, planks_oak: 1058, planks_palm: 1059, fence_wood: 1060, fence_oak: 1061, fence_palm: 1062, fence_elf: 1063, door_wood: 1064, door_oak: 1072, door_palm: 1080, door_elf: 1088, ruin_wall: 1096, old_tiles: 1097, rusty_sign: 1098, pipes: 1099, hanging_cables: 1100, broken_glass: 1101 };
 export const CONC_COLORS = [1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035];
 
@@ -662,6 +685,13 @@ export const ITEMS = {
   413: { name: 'Alfombra roja', icon: 'decor', decor: 7, color: 0xc83a3a },
   414: { name: 'Caja de madera', icon: 'decor', decor: 8, color: 0xa08050 },
   415: { name: 'Puesto de venta', icon: 'decor', decor: 9, color: 0xd84a3a },
+  // v12.2
+  416: { name: 'Cuarzo', icon: 'gem', color: 0xf0ecf8 },
+  417: { name: 'Pico de obsidiana', icon: 'pick', color: 'obsidian', tool: 'pick', tier: 3, speed: 9, durability: 2400 },
+  418: { name: 'Hacha de obsidiana', icon: 'axe', color: 'obsidian', tool: 'axe', tier: 3, speed: 9, durability: 2400, weapon: 10 },
+  419: { name: 'Pala de obsidiana', icon: 'shovel', color: 'obsidian', tool: 'shovel', tier: 3, speed: 9, durability: 2400 },
+  420: { name: 'Espada de obsidiana', icon: 'sword', color: 'obsidian', weapon: 13, durability: 2000 },
+  422: { name: 'Sal', icon: 'gem', color: 0xf8f8f0 },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -726,7 +756,7 @@ export const maxStack = (id) => (ITEMS[id]?.durability || ITEMS[id]?.stack === 1
 export const FLAMMABLE = new Uint8Array(MAXB);
 for (let i = 1; i < B.length; i++) { const b = B[i]; if (b && !b.container && !b.station && !b.marker && !b.loot && !LIQ[i] && (b.tool === 'axe' || /hoja|tela|cortina|paja|cebada|lúpulo|pasto|hongo|papa/i.test(b.name))) FLAMMABLE[i] = 1; }
 {
-  const C = { 28: 1, 21: 1, 217: 2, 208: 3, 219: 3, 55: 5, 221: 7, 74: 7, 140: 4, 241: 4, 138: 4, 238: 0, 159: 1 };
+  const C = { 1115: 2, 1117: 7, 1108: 3, 28: 1, 21: 1, 217: 2, 208: 3, 219: 3, 55: 5, 221: 7, 74: 7, 140: 4, 241: 4, 138: 4, 238: 0, 159: 1 };
   for (const [id, c] of Object.entries(C)) LCOL[+id] = c;
   for (let i = 1; i < B.length; i++) { const bl = B[i]; if (!bl?.light || LCOL[i]) continue; if (/hongo|seta/i.test(bl.name || '')) LCOL[i] = 6; else if (/portal/i.test(bl.name || '')) LCOL[i] = 2; }
 }
@@ -757,6 +787,14 @@ export const RECIPES = [
   { out: [59, 6], in: [[9, 3]], station: 'mesa' },
   { out: [60, 6], in: [[23, 3]], station: 'mesa' },
   { out: [9, 4], in: [[8, 2], [6, 2]], station: 'mesa' },
+  // v12.2: mundo
+  { out: [1103, 4], in: [[1102, 4]], station: 'horno' },
+  { out: [1116, 1], in: [[416, 4]], station: 'mesa' },
+  { out: [1117, 1], in: [[416, 2], [14, 1], [257, 1]], station: 'mesa' },
+  { out: [417, 1], in: [[1111, 3], [256, 2]], station: 'mesa' },
+  { out: [418, 1], in: [[1111, 3], [256, 2]], station: 'mesa' },
+  { out: [419, 1], in: [[1111, 1], [256, 2]], station: 'mesa' },
+  { out: [420, 1], in: [[1111, 2], [256, 1]], station: 'mesa' },
   // v12.1: materiales
   { out: [1036, 4], in: [[229, 4]], station: 'horno' },
   { out: [1037, 4], in: [[6, 4], [8, 1]], station: 'horno' },

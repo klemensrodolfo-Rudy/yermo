@@ -146,6 +146,14 @@ export function setupGuide(ui, getGame) {
       <h3>Empleados</h3><p>Se contratan con el líder de un asentamiento (15 fichas + 2 por día): <b>granjero</b> (cosecha, resiembra y guarda en tu cofre), <b>guardia</b> (dispara a lo hostil) y <b>cervecero</b> (vende la cerveza de tus choperas cada mañana y deposita en el banco).</p>
       <h3>Repartos y rutas</h3><p>El líder te da ${icon(354)} cajones para llevar a otro asentamiento. Si hacés la misma ruta dos veces queda como <b>ruta comercial</b> y paga todos los días (hasta 5 rutas).</p>
       <h3>Concurso cervecero</h3><p>Cada 7 días (el diario avisa). Presentá tu mejor cerveza a un líder: cuenta la calidad ★, el estilo, la reputación y si tiene <b>nombre propio</b> (etiquetala en el diario → Cervezas). El ganador se lleva la ${icon(363)} Copa cervecera y 25 fichas.</p>`,
+    'Biomas nuevos y cuevas': () => `
+      <p><b>Cañones rojos</b>: mesetas escalonadas con paredes en franjas de ${icon(1103)} arenisca roja y ${icon(1104)} ${icon(1105)} arcillas; abajo, ${icon(1102)} arena roja y a veces un arroyo. Hay serpientes y escorpiones.</p>
+      <p><b>Salar</b>: un llano blanco de ${icon(1106)} costra de sal con lagunas y ${icon(1107)} cristales de sal (dan ${icon(422)} sal). Van flamencos.</p>
+      <p><b>Campo de géiseres</b>: roca volcánica y ${icon(1109)} tierra termal. Los ${icon(1108)} <b>géiseres</b> largan un chorro de vapor cada tanto: si estás encima te lanza por el aire (sin daño al caer).</p>
+      <p><b>Bosque de hongos</b>: ahora también hay hongos gigantes de hasta 17 bloques y ${icon(1114)} hongos que brillan.</p>
+      <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
+      <h3>Minerales nuevos</h3>
+      <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
     'Peligros y clima': () => `
       <p><b>Estaciones</b>: primavera, verano, otoño e invierno (3 días cada una). Cambian la temperatura y la velocidad de los cultivos; en invierno nieva.</p>
       <p><b>Tormenta eléctrica</b>: caen rayos donde hay cielo abierto (prefieren lo alto y lo metálico) y prenden fuego. <b>Tornado</b>: un embudo que arrastra, levanta y rompe cosas livianas; bajo techo estás a salvo.</p>

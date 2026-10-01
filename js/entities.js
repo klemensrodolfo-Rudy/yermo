@@ -1129,14 +1129,14 @@ export class Mobs {
       }
     }
     if (sy != null && col.biome === BIOME.TUNDRA && r > 0.92) { if (r > 0.97 && count.bear < 2) herd('bear', 1); else if (count.penguin < 6) herd('penguin', 3); return; }
-    if (sy != null && col.biome === BIOME.SWAMP && r > 0.9) { if (r > 0.96 && count.crocodile < 3) herd('crocodile', 1); else if (count.flamingo < 6) herd('flamingo', 3); return; }
-    if (sy != null && col.biome === BIOME.DESERT && r > 0.94 && count.snake < 3) { herd('snake', 1); return; }
+    if (sy != null && (col.biome === BIOME.SWAMP || col.biome === BIOME.SALT) && r > 0.9) { if (r > 0.96 && count.crocodile < 3) herd('crocodile', 1); else if (count.flamingo < 6) herd('flamingo', 3); return; }
+    if (sy != null && (col.biome === BIOME.DESERT || col.biome === BIOME.CANYON) && r > 0.94 && count.snake < 3) { herd('snake', 1); return; }
     if (sy != null) {
       if (col.biome === BIOME.CRATER && count.behemoth < 1 && Math.random() < 0.04) { this.add('behemoth', x + 0.5, sy, z + 0.5); this.onBoss?.(); return; }
       if (night && count.ghoul < 8 && r < 0.65 && !this.torchNear(x, sy, z, 7)) { this.add('ghoul', x + 0.5, sy, z + 0.5); return; }
       if (night && col.biome === BIOME.CITY && count.rat < 6 && r < 0.8 && !this.torchNear(x, sy, z, 6)) { for (let i = 0; i < 2 + (Math.random() < 0.5 ? 1 : 0); i++) this.add('rat', x + 0.5 + i * 0.6, sy, z + 0.5); return; }
       if (!night && count.crow < 4 && r > 0.85 && (col.biome === BIOME.FOREST || col.biome === BIOME.DESERT || col.biome === BIOME.BREW)) { this.add('crow', x + 0.5, sy + 8, z + 0.5); return; }
-      if ((col.biome === BIOME.DESERT || col.biome === BIOME.CRATER) && count.scorpion < 3 && r < 0.3) { this.add('scorpion', x + 0.5, sy, z + 0.5); return; }
+      if ((col.biome === BIOME.DESERT || col.biome === BIOME.CRATER || col.biome === BIOME.CANYON) && count.scorpion < 3 && r < 0.3) { this.add('scorpion', x + 0.5, sy, z + 0.5); return; }
       if (col.biome === BIOME.TUNDRA && count.wolf < 5 && r < 0.4) { for (let i = 0; i < 2 + (r < 0.15 ? 1 : 0); i++) this.add('wolf', x + 0.5 + i, sy, z + 0.5); return; }
       if (col.biome === BIOME.MUSHROOM && count.shroom < 5 && r < 0.45) { this.add('shroom', x + 0.5, sy, z + 0.5); return; }
       if ((col.biome === BIOME.FOREST || col.biome === BIOME.BREW) && count.dog < 2 && r > 0.92) { this.add('dog', x + 0.5, sy, z + 0.5); return; }
