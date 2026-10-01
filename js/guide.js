@@ -293,6 +293,11 @@ export function setupGuide(ui, getGame) {
       <p><b>🐾 Animales</b>: los pacíficos andan en manada, escapan de los cazadores y de noche vuelven a su lugar. Los cazadores (lobos, leones, osos, huargos…) persiguen presas cuando no hay nadie cerca.</p>
       <p><b>📜 Historias</b>: cada zona (ciudad, desierto, cráter, zona militar, mar de chatarra, tundra, pantano, bosque y el archipiélago) tiene una historia en 4 partes. Las notas que encontrás en los cofres de esa zona son partes de su historia; las ves en pausa → Mundo → Historias. Completar una da 8 fichas.</p>
       <p><b>🐦 Aves y 🐟 peces</b>: de día pasan bandadas por el cielo, y en el agua limpia nadan cardúmenes de colores que escapan si te acercás.</p>`,
+    'Libro y mejoras': () => `
+      <p>El <b>📖 Libro del superviviente</b> (tecla <b>O</b> o pausa → Juego → Libro) tiene tres partes:</p>
+      <ul><li><b>Colección</b>: animales que viste, minerales que sacaste, biomas que visitaste, recetas que fabricaste y lo que pescaste. Al llegar al 25, 50, 75 y 100% de cada página ganás fichas.</li>
+      <li><b>Semana</b>: 3 desafíos que cambian cada lunes (pescar, fabricar, cosechar, comerciar…). Cada uno da 20 fichas y un regalo.</li>
+      <li><b>Mejoras</b>: casi todo lo que hacés da experiencia; cada nivel te da un punto para mejorar algo: correr más rápido, aguantar más bajo el agua, romper más rápido, pegar más fuerte, aguantar el frío y el calor, recuperar vida más rápido o tener más suerte en los cofres (hasta 3 niveles cada una).</li></ul>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

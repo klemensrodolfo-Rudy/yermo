@@ -124,6 +124,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v10.7 — Mundo vivo**: pueblos que crecen con casas y vecinos nuevos, rutina de día y de noche, manadas, cazadores y presas, historias de 4 partes por zona, aves en bandada y peces en el agua limpia.
 
+**v10.8 — Progresión**: libro de colección con premios, desafíos semanales y experiencia con 7 mejoras del personaje.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

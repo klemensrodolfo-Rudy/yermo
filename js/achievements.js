@@ -83,6 +83,9 @@ export const ACHIEVEMENTS = [
   { id: 'voz', name: 'A tus órdenes', desc: 'Hacé algo con el control por voz.' },
   { id: 'historia', name: 'Cronista', desc: 'Completá las 4 partes de una historia de una zona.' },
   { id: 'pueblo', name: 'Vecino querido', desc: 'Ayudá a que un pueblo crezca.' },
+  { id: 'coleccion', name: 'Coleccionista', desc: 'Completá una página entera del libro.' },
+  { id: 'semana', name: 'Semana perfecta', desc: 'Completá los 3 desafíos de una semana.' },
+  { id: 'nivel', name: 'Experimentado', desc: 'Subí de nivel.' },
 ];
 
 export class Achievements {

@@ -121,8 +121,8 @@ export class Player {
     if (this.thirst <= 0) { a.thirst = (a.thirst || 0) + dt; if (a.thirst > 5) { a.thirst = 0; this.damage(1, 'sed'); } }
     // temperatura: se acerca de a poco a la del entorno
     this.temp += (this.targetTemp - this.temp) * Math.min(1, dt / 25);
-    if (this.temp < 4) { a.cold = (a.cold || 0) + dt; if (a.cold > 6) { a.cold = 0; this.damage(1, 'frío'); } }
-    if (this.temp > 40) { a.heat = (a.heat || 0) + dt; if (a.heat > 8) { a.heat = 0; this.damage(1, 'calor'); } }
+    if (this.temp < 4) { a.cold = (a.cold || 0) + dt; if (a.cold > 6 * (this.perkCold || 1)) { a.cold = 0; this.damage(1, 'frío'); } }
+    if (this.temp > 40) { a.heat = (a.heat || 0) + dt; if (a.heat > 8 * (this.perkCold || 1)) { a.heat = 0; this.damage(1, 'calor'); } }
     // enfermedades
     if (this.disease.infeccion > 0) { this.disease.infeccion += dt; a.inf = (a.inf || 0) + dt; if (a.inf > 20) { a.inf = 0; if (this.health > 2) this.damage(1, 'infección'); } }
     if (intox) this.disease.intoxicacion = Math.max(0, this.disease.intoxicacion - dt);
@@ -133,10 +133,10 @@ export class Player {
     if (this.buffs.acido > 0 && this.health < 20) { a.acid = (a.acid || 0) + dt; if (a.acid > 2) { a.acid = 0; this.health = Math.min(20, this.health + 1); } }
     if (this.hunger >= 15 && this.health < 20 && this.rad < 60 && regenOk) {
       a.regen += dt;
-      if (a.regen > 3) { a.regen = 0; this.health = Math.min(20, this.health + 1); this.hunger = Math.max(0, this.hunger - 0.5); }
+      if (a.regen > 3 / (this.perkRegen || 1)) { a.regen = 0; this.health = Math.min(20, this.health + 1); this.hunger = Math.max(0, this.hunger - 0.5); }
     } else a.regen = 0;
     if (this.hunger <= 0) { a.starve += dt; if (a.starve > 4) { a.starve = 0; if (this.health > 1) this.damage(1, 'hambre'); } }
-    const maxAir = 10 * (this.inv.equip.head ? ITEMS[this.inv.equip.head.id]?.air ?? 1 : 1);
+    const maxAir = 10 * (this.inv.equip.head ? ITEMS[this.inv.equip.head.id]?.air ?? 1 : 1) * (this.perkAir || 1);
     if (this.headInWater) {
       this.air = Math.max(0, this.air - dt);
       if (this.air <= 0) { a.drown += dt; if (a.drown > 1) { a.drown = 0; this.damage(2, 'ahogo'); } }
@@ -322,7 +322,7 @@ export class Player {
       if (VT.boat) speed = liquid ? VT.speed : 1.2;
       else if (liquid) speed *= 0.4;
     } else if (liquid && !this.flying) speed *= this.inLava ? 0.35 : 0.55;
-    if (!R) speed *= this.speedMul ?? 1;
+    if (!R) speed *= (this.speedMul ?? 1) * (this.perkSpeed ?? 1);
     if (this.drunk >= 3 && !R) { const t = performance.now() / 700; mx += Math.sin(t) * 0.25; mz += Math.cos(t * 1.3) * 0.25; }
 
     if (w.getBlock(fx0, 1, fz0) === -1) { this.vel.set(0, 0, 0); this.updateCamera(dt, sprint, 0); return; }
@@ -449,7 +449,7 @@ export class Player {
     if (good) t /= it.speed;
     const tier = good ? it.tier : 0;
     if (b.tier > 0 && tier < b.tier) t *= 3.3;
-    return Math.max(0.05, t);
+    return Math.max(0.05, t / (this.perkMine || 1));
   }
   canHarvest(id) {
     const b = BLOCKS[id];
@@ -458,7 +458,7 @@ export class Player {
     return !!(it && it.tool === b.tool && it.tier >= b.tier);
   }
 
-  get dmgMul() { return (this.buffs.coraje > 0 ? 1.3 : 1) * (this.buffs.furia > 0 ? 1.6 : 1); }
+  get dmgMul() { return (this.buffs.coraje > 0 ? 1.3 : 1) * (this.buffs.furia > 0 ? 1.6 : 1) * (this.perkDmg || 1); }
   weaponDamage() {
     const it = this.inv.hand && ITEMS[this.inv.hand.id];
     return (it?.weapon ?? 1) * this.dmgMul;
@@ -766,6 +766,8 @@ export class Player {
     if (this.creative) return;
     if (b.loot) {
       for (const [lid, a, bb, p] of LOOT_TABLES[b.loot]) if (Math.random() < p) this.give(lid, a + Math.floor(Math.random() * (bb - a + 1)), lid === 337 ? { note: this.storyNote?.(br.x, br.z) ?? Math.floor(Math.random() * 1000) } : ITEMS[lid]?.beer ? { q: 1 + Math.floor(Math.random() * 3) } : undefined);
+      // suertudo: a veces sale algo de más
+      if (this.perkLuck && Math.random() < this.perkLuck) { const T = LOOT_TABLES[b.loot], e = T[Math.floor(Math.random() * T.length)]; if (e[0] !== 337) this.give(e[0], e[1]); }
       this.onEvent('loot', id);
     }
     if (this.canHarvest(id) && b.drop) {

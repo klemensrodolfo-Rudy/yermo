@@ -32,6 +32,7 @@ import { createVisuals } from './visuals.js';
 import { createUX } from './ux.js';
 import { createVoiceCmd } from './voicecmd.js';
 import { createLife } from './life.js';
+import { createProgress } from './progress.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -1101,6 +1102,7 @@ async function startGame(meta, hello, cloudInfo) {
     game?.features2?.event(n, id);
     game?.extras?.event(n, id);
     game?.life?.event(n, id);
+    game?.progress?.event(n, id);
   };
   player.onBreakStage = setCrack;
   player.onStation = (st) => openInventory(st);
@@ -1200,6 +1202,7 @@ async function startGame(meta, hello, cloudInfo) {
   game.ux = createUX(fctx);
   game.voiceCmd = createVoiceCmd(fctx);
   game.life = createLife(fctx);
+  game.progress = createProgress(fctx);
   // clic derecho en bloques y criaturas: cada módulo mira primero lo suyo
   const blockF2 = player.onUseBlock;
   player.onUseBlock = (...a) => LE.onUseBlock(...a) || CR.onUseBlock(...a) || MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
@@ -1255,7 +1258,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1641,6 +1644,7 @@ document.addEventListener('keydown', (e) => {
   if (locked && game.features2.key(e)) return;
   if (locked && game.ux?.key(e)) return;
   if (game.voiceCmd?.key(e)) return;
+  if (locked && game.progress?.key(e)) return;
   if (e.code === 'KeyM' && inputActive()) { toggleBigMap(); return; }
   if (!locked) return;
   if (e.code === 'KeyT' && net.active) { e.preventDefault(); game.player.keys = {}; openChat(); return; }
@@ -1687,7 +1691,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '10.7 · 2026-10-02';
+const VERSION = '10.8 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1770,6 +1774,7 @@ function loop(now) {
   game.ux?.update(dt);
   game.voiceCmd?.update(dt);
   game.life?.update(dt);
+  game.progress?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
