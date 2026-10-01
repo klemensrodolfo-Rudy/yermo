@@ -181,7 +181,12 @@ export class Sfx {
       17: [[[28, 35, 40, 46], [29, 36, 41, 47]], [52, 53, 56, 57, 59, 60, 64]], // Brasa
       18: [[[41, 48, 53, 57], [43, 50, 55, 59], [38, 45, 50, 53]], [65, 67, 69, 72, 74, 77]], // mar abierto
       19: [[[43, 50, 55, 59], [45, 52, 57, 60], [41, 48, 53, 57]], [67, 69, 71, 74, 76, 79]], // isla
+      20: [[[40, 47, 52, 56], [41, 48, 53, 57], [43, 50, 55, 58]], [64, 65, 68, 69, 71, 72, 74]], // cañones: frigio dominante
+      21: [[[41, 48, 57, 60], [43, 50, 59, 62], [45, 52, 57, 64]], [65, 67, 69, 71, 72, 76, 79]], // salar: lidio, abierto
+      22: [[[34, 41, 46, 50], [36, 43, 48, 52]], [58, 60, 62, 64, 66, 68]], // géiseres: tonos enteros graves
     };
+    // timbre propio de cada bioma: [onda, duración, volumen]
+    const LEAD = { 20: ['sawtooth', 0.7, 0.035], 21: ['sine', 2.6, 0.07], 22: ['sine', 2.0, 0.06], 6: ['sine', 2.2, 0.06], 7: ['sine', 2.4, 0.06], 14: ['triangle', 2.2, 0.06], 18: ['sine', 2.0, 0.06] };
     const harm = () => HARM[this.biome] || minor;
     let ci = 0;
     const pad = () => {
@@ -221,7 +226,7 @@ export class Sfx {
       let next = 400;
       if (mood === 'explore' || mood === 'abyss') {
         // notas sueltas con eco, cada tanto
-        if (Math.random() < (mood === 'abyss' ? 0.25 : 0.35)) { const sc = mood === 'abyss' ? HARM[11][1] : harm()[1]; note(sc[Math.floor(Math.random() * sc.length)] - (this.night > 0.5 || mood === 'abyss' ? 12 : 0), 1.6, 0.06); }
+        if (Math.random() < (mood === 'abyss' ? 0.25 : 0.35)) { const sc = mood === 'abyss' ? HARM[11][1] : harm()[1], L = mood === 'abyss' ? null : LEAD[this.biome]; note(sc[Math.floor(Math.random() * sc.length)] - (this.night > 0.5 || mood === 'abyss' ? 12 : 0), L ? L[1] : 1.6, L ? L[2] : 0.06, L ? L[0] : 'triangle'); if (this.biome === 20 && Math.random() < 0.5) setTimeout(() => note(sc[Math.floor(Math.random() * sc.length)], 0.5, 0.03, 'sawtooth'), 180); }
         next = 1800 + Math.random() * 2000;
       } else if (mood === 'danger') {
         // pulso grave y ostinato menor

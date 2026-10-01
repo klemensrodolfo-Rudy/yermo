@@ -2,6 +2,7 @@
 import { itemName } from './blocks.js';
 
 export const NEWS = [
+  ['13.4', 'Recuerdos y mascotas', [[116, 'Álbum de viaje automático con tus mejores momentos.'], [443, 'Grabar recorrido: un video de tu mundo en 30 segundos.'], [271, 'El perro encuentra tesoros y la cabra avisa del peligro.'], [245, 'Música propia en los cañones, el salar y los géiseres.']]],
   ['13.3', 'Con amigos', [[285, 'El mundo sigue mientras no estás: cultivos y baterías avanzan.'], [442, 'Paquetes de hasta 4 cosas por el buzón.'], [443, 'Carreras en globo con 10 aros y ranking del grupo.'], [251, 'Concurso semanal de construcción con votos.']]],
   ['13.2', 'Pincel, portones y planos', [[444, 'Pincel para teñir hormigón, vidrio y camas con 12 colores.'], [1147, 'Portón automático que se abre al acercarte.'], [362, 'Planos compartibles como código de texto.']]],
   ['13.1', 'Caravanas, faros y estaciones', [[271, 'Caravanas de comerciantes para escoltar (25 fichas y un regalo).'], [1146, 'Faros con haz de luz giratorio de noche.'], [228, 'Templos hundidos en el mar abierto.'], [1106, 'Nieve en las mesetas en invierno, salar inundado tras la lluvia y géiseres más activos de noche.']]],

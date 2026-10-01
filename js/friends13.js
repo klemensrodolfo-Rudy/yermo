@@ -75,7 +75,7 @@ export function createFriends13(ctx) {
       const ms = Math.round(race.t * 1000), best = meta.balloonBest;
       if (!best || ms < best) meta.balloonBest = ms;
       flash(`🏁 ¡Llegaste! ${(ms / 1000).toFixed(1)} s${!best || ms < best ? ' · ¡récord del mundo!' : ` · récord: ${(best / 1000).toFixed(1)} s`}`);
-      sfx.achievement?.(); p.onEvent('v13', 'carrera');
+      sfx.achievement?.(); p.onEvent('v13', 'carrera'); g.album?.snap(`🎈 Carrera en globo: ${(ms / 1000).toFixed(1)} s`);
       if (meta.cloud || Cloud.user) Cloud.submitScore({ score: Math.max(0, 900000 - ms), days: 0, kills: 0, world_type: 'globo', seed: meta.seed, cause: null }).catch(() => {});
     }
     race = null;

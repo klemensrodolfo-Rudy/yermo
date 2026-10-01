@@ -114,7 +114,7 @@ export function createWorld13(ctx) {
         const extra = [442, 440, 416, 441][Math.floor(Math.random() * 4)];
         p.give(353, 25); p.give(extra, extra === 416 ? 4 : 1); sfx.achievement?.();
         p.onEvent('v13', 'escolta'); p.onEvent('quest');
-        endCaravan('💰 ¡La caravana llegó sana y salva! Te pagaron 25 fichas y un regalo.');
+        g.album?.snap('🐐 Caravana escoltada'); endCaravan('💰 ¡La caravana llegó sana y salva! Te pagaron 25 fichas y un regalo.');
       } else endCaravan(null);
     }
   }

@@ -66,7 +66,7 @@ export function createTreasure(ctx) {
     meta.waypoints = (meta.waypoints || []).filter((wp) => !(wp.treasure && wp.x === t.x && wp.z === t.z));
     for (let i = 0; i < inv.slots.length; i++) { const s = inv.slots[i]; if (s?.id === 442 && s.tx === t.x && s.tz === t.z) inv.slots[i] = null; }
     inv.onChange();
-    sfx.achievement?.(); flash('💰 ¡Encontraste el tesoro!'); p.onEvent('v12', 'tesoro');
+    sfx.achievement?.(); flash('💰 ¡Encontraste el tesoro!'); p.onEvent('v12', 'tesoro'); g.album?.snap('💰 Tesoro encontrado');
   };
   api.dispose = () => {};
   return api;

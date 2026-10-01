@@ -44,6 +44,7 @@ import { createQol } from './qol.js';
 import { createWorld13 } from './world13.js';
 import { createBuild13 } from './build13.js';
 import { createFriends13 } from './friends13.js';
+import { createMemories } from './memories.js';
 import { createTreasure } from './treasure.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
@@ -1269,6 +1270,7 @@ async function startGame(meta, hello, cloudInfo) {
   const W13 = game.world13 = createWorld13(fctx);
   const B13 = game.build13 = createBuild13(fctx);
   game.friends13 = createFriends13(fctx);
+  game.album = createMemories(fctx);
   const useB13 = player.onUseItem;
   player.onUseItem = (...a) => B13.onUseItem(...a) || useB13(...a);
   const TR = game.treasure = createTreasure(fctx);
@@ -1337,7 +1339,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); game.news?.dispose(); game.wildlife?.dispose(); game.treasure?.dispose(); game.qol?.dispose(); game.world13?.dispose(); game.build13?.dispose(); game.friends13?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); game.news?.dispose(); game.wildlife?.dispose(); game.treasure?.dispose(); game.qol?.dispose(); game.world13?.dispose(); game.build13?.dispose(); game.friends13?.dispose(); game.album?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1770,7 +1772,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '13.3 · 2026-10-02';
+const VERSION = '13.4 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1868,6 +1870,7 @@ function loop(now) {
   game.world13?.update(dt);
   game.build13?.update(dt);
   game.friends13?.update(dt);
+  game.album?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
@@ -1960,6 +1963,7 @@ function loop(now) {
   game.features.preRender();
   renderer.render(scene, camera);
   if (game.features.wantPhoto) game.features.capture();
+  game.album?.grab();
   if (!paused && !ui.open && !game.player.dead && !game.meta.remote && now - (game.thumbT || 0) > (game.meta.thumb ? 90000 : 8000)) {
     game.thumbT = now;
     try { const c = document.createElement('canvas'); c.width = 176; c.height = 100; c.getContext('2d').drawImage(renderer.domElement, 0, 0, 176, 100); game.meta.thumb = c.toDataURL('image/jpeg', 0.6); } catch { /* sin miniatura */ }

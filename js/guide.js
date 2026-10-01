@@ -154,6 +154,11 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Recuerdos y mascotas': () => `
+      <p><b>📔 Álbum de viaje</b> (pausa → Juego): se llena solo con una foto de cada logro, cada bioma nuevo y los momentos especiales (tesoros, eclipses, caravanas, carreras, tu primer vuelo en globo).</p>
+      <p><b>🎬 Grabar recorrido</b> (pausa → Juego): la cámara vuela sola alrededor de tu casa y se aleja mostrando tu mundo; en 30 segundos tenés un video para guardar o compartir. Esc lo corta.</p>
+      <p><b>🐕 Tu perro</b> olfatea los tesoros de tus mapas y escarba donde hay cofres enterrados cerca. <b>🐐 Tu cabra</b> se pone nerviosa y te avisa si algo peligroso se acerca.</p>
+      <p><b>🎵 Música</b>: los cañones, el salar y los géiseres tienen su propia música, y cada bioma suena con su timbre.</p>`,
     'Con amigos': () => `
       <p><b>🕰 El mundo sigue</b>: cuando volvés después de un rato, los cultivos crecieron y las baterías se cargaron según el tiempo que pasó (hasta un día). Te avisa al entrar.</p>
       <p><b>📦 Paquetes</b>: en el buzón (mundo del grupo) podés mandar hasta 4 cosas de tu barra juntas, aunque el otro no esté. Los cuadros viajan con su dibujo y los mapas del tesoro con su destino.</p>
