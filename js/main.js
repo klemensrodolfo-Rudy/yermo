@@ -768,7 +768,7 @@ async function startGame(meta, hello) {
   player.vehicles = vehicles;
   sim.mobs = mobs;
   sim.entities = () => { const out = [{ x: player.pos.x, y: player.pos.y, z: player.pos.z }]; for (const m of mobs.list.values()) out.push(m.pos); for (const a of net.avatars.values()) out.push(a.pos); return out; };
-  game.race = new Race(game, net, sfx, flash);
+  game.race = new Race(game, net, sfx, flash, scene);
   const ext = {};
   const fctx = {
     game, ui, net, sfx, flash, scene, camera, renderer, uniforms, skyUniforms, settings, particles, voice, ext,
@@ -1204,7 +1204,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '7.4 · 2026-10-01';
+const VERSION = '7.5 · 2026-10-01';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles

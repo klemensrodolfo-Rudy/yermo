@@ -68,8 +68,8 @@ const $ = (s) => document.querySelector(s);
 const fmt = (t) => { const m = Math.floor(t / 60), s = t - m * 60; return (m ? m + ':' : '') + s.toFixed(2).padStart(m ? 5 : 4, '0'); };
 
 export class Race {
-  constructor(game, net, sfx, flash) {
-    this.g = game; this.net = net; this.sfx = sfx; this.flash = flash;
+  constructor(game, net, sfx, flash, scene) {
+    this.g = game; this.net = net; this.sfx = sfx; this.flash = flash; this.scene = scene;
     this.state = null; this.champ = null;
     this.acc = 0;
   }
@@ -210,6 +210,11 @@ export class Race {
       for (let i = 0; i < 3; i++) lights[i].className = left <= 3 - i && left > 0 ? 'red' : '';
       if (left < S.lastBeep && left > 0) { S.lastBeep = left; this.sfx.beep?.(440); }
       if (S.me && p.riding) { p.vel.set(0, 0, 0); }
+      // subirse a un vehículo cerca de la largada durante la cuenta regresiva: entra a la carrera
+      if (!S.me && p.riding) {
+        const st = S.tr.at(0);
+        if (Math.hypot(p.pos.x - st.x, p.pos.z - st.z) < 40) { S.me = { lap: 0, cp: 1, done: false, time: 0, lapStart: 0, best: null, name: this.net.myName || 'Vos' }; this.flash('¡Estás en la carrera!'); }
+      }
       if (tRace >= 0) {
         S.phase = 'running';
         for (const l of lights) l.className = 'green';
@@ -218,23 +223,37 @@ export class Race {
       }
     }
     if (S.phase === 'running') {
+      // jugador local: se sigue el control más cercano. Avanzar de a 1-3 controles suma progreso (en el sentido
+      // elegido al arrancar); los saltos grandes (cortar por el pasto) no suman. La vuelta cuenta al cruzar la meta
+      // si se recorrió casi toda la pista (se perdonan hasta 3 controles).
       if (S.me && !S.me.done) {
-        const e = S.me;
-        const cp = S.tr.at(S.tr.cps[e.cp % S.N]);
-        const seg = S.L / S.N;
-        const d = Math.hypot(p.pos.x - cp.x, p.pos.z - cp.z);
-        e.frac = Math.max(0, 1 - d / seg);
-        if (d < S.tr.radius) {
-          if (e.cp % S.N === 0) {
-            const lapTime = tRace - e.lapStart;
-            e.best = e.best == null ? lapTime : Math.min(e.best, lapTime);
-            e.lap++; e.lapStart = tRace;
-            this.sfx.beep?.(660);
-            if (e.lap >= S.laps) { e.done = true; e.time = tRace; this.finishCheck(); }
-            else this.flash(`Vuelta ${e.lap + 1} de ${S.laps} · ${fmt(lapTime)}`);
+        const e = S.me, N = S.N, H = Math.floor(N / 2);
+        let ni = 0, nd = Infinity;
+        for (let i = 0; i < N; i++) { const q = S.tr.at(S.tr.cps[i]); const d = Math.hypot(p.pos.x - q.x, p.pos.z - q.z); if (d < nd) { nd = d; ni = i; } }
+        if (e.ni == null) { e.ni = ni; e.u = 0; e.dir = 0; }
+        if (nd < S.tr.radius * 2.2 && ni !== e.ni) {
+          const delta = ((((ni - e.ni) % N) + N + H) % N) - H; // paso con signo, el más corto
+          if (Math.abs(delta) <= 3) {
+            if (!e.dir) { e.dir = Math.sign(delta); if (e.dir < 0) this.flash('Corrés en sentido contrario: vale igual'); }
+            e.u += delta * e.dir;
+            const crossed = e.dir > 0 ? delta > 0 && e.ni > ni : delta < 0 && e.ni < ni;
+            if (crossed && e.u >= N * (e.lap + 1) - 3) {
+              const lapTime = tRace - e.lapStart;
+              e.best = e.best == null ? lapTime : Math.min(e.best, lapTime);
+              e.lap++; e.lapStart = tRace;
+              this.sfx.beep?.(660);
+              if (e.lap >= S.laps) { e.done = true; e.time = tRace; this.finishCheck(); }
+              else this.flash(`Vuelta ${e.lap + 1} de ${S.laps} · ${fmt(lapTime)}`);
+            } else if (crossed && e.u > 3) this.flash('Te salteaste parte de la pista: esta vuelta no cuenta');
           }
-          e.cp++;
+          e.ni = ni;
         }
+        e.cp = (((e.u % N) + N) % N) + 1;
+        const nextI = (((e.ni + (e.dir || 1)) % N) + N) % N;
+        const nq = S.tr.at(S.tr.cps[nextI]);
+        e.nextDist = Math.hypot(p.pos.x - nq.x, p.pos.z - nq.z);
+        e.frac = Math.max(0, 1 - e.nextDist / (S.L / N));
+        this.beacon(e.done ? null : nq);
         if (!p.riding && !e.done) { this.flash('Te bajaste del vehículo: abandonaste la carrera'); e.done = true; e.time = Infinity; this.finishCheck(); }
       }
       // pilotos de la IA: siguen la línea central en su carril y frenan en las curvas
@@ -266,6 +285,22 @@ export class Race {
     this.renderHud(tRace);
   }
 
+  // columna de luz sobre el próximo punto de control
+  beacon(q) {
+    if (!q) { if (this.bc) this.bc.visible = false; return; }
+    if (!this.bc) {
+      const g = new THREE.Group();
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 14, 10, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd84a, transparent: true, opacity: 0.35, depthWrite: false }));
+      col.position.y = 7; g.add(col);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.15, 6, 24), new THREE.MeshBasicMaterial({ color: 0xffd84a }));
+      ring.rotation.x = Math.PI / 2; ring.position.y = 0.4; g.add(ring);
+      this.scene.add(g); this.bc = g;
+    }
+    this.bc.visible = true;
+    this.bc.position.set(q.x, q.y, q.z);
+    this.bc.children[1].scale.setScalar(1 + Math.sin(performance.now() / 200) * 0.1);
+  }
+
   standings() {
     const S = this.state;
     const list = [];
@@ -283,7 +318,8 @@ export class Race {
     const champ = this.champ ? `🏆 Fecha ${this.champ.round + 1}/${CHAMP_ROUNDS} · ` : '';
     const nitro = this.g.player.riding?.tune?.nitro ? ` · Nitro ${Math.round((this.g.player.riding.nitro ?? 0) / 5 * 100)}% (Shift)` : '';
     $('#raceInfo').innerHTML = champ + (me ? `<b>${me.done ? 'Terminaste' : `Vuelta ${Math.min(me.lap + 1, S.laps)}/${S.laps}`}</b> · Posición ${pos}/${st.length}<br>` : '<b>Espectador</b><br>') +
-      `Tiempo ${fmt(Math.max(0, me?.done && isFinite(me.time) ? me.time : tRace))}${me?.best ? ` · Mejor vuelta ${fmt(me.best)}` : ''}${nitro}`;
+      `Tiempo ${fmt(Math.max(0, me?.done && isFinite(me.time) ? me.time : tRace))}${me?.best ? ` · Mejor vuelta ${fmt(me.best)}` : ''}${nitro}` +
+      (me && !me.done && S.phase === 'running' ? `<br>Control ${((me.cp - 1) % S.N) + 1}/${S.N} · ${Math.round(me.nextDist ?? 0)} m · seguí la luz amarilla` : '');
     $('#raceTable').innerHTML = st.map((e, i) => `<div>${i + 1}. ${e.name}${e.done && isFinite(e.time) ? ' · ' + fmt(e.time) : ''}</div>`).join('');
   }
 
@@ -351,6 +387,7 @@ export class Race {
     if (!S) return;
     for (const A of S.ais) this.g.vehicles.remove(A.veh);
     this.state = null;
+    if (this.bc) this.bc.visible = false;
     if (!keepChamp && S.finished !== true) this.champ = null;
     $('#raceHud').hidden = true; $('#raceLights').hidden = true; $('#podium').hidden = true;
   }
