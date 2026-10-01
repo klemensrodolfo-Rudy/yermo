@@ -118,6 +118,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v10.3 — Control por voz**: con K o el botón 🎙, frases en castellano («adelante», «corré», «pará», «golpeá», «dejá de golpear», «mirá a la derecha», «saltá», «abrí la mochila», «elegí el tres»…), encadenables y con indicador de lo que entendió. Usa el reconocimiento del navegador (Chrome/Edge).
 
+**v10.4 — Luces, sonido y vida**: luces de colores que tiñen el entorno y halos de noche, sonido ambiente por capas (olas, agua, viento, pájaros, grillos, fogata, bajo el agua) con volumen propio, pasos según la superficie, animales que te miran, huellas en arena y nieve, vista previa al construir, deslizar la barra en el celu, herramienta automática y marcador de donde moriste.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

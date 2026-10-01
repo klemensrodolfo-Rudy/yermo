@@ -1,7 +1,7 @@
 // Visual v10: luz de la antorcha en la mano, partículas ambientales (luciérnagas, hojas, polvo, burbujas),
 // color por bioma y momento del día, auroras en lugares fríos y opciones de cámara.
 import * as THREE from 'three';
-import { BLOCKS, ITEMS } from './blocks.js';
+import { BLOCKS, ITEMS, LIQ, LIQ_LEVEL, EMIT, LCOL, RENDER } from './blocks.js';
 import { BIOME } from './worldgen.js';
 
 // color por bioma: [saturación, contraste, brillo, tono]
@@ -30,7 +30,7 @@ export function createVisuals(ctx) {
     box.innerHTML = `<label>Campo de visión: <b class="fovV">${settings.fov}</b>°</label><input class="fov" type="range" min="60" max="105" value="${settings.fov}">
       <div class="checks"><label class="check"><input type="checkbox" class="bob"> 🚶 Balanceo al caminar</label><label class="check"><input type="checkbox" class="shk"> 💥 Sacudón de cámara</label>
       <label class="check"><input type="checkbox" class="inv"> ↕ Invertir mirada vertical</label><label class="check"><input type="checkbox" class="grd"> 🎨 Color cinematográfico</label>
-      <label class="check"><input type="checkbox" class="amb"> ✨ Partículas del ambiente</label><label style="margin:8px 0 0">Mira <select class="xh"><option value="cruz">Cruz</option><option value="punto">Punto</option><option value="aro">Aro</option></select></label><label class="check"><input type="checkbox" class="tps"> 💡 Consejos la primera vez</label></div>`;
+      <label class="check"><input type="checkbox" class="amb"> ✨ Partículas del ambiente</label><label style="margin:8px 0 0">Mira <select class="xh"><option value="cruz">Cruz</option><option value="punto">Punto</option><option value="aro">Aro</option></select></label><label class="check"><input type="checkbox" class="tps"> 💡 Consejos la primera vez</label><label class="check"><input type="checkbox" class="bpv"> 🧱 Vista previa al construir</label><label class="check"><input type="checkbox" class="atl"> ⛏ Herramienta automática al romper</label></div>`;
     const $ = (s) => box.querySelector(s);
     $('.bob').checked = settings.bob; $('.shk').checked = settings.shake; $('.inv').checked = settings.invertY; $('.grd').checked = settings.grade; $('.amb').checked = settings.ambient;
     const save = () => { applyCam(); ctx.saveSettings?.(); };
@@ -41,6 +41,8 @@ export function createVisuals(ctx) {
     $('.grd').onchange = (e) => { settings.grade = e.target.checked; save(); };
     $('.amb').onchange = (e) => { settings.ambient = e.target.checked; save(); };
     $('.xh').value = settings.crosshair || 'cruz'; $('.xh').onchange = (e) => { settings.crosshair = e.target.value; save(); };
+    $('.bpv').checked = settings.buildPreview !== false; $('.bpv').onchange = (e) => { settings.buildPreview = e.target.checked; save(); };
+    $('.atl').checked = !!settings.autoTool; $('.atl').onchange = (e) => { settings.autoTool = e.target.checked; save(); };
     $('.tps').checked = settings.tips !== false; $('.tps').onchange = (e) => { settings.tips = e.target.checked; save(); };
   }
 
@@ -158,15 +160,32 @@ export function createVisuals(ctx) {
   const sGeo = new THREE.BufferGeometry(); sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3)); sGeo.setAttribute('color', new THREE.BufferAttribute(sCol, 3));
   const smoke = new THREE.Points(sGeo, new THREE.PointsMaterial({ size: 0.9, map: glowTex, vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false }));
   smoke.frustumCulled = false; scene.add(smoke);
-  let sNext = 0, sources = [], scanAcc = 3, puffAcc = 0;
+  let sNext = 0, sources = [], lights = [], scanAcc = 3, puffAcc = 0;
+  // halos alrededor de las luces (de noche o en lugares oscuros)
+  const PAL = [[1, 0.65, 0.3], [0.5, 1, 0.35], [0.75, 0.45, 1], [0.6, 0.8, 1], [1, 0.25, 0.2], [1, 0.45, 0.15], [0.35, 0.9, 1], [1, 0.95, 0.85]];
+  const halos = [];
+  for (let i = 0; i < 48; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 })); s.visible = false; scene.add(s); halos.push(s); }
+  function haloTick() {
+    const dark = Math.max(0, 1 - uniforms.daylight.value * 1.4), t = performance.now() / 1000;
+    for (let i = 0; i < halos.length; i++) {
+      const h = halos[i], L = lights[i];
+      if (!L || dark < 0.05 || settings.battery) { h.visible = false; continue; }
+      h.visible = true; h.position.set(L[0], L[1], L[2]);
+      const flick = L[5] ? 0.85 + Math.sin(t * 11 + i) * 0.08 + Math.sin(t * 6.7 + i * 2) * 0.07 : 1;
+      const s = (L[5] ? 1.3 : 2.2) * (L[4] / 15) * flick; h.scale.set(s, s, 1);
+      h.material.color.setRGB(...PAL[L[3]] || PAL[0]); h.material.opacity = 0.55 * dark * flick;
+    }
+  }
   function smokeTick(dt) {
     scanAcc += dt;
     if (scanAcc > 2.5) {
       scanAcc = 0; sources = [];
       const x0 = Math.floor(p.pos.x), y0 = Math.floor(p.pos.y), z0 = Math.floor(p.pos.z);
+      lights = [];
       for (let dx = -18; dx <= 18; dx++) for (let dz = -18; dz <= 18; dz++) for (let dy = -6; dy <= 6; dy++) {
         const b = w.getBlock(x0 + dx, y0 + dy, z0 + dz);
-        if (b === 108 || b === 181) { sources.push([x0 + dx + 0.5, y0 + dy + (b === 108 ? 0.6 : 0.9), z0 + dz + 0.5]); if (sources.length > 24) break; }
+        if ((b === 108 || b === 181) && sources.length < 24) sources.push([x0 + dx + 0.5, y0 + dy + (b === 108 ? 0.6 : 0.9), z0 + dz + 0.5]);
+        if (b > 0 && EMIT[b] >= 10 && !LIQ[b] && lights.length < 48) lights.push([x0 + dx + 0.5, y0 + dy + (RENDER[b] === 2 ? 0.75 : 0.5), z0 + dz + 0.5, LCOL[b], EMIT[b], RENDER[b] === 2 || b === 108 || b === 181]);
       }
     }
     puffAcc += dt;
@@ -195,7 +214,35 @@ export function createVisuals(ctx) {
     sGeo.attributes.position.needsUpdate = true; sGeo.attributes.color.needsUpdate = true;
   }
 
-  api.update = (dt) => { windTick(dt); handLight(); ambient(dt); grade(dt); smokeTick(dt); };
-  api.dispose = () => { scene.remove(smoke); sGeo.dispose(); scene.remove(pts); geo.dispose(); canvas.style.filter = ''; uniforms.plOn.value = 0; skyUniforms.aurora.value = 0; };
+  // ---------- sonido ambiente: qué hay cerca ----------
+  let ambAcc = 1;
+  const GREEN = new Set([BIOME.FOREST, BIOME.BREW, BIOME.VALE, BIOME.ELFWOOD, BIOME.ISLAND, BIOME.ZOO, BIOME.MUSHROOM, BIOME.SWAMP, BIOME.MIRE]);
+  function ambienceTick(dt) {
+    ambAcc += dt; if (ambAcc < 0.4) return; ambAcc = 0;
+    const sfx = ctx.sfx; if (!sfx?.ctx) return;
+    sfx.ambVol = (settings.ambVol ?? 70) / 100;
+    const x0 = Math.floor(p.pos.x), y0 = Math.floor(p.pos.y), z0 = Math.floor(p.pos.z);
+    let water = 0, flowing = 0, fire = 0;
+    for (let dx = -8; dx <= 8; dx += 2) for (let dz = -8; dz <= 8; dz += 2) for (let dy = -4; dy <= 4; dy += 2) {
+      const b = w.getBlock(x0 + dx, y0 + dy, z0 + dz);
+      if (LIQ[b] === 1 || LIQ[b] === 2) { water++; if (LIQ_LEVEL[b] > 0) flowing++; }
+      else if (b === 108 || b === 181) fire++;
+    }
+    let sea = 0;
+    for (let a = 0; a < 8; a++) { const c = g.gen.column(Math.floor(p.pos.x + Math.cos(a) * 20), Math.floor(p.pos.z + Math.sin(a) * 20)); if (c.h < 40 && (c.biome === BIOME.OCEAN || c.biome === BIOME.SCRAPSEA)) sea++; }
+    const b = g.gen.column(x0, z0).biome, day = uniforms.daylight.value, rain = g.weather?.rainK || 0;
+    const open = y0 > 30;
+    sfx.ambience({
+      waves: Math.min(1, sea / 4) * (open ? 1 : 0.3),
+      water: Math.min(1, flowing / 6 + (water > 30 && sea === 0 ? 0.15 : 0)),
+      birds: day > 0.6 && GREEN.has(b) && rain < 0.2 && open && !p.headInWater ? (b === BIOME.ELFWOOD || b === BIOME.ISLAND || b === BIOME.VALE ? 1 : 0.6) : 0,
+      crickets: day < 0.35 && GREEN.has(b) && rain < 0.2 && open && !p.headInWater ? 1 : 0,
+      fire: Math.min(1, fire / 2),
+      underwater: p.headInWater ? 1 : 0,
+    });
+    sfx.setWind(Math.min(1, g.wind?.k ?? 0.3));
+  }
+  api.update = (dt) => { windTick(dt); handLight(); ambient(dt); grade(dt); smokeTick(dt); haloTick(); ambienceTick(dt); };
+  api.dispose = () => { for (const h of halos) scene.remove(h); scene.remove(smoke); sGeo.dispose(); scene.remove(pts); geo.dispose(); canvas.style.filter = ''; uniforms.plOn.value = 0; skyUniforms.aurora.value = 0; };
   return api;
 }

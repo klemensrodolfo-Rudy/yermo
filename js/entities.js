@@ -735,6 +735,7 @@ export class Mobs {
 
   // players: [{pos, id, local, dead, creative, player?}]
   update(dt, players, daylight) {
+    this.focus = players[0]?.pos;
     if (this.authority) this.spawn(dt, players, daylight);
     for (const m of [...this.list.values()]) {
       if (this.kids && this.authority && m.def.hostile && !m.def.neutral && !m.owner) { this.remove(m); continue; }
@@ -940,6 +941,15 @@ export class Mobs {
     if (P.segs) P.segs.forEach((sg, i) => { sg.position.x = Math.sin(performance.now() / 400 + i * 0.8) * 0.3 * (i + 1) / 3; });
     if (P.armsRelaxed && P.arms) P.arms.forEach((a, i) => (a.rotation.x = (i ? s : -s) * 0.6));
     if (P.collar) P.collar.visible = !!m.owner;
+    // miran al jugador cuando está cerca (y respiran cuando están quietos)
+    if (P.head && !m.dying && this.focus && !m.def.boss) {
+      const dx = this.focus.x - m.pos.x, dz = this.focus.z - m.pos.z, dd = Math.hypot(dx, dz);
+      let want = 0;
+      if (dd < 7 && dd > 0.6) { want = Math.atan2(-dx, -dz) - m.yaw; want = Math.atan2(Math.sin(want), Math.cos(want)); want = Math.max(-0.9, Math.min(0.9, want)); }
+      m.headYaw = (m.headYaw || 0) + (want - (m.headYaw || 0)) * Math.min(1, dt * 4);
+      P.head.rotation.y = m.headYaw;
+      if (!m.walking) { m.breath = (m.breath || Math.random() * 6) + dt; P.head.position.y += Math.sin(m.breath * 2.2) * 0.0009; }
+    }
     if (P.hop) g.position.y += Math.abs(Math.sin(m.phase * 0.5)) * 0.45 * walk;
     if (P.waddle) g.rotation.z = Math.sin(m.phase) * 0.12 * walk;
     if (P.trunk) P.trunk.rotation.x = Math.sin(performance.now() / 700) * 0.25 + (m.attackAnim ? -0.9 : 0);

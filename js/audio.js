@@ -16,6 +16,10 @@ export class Sfx {
   }
   mat(id) {
     const b = BLOCKS[id]; if (!b) return 'stone';
+    if (id === 229 || id === 6 || id === 8) return 'sand';
+    if (id === 147 || id === 235 || id === 148) return 'snow';
+    if (id === 84 || id === 5 || id === 143 || id === 7) return 'grass';
+    if (b.liquid) return 'water';
     if (b.tool === 'shovel') return 'soft';
     if (b.tool === 'axe') return 'wood';
     if (id === 12 || id === 27 || id === 29 || id === 19) return 'metal';
@@ -45,6 +49,10 @@ export class Sfx {
       case 'wood': this.burst({ freq: 700 * r, q: 3, dur: 0.1 * strength, gain: 0.5 * strength }); this.tone({ freq: 180 * r, dur: 0.08, gain: 0.15 * strength }); break;
       case 'metal': this.burst({ freq: 3000 * r, q: 8, dur: 0.18 * strength, gain: 0.3 * strength }); this.tone({ freq: 900 * r, dur: 0.2 * strength, gain: 0.06 * strength, type: 'square', slide: 0.97 }); break;
       case 'glass': this.burst({ freq: 5000 * r, q: 4, dur: 0.3, gain: 0.35 * strength, type: 'highpass' }); break;
+      case 'sand': this.burst({ freq: 2600 * r, q: 0.6, dur: 0.14 * strength, gain: 0.22 * strength, type: 'highpass' }); break;
+      case 'snow': this.burst({ freq: 1500 * r, q: 0.9, dur: 0.18 * strength, gain: 0.3 * strength, type: 'lowpass' }); this.burst({ freq: 3800 * r, q: 2, dur: 0.06, gain: 0.06 * strength }); break;
+      case 'grass': this.burst({ freq: 1800 * r, q: 0.7, dur: 0.11 * strength, gain: 0.25 * strength }); break;
+      case 'water': this.burst({ freq: 900 * r, q: 0.7, dur: 0.25 * strength, gain: 0.3 * strength, type: 'lowpass' }); this.tone({ freq: 500 * r, dur: 0.08, gain: 0.04 * strength, type: 'sine', slide: 1.6 }); break;
       default: this.burst({ freq: 1200 * r, q: 1.5, dur: 0.09 * strength, gain: 0.45 * strength });
     }
   }
@@ -262,6 +270,49 @@ export class Sfx {
   emote() { this.tone({ freq: 700, dur: 0.1, gain: 0.08, type: 'sine', slide: 1.3 }); }
   cheer() { for (let i = 0; i < 6; i++) setTimeout(() => this.burst({ freq: 1200 + Math.random() * 800, q: 1, dur: 0.25, gain: 0.12 }), i * 90); }
 
+  // ---------- ambiente: capas que se mezclan según lo que hay cerca ----------
+  // s: { waves, water, birds, crickets, fire, underwater } entre 0 y 1
+  ambience(s) {
+    if (!this.ctx) return;
+    const c = this.ctx, t = c.currentTime;
+    if (!this.amb) {
+      const out = c.createGain(); out.gain.value = this.ambVol ?? 0.7; out.connect(this.master);
+      const loop = (type, freq, q) => { const src = c.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true; const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q; const g = c.createGain(); g.gain.value = 0; src.connect(f); f.connect(g); g.connect(out); src.start(); return { g, f }; };
+      const waves = loop('lowpass', 420, 0.6);
+      // las olas vienen y van
+      const swell = c.createOscillator(); swell.frequency.value = 0.13; const sg = c.createGain(); sg.gain.value = 0; swell.connect(sg); sg.connect(waves.g.gain); swell.start();
+      const water = loop('bandpass', 1300, 0.7);
+      // bajo el agua: todo suena apagado
+      const muffle = c.createBiquadFilter(); muffle.type = 'lowpass'; muffle.frequency.value = 22000;
+      this.master.disconnect(); this.master.connect(muffle); muffle.connect(c.destination);
+      this.amb = { out, waves, swell: sg, water, muffle, nextBird: 0, nextCricket: 0, nextFire: 0 };
+    }
+    const A = this.amb, k = 1.5;
+    A.out.gain.setTargetAtTime(this.ambVol ?? 0.7, t, 0.3);
+    A.waves.g.gain.setTargetAtTime(s.waves * 0.16, t, k); A.swell.gain.setTargetAtTime(s.waves * 0.1, t, k);
+    A.water.g.gain.setTargetAtTime(s.water * 0.12, t, k);
+    A.muffle.frequency.setTargetAtTime(s.underwater ? 650 : 22000, t, 0.15);
+    const now = performance.now();
+    // pájaros: trinos cortos de a dos o tres notas
+    if (s.birds > 0 && now > A.nextBird) {
+      A.nextBird = now + 1500 + Math.random() * 5000 / s.birds;
+      const base = 2200 + Math.random() * 1800, n = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) setTimeout(() => this.chirp(base * (1 + (Math.random() - 0.5) * 0.25), 0.07 + Math.random() * 0.05, 0.035 * s.birds), i * (90 + Math.random() * 60));
+    }
+    // grillos: pulsos agudos y regulares
+    if (s.crickets > 0 && now > A.nextCricket) {
+      A.nextCricket = now + 700 + Math.random() * 900;
+      for (let i = 0; i < 3; i++) setTimeout(() => this.chirp(4300 + Math.random() * 200, 0.025, 0.02 * s.crickets, 1), i * 55);
+    }
+    // fogata: chasquidos
+    if (s.fire > 0 && now > A.nextFire) { A.nextFire = now + 120 + Math.random() * 500; this.burstTo(A.out, { freq: 2000 + Math.random() * 2500, q: 1.2, dur: 0.03, gain: 0.08 * s.fire, type: 'bandpass' }); }
+  }
+  chirp(freq, dur, gain, flat) {
+    const c = this.ctx, t = c.currentTime;
+    const o = c.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(freq, t); if (!flat) o.frequency.exponentialRampToValueAtTime(freq * 1.25, t + dur);
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(this.amb?.out || this.master); o.start(t); o.stop(t + dur + 0.02);
+  }
   wind() {
     const c = this.ctx;
     const src = c.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;

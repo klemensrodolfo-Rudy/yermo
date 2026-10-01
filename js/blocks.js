@@ -357,6 +357,8 @@ export const DOOR_IDS = DOORS;
 export const OPAQUE = new Uint8Array(256);
 export const SOLID = new Uint8Array(256);
 export const EMIT = new Uint8Array(256);
+// color de la luz que emite cada bloque (0 cálida de fuego · 1 verde · 2 violeta · 3 fría · 4 roja · 5 lava · 6 cian · 7 blanca)
+export const LCOL = new Uint8Array(256);
 export const RENDER = new Uint8Array(256); // 0 none,1 cube,2 torch,3 liquid,4 box,5 cross
 export const TORCH_DIR = new Int8Array(512); // [dx, dz] por id (antorchas de pared)
 export const LIQ = new Uint8Array(256);     // 0 no, 1 tóxica, 2 limpia, 3 lava
@@ -596,6 +598,11 @@ export const maxStack = (id) => (ITEMS[id]?.durability || ITEMS[id]?.stack === 1
 // bloques que se prenden fuego (madera, plantas, tela)
 export const FLAMMABLE = new Uint8Array(256);
 for (let i = 1; i < 256; i++) { const b = B[i]; if (b && !b.container && !b.station && !b.marker && !b.loot && !LIQ[i] && (b.tool === 'axe' || /hoja|tela|cortina|paja|cebada|lúpulo|pasto|hongo|papa/i.test(b.name))) FLAMMABLE[i] = 1; }
+{
+  const C = { 28: 1, 21: 1, 217: 2, 208: 3, 219: 3, 55: 5, 221: 7, 74: 7, 140: 4, 241: 4, 138: 4, 238: 0, 159: 1 };
+  for (const [id, c] of Object.entries(C)) LCOL[+id] = c;
+  for (let i = 1; i < 256; i++) { const bl = B[i]; if (!bl?.light || LCOL[i]) continue; if (/hongo|seta/i.test(bl.name || '')) LCOL[i] = 6; else if (/portal/i.test(bl.name || '')) LCOL[i] = 2; }
+}
 export const PLACEABLE = (id) => isBlock(id) && id !== 1 && !LIQ[id] && !B[id]?.crop;
 
 // ---------- Recetas ----------

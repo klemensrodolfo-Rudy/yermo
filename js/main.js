@@ -95,9 +95,9 @@ const vert = /* glsl */`
   attribute vec4 lit; attribute vec4 tinf; attribute vec4 tint;
   uniform float time; uniform vec2 wind;
   varying vec2 vUv; varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
-  flat varying vec4 vInf;
+  flat varying vec4 vInf; flat varying float vLc;
   void main() {
-    vUv = uv; vLit = lit; vInf = tinf; vTint = tint.rgb * 2.0;
+    vUv = uv; vLit = lit; vInf = tinf; vTint = tint.rgb * 2.0; vLc = tint.a * 255.0 / 32.0;
     vec3 p = position;
     vec4 wp = modelMatrix * vec4(p, 1.0);
     // plantas: la parte de arriba se mece con el viento
@@ -142,8 +142,14 @@ const frag = (water) => /* glsl */`
   uniform vec3 plPos; uniform float plOn; uniform vec3 plCol; uniform float plR;
   uniform vec2 wind; uniform float rain;
   varying vec2 vUv; varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
-  flat varying vec4 vInf;
+  flat varying vec4 vInf; flat varying float vLc;
   const float SZ = 768.0;
+  vec3 lightCol(float id) {
+    int i = int(id + 0.5);
+    if (i == 1) return vec3(0.55, 1.0, 0.4); if (i == 2) return vec3(0.8, 0.5, 1.0); if (i == 3) return vec3(0.7, 0.85, 1.0);
+    if (i == 4) return vec3(1.0, 0.3, 0.22); if (i == 5) return vec3(1.0, 0.5, 0.18); if (i == 6) return vec3(0.4, 0.9, 1.0); if (i == 7) return vec3(1.0, 0.95, 0.85);
+    return vec3(1.0, 0.7, 0.4);
+  }
   float shadowAt(vec3 wp) {
     vec4 sc = shadowMatrix * vec4(wp, 1.0);
     vec3 c = sc.xyz / sc.w * 0.5 + 0.5;
@@ -229,7 +235,7 @@ const frag = (water) => /* glsl */`
     // relieve: diferencia entre la luz con y sin la normal de la textura
     float relief = 1.0 + (max(dot(Np, Ls), 0.0) - max(dot(N, Ls), 0.0)) * 1.4 * (0.4 + 0.6 * vLit.x);
     float reliefV = 1.0 + (dot(Np, V) - dot(N, V)) * 0.8;
-    vec3 light = skyTint * sky * mix(1.0, moonLight, 1.0 - daylight) * relief + vec3(1.0, 0.7, 0.4) * blk * 1.35 * reliefV;
+    vec3 light = skyTint * sky * mix(1.0, moonLight, 1.0 - daylight) * relief + lightCol(vLc) * blk * 1.35 * reliefV;
     // faros
     if (hlOn > 0.5) {
       vec3 Lh = vWorld - hlPos; float dh = length(Lh);
@@ -248,7 +254,7 @@ const frag = (water) => /* glsl */`
       vec3 Hh = normalize(Ls + V);
       float sp = pow(max(dot(Np, Hh), 0.0), 16.0 + spec * 64.0) * spec * (0.3 + spec);
       col += vec3(1.0, 0.93, 0.8) * sp * sky * shadowF * 1.6;
-      col += vec3(1.0, 0.7, 0.4) * pow(max(dot(Np, V), 0.0), 24.0) * spec * blk * 0.35;
+      col += lightCol(vLc) * pow(max(dot(Np, V), 0.0), 24.0) * spec * blk * 0.35;
     }
     // píxeles que brillan solos (minerales, lava, lámparas, hongos)
     if (emis > 0.0) {
@@ -1420,6 +1426,8 @@ $('#optDistP').oninput = (e) => { const v = +e.target.value; $('#optDistV').text
 $('#optSens').oninput = (e) => { const v = +e.target.value; game.player.sens = v / 10000; game.meta.sens = v / 10000; };
 $('#optVol').oninput = (e) => { settings.sfx = +e.target.value; applySettings(); };
 $('#optMusic').oninput = (e) => { settings.music = +e.target.value; applySettings(); };
+$('#optAmb').oninput = (e) => { settings.ambVol = +e.target.value; applySettings(); };
+$('#optAmb').value = settings.ambVol ?? 70;
 $('#optQuality').onchange = (e) => { settings.quality = e.target.value; applySettings(); };
 $('#optBattery').onchange = (e) => { settings.battery = e.target.checked; applySettings(); flash(settings.battery ? '🔋 Ahorro de batería: 30 cuadros por segundo y menos efectos' : 'Ahorro de batería desactivado'); };
 $('#optAutoDist').onchange = (e) => { settings.autoDist = e.target.checked; applySettings(); if (!settings.autoDist && game) game.world.renderDist = game.meta.renderDist || game.world.renderDist; };
@@ -1647,7 +1655,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '10.3 · 2026-10-02';
+const VERSION = '10.4 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1734,7 +1742,7 @@ function loop(now) {
     if (auth) player.riding.rider = 'local';
     sfx.setEngine(Math.min(1, (player.riding.speed || 0) / 15) * 0.8 + 0.2);
   } else sfx.setEngine(0);
-  sfx.setRain(weather.rainK); sfx.setWind(weather.windK);
+  sfx.setRain(weather.rainK);
   uniforms.time.value = now / 1000;
   uniforms.underwater.value = player.headInWater ? 1 : 0;
   if (player.headInWater) {

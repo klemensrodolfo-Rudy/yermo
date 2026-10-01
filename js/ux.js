@@ -1,7 +1,7 @@
 // UX v10: marcadores propios (en pantalla y en el mapa), mapa grande con zoom y arrastre, modo foto con
 // filtros y cuenta regresiva, y consejos que aparecen la primera vez que ves algo.
 import * as THREE from 'three';
-import { BLOCKS, ITEMS, itemName } from './blocks.js';
+import { BLOCKS, ITEMS, itemName, PLACEABLE } from './blocks.js';
 import { BIOME_NAMES } from './worldgen.js';
 import { MOB_TYPES } from './entities.js';
 
@@ -241,11 +241,85 @@ export function createUX(ctx) {
     T.querySelector('.b-chat').hidden = !ctx.net?.active;
   }
 
+  // ---------- vista previa del bloque que vas a poner ----------
+  const ghost = new THREE.Mesh(new THREE.BoxGeometry(1.004, 1.004, 1.004), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.4, depthWrite: false }));
+  ghost.visible = false; ghost.renderOrder = 3; ctx.scene.add(ghost);
+  const ghostEdge = new THREE.LineSegments(new THREE.EdgesGeometry(ghost.geometry), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 }));
+  ghost.add(ghostEdge);
+  let ghostId = -1;
+  function ghostTick() {
+    const h = g.inv.hand, t = p.target;
+    const ok = settings.buildPreview !== false && h && PLACEABLE(h.id) && t && !ctx.ui.open && !p.dead && !ctx.isPhoto?.();
+    if (!ok) { ghost.visible = false; return; }
+    if (ghostId !== h.id) {
+      ghostId = h.id;
+      const tex = new THREE.CanvasTexture(ctx.ui.icon(h.id)); tex.magFilter = THREE.NearestFilter; tex.colorSpace = THREE.SRGBColorSpace;
+      ghost.material.map?.dispose(); ghost.material.map = tex; ghost.material.needsUpdate = true;
+    }
+    ghost.position.set(t.x + t.face[0] + 0.5, t.y + t.face[1] + 0.5, t.z + t.face[2] + 0.5);
+    ghost.material.opacity = 0.28 + Math.sin(performance.now() / 300) * 0.08;
+    ghost.visible = true;
+  }
+
+  // ---------- deslizar sobre la barra (celular) ----------
+  const hb = $('#hotbar'); let swX = null;
+  hb.addEventListener('touchstart', (e) => { swX = e.touches[0].clientX; }, { passive: true });
+  hb.addEventListener('touchmove', (e) => {
+    if (swX == null) return;
+    const dx = e.touches[0].clientX - swX;
+    if (Math.abs(dx) > 34) { ctx.ui.select((g.inv.selected + (dx > 0 ? 1 : -1) + 9) % 9); swX = e.touches[0].clientX; ctx.input?.buzz?.(5); }
+  }, { passive: true });
+  hb.addEventListener('touchend', () => { swX = null; });
+
+  // ---------- herramienta automática (opcional) ----------
+  function autoTool() {
+    if (!settings.autoTool || !p.mouse.left || !p.target || p.creative) return;
+    const bt = BLOCKS[p.target.id]; if (!bt?.tool) return;
+    let best = -1, bs = -1;
+    for (let i = 0; i < 9; i++) { const s = g.inv.slots[i], it = s && ITEMS[s.id]; if (it?.tool === bt.tool) { const sc = (it.tier || 0) * 10 + (it.speed || 0); if (sc > bs) { bs = sc; best = i; } } }
+    if (best >= 0 && best !== g.inv.selected) ctx.ui.select(best);
+  }
+
+  // ---------- donde moriste ----------
+  let wasDead = false;
+  function deathMark() {
+    if (p.dead && !wasDead) {
+      meta.waypoints = meta.waypoints.filter((w) => !w.death);
+      meta.waypoints.push({ name: '💀 Donde moriste', color: '#ff6a5a', x: Math.round(p.pos.x), y: Math.round(p.pos.y), z: Math.round(p.pos.z), death: true });
+    }
+    wasDead = p.dead;
+    const d = meta.waypoints.find((w) => w.death);
+    if (d && !p.dead && Math.hypot(d.x - p.pos.x, d.z - p.pos.z) < 3) { meta.waypoints.splice(meta.waypoints.indexOf(d), 1); flash('💀 Volviste al lugar donde moriste'); }
+  }
+
+  // ---------- huellas en la arena y la nieve ----------
+  const prints = [], printGeo = new THREE.PlaneGeometry(0.22, 0.34);
+  let stepDist = 0, lastPos = p.pos.clone(), foot = 1;
+  function footprints(dt) {
+    const d = Math.hypot(p.pos.x - lastPos.x, p.pos.z - lastPos.z); lastPos.copy(p.pos);
+    if (p.onGround && !p.riding && d < 1) {
+      stepDist += d;
+      if (stepDist > 0.75) {
+        stepDist = 0;
+        const bx = Math.floor(p.pos.x), by = Math.floor(p.pos.y - 0.1), bz = Math.floor(p.pos.z), b = g.world.getBlock(bx, by, bz);
+        if (b === 229 || b === 6 || b === 147 || b === 235) {
+          const m = new THREE.Mesh(printGeo, new THREE.MeshBasicMaterial({ color: b === 147 || b === 235 ? 0x8890a0 : 0x6a5a40, transparent: true, opacity: 0.45, depthWrite: false }));
+          m.rotation.x = -Math.PI / 2; m.rotation.z = p.yaw;
+          foot = -foot;
+          m.position.set(p.pos.x + Math.cos(p.yaw) * 0.14 * foot, by + 1.012, p.pos.z - Math.sin(p.yaw) * 0.14 * foot);
+          m.userData.t = 25; ctx.scene.add(m); prints.push(m);
+          if (prints.length > 80) { const o = prints.shift(); ctx.scene.remove(o); o.material.dispose(); }
+        }
+      }
+    }
+    for (const m of [...prints]) { m.userData.t -= dt; m.material.opacity = Math.min(0.45, m.userData.t / 25 * 0.45); if (m.userData.t <= 0) { ctx.scene.remove(m); m.material.dispose(); prints.splice(prints.indexOf(m), 1); } }
+  }
+
   // ---------- botones y teclas ----------
   const wb = $('#worldBtns');
   const bw = document.createElement('button'); bw.textContent = '📍 Marcadores'; bw.onclick = () => { $('#pause').hidden = true; ctx.setPause(false); openWaypoints(); }; wb?.appendChild(bw);
   api.key = (e) => { if (e.code === 'KeyN') { api.addHere(); return true; } return false; };
-  api.update = (dt) => { drawWaypoints(); photoTick(dt); tipsTick(dt); hudTick(dt); };
-  api.dispose = () => { g.mobs.hit = hitWrap; low.classList.remove('on'); bw.remove(); bar.remove(); count.remove(); box.innerHTML = ''; tipEl.hidden = true; ctx.renderer.domElement.style.filter = ''; };
+  api.update = (dt) => { drawWaypoints(); photoTick(dt); tipsTick(dt); hudTick(dt); ghostTick(); autoTool(); deathMark(); footprints(dt); };
+  api.dispose = () => { ctx.scene.remove(ghost); for (const m of prints) ctx.scene.remove(m); g.mobs.hit = hitWrap; low.classList.remove('on'); bw.remove(); bar.remove(); count.remove(); box.innerHTML = ''; tipEl.hidden = true; ctx.renderer.domElement.style.filter = ''; };
   return api;
 }

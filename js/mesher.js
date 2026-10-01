@@ -1,6 +1,6 @@
 // Construye la geometría de un chunk a partir de un volumen con borde (padding)
 // e incluye luz de cielo + luz de bloques con BFS e iluminación suave + AO.
-import { CHUNK, HEIGHT, OPAQUE, EMIT, RENDER, TEX_TOP, TEX_SIDE, TEX_BOTTOM, TEX_FRONT, TORCH_DIR, LIQ, LIQ_LEVEL, BOXES, ATLAS, TILE_FLAGS } from './blocks.js';
+import { CHUNK, HEIGHT, OPAQUE, EMIT, LCOL, RENDER, TEX_TOP, TEX_SIDE, TEX_BOTTOM, TEX_FRONT, TORCH_DIR, LIQ, LIQ_LEVEL, BOXES, ATLAS, TILE_FLAGS } from './blocks.js';
 
 export const PAD = 14;
 export const W = CHUNK + PAD * 2; // 44
@@ -9,7 +9,7 @@ const WW = W * W;
 const TS = ATLAS.res / ATLAS.size;
 const tileU = (t) => ((t % ATLAS.cols) * ATLAS.cell + ATLAS.pad) / ATLAS.size;
 const tileV = (t) => (Math.floor(t / ATLAS.cols) * ATLAS.cell + ATLAS.pad) / ATLAS.size;
-const WHITE = new Uint8Array([128, 128, 128, 255, 128, 128, 128, 255, 128, 128, 128, 255, 128, 128, 128, 255]);
+const WHITE = new Uint8Array([128, 128, 128, 0, 128, 128, 128, 0, 128, 128, 128, 0, 128, 128, 128, 0]);
 
 // Cara: normal, 4 vértices (orden CCW visto desde fuera), ejes tangentes u/v para muestreo AO
 const FACES = [
@@ -22,7 +22,7 @@ const FACES = [
 ];
 const FACE_UV = [[0, 1], [1, 1], [1, 0], [0, 0]];
 
-function computeLight(vol, sky, blk) {
+function computeLight(vol, sky, blk, lc) {
   const N = WW * HEIGHT;
   const q = new Int32Array(N > 600000 ? N : 600000);
   // --- cielo: columnas ---
@@ -51,11 +51,11 @@ function computeLight(vol, sky, blk) {
   bfs(vol, sky, q, qh, qt);
   // --- bloques emisores ---
   qt = 0;
-  for (let i = 0; i < N; i++) { const e = EMIT[vol[i]]; if (e) { blk[i] = e; q[qt++] = i; } }
-  bfs(vol, blk, q, 0, qt);
+  for (let i = 0; i < N; i++) { const e = EMIT[vol[i]]; if (e) { blk[i] = e; lc[i] = LCOL[vol[i]]; q[qt++] = i; } }
+  bfs(vol, blk, q, 0, qt, lc);
 }
 
-function bfs(vol, L, q, qh, qt) {
+function bfs(vol, L, q, qh, qt, C) {
   const cap = q.length;
   while (qh !== qt) {
     const i = q[qh]; qh = (qh + 1) % cap;
@@ -64,12 +64,12 @@ function bfs(vol, L, q, qh, qt) {
     const x = i % W, z = ((i / W) | 0) % W, y = (i / WW) | 0;
     const nl = l - 1;
     // 6 vecinos
-    if (x > 0) { const j = i - 1; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (x < W - 1) { const j = i + 1; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (z > 0) { const j = i - W; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (z < W - 1) { const j = i + W; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (y > 0) { const j = i - WW; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (y < HEIGHT - 1) { const j = i + WW; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (x > 0) { const j = i - 1; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (x < W - 1) { const j = i + 1; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (z > 0) { const j = i - W; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (z < W - 1) { const j = i + W; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (y > 0) { const j = i - WW; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (y < HEIGHT - 1) { const j = i + WW; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
   }
 }
 
@@ -84,7 +84,7 @@ class Buf {
       this.uv.push(uv[k * 2], uv[k * 2 + 1]);
       this.lit.push(lit[k * 4], lit[k * 4 + 1], lit[k * 4 + 2], lit[k * 4 + 3]);
       this.inf.push(tile, flags, face, 0);
-      this.tint.push(tint[k * 4], tint[k * 4 + 1], tint[k * 4 + 2], 255);
+      this.tint.push(tint[k * 4], tint[k * 4 + 1], tint[k * 4 + 2], tint[k * 4 + 3]);
     }
     if (flip) this.idx.push(b + 1, b + 2, b + 3, b + 1, b + 3, b);
     else this.idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
@@ -101,8 +101,8 @@ class Buf {
 // tintAt(x, z) → [r, g, b] (0-255, 128 = sin cambio) en coordenadas locales del chunk
 export function buildMesh(vol, tintAt) {
   const N = WW * HEIGHT;
-  const sky = new Uint8Array(N), blk = new Uint8Array(N);
-  computeLight(vol, sky, blk);
+  const sky = new Uint8Array(N), blk = new Uint8Array(N), lc = new Uint8Array(N);
+  computeLight(vol, sky, blk, lc);
 
   const solid = new Buf(), water = new Buf();
   const P = new Float32Array(12), UV = new Float32Array(8), LIT = new Uint8Array(16), TINT = new Uint8Array(16);
@@ -118,8 +118,8 @@ export function buildMesh(vol, tintAt) {
     const lx = x - PAD, lz = z - PAD;
 
     if (r === 2) { torch(solid, lx, y, lz, sky[i], blk[i], b); continue; }
-    if (r === 4) { boxes(solid, lx, y, lz, b, sky[i], blk[i], (dx, dy, dz) => OPAQUE[get(x + dx, y + dy, z + dz)], tintAt); continue; }
-    if (r === 5) { cross(solid, lx, y, lz, b, sky[i], blk[i], tintAt); continue; }
+    if (r === 4) { boxes(solid, lx, y, lz, b, sky[i], blk[i], (dx, dy, dz) => OPAQUE[get(x + dx, y + dy, z + dz)], tintAt, lc[i]); continue; }
+    if (r === 5) { cross(solid, lx, y, lz, b, sky[i], blk[i], tintAt, lc[i]); continue; }
     const liq = LIQ[b];
     // altura de la superficie del líquido
     let lh = 1;
@@ -172,6 +172,7 @@ export function buildMesh(vol, tintAt) {
       const tu = tileU(tile), tv = tileV(tile);
       const e = 0.00002;
       let aoSum = [0, 0, 0, 0];
+      const lcv = (ny >= 0 && ny < HEIGHT ? lc[li(nx, ny, nz)] : 0) * 32;
       for (let k = 0; k < 4; k++) {
         const v = F.v[k];
         let vy = v[1];
@@ -212,8 +213,9 @@ export function buildMesh(vol, tintAt) {
         LIT[k * 4 + 1] = liq === 3 ? 255 : Math.round(sb / cnt * 17);
         LIT[k * 4 + 2] = Math.round((0.45 + ao * 0.55 / 3) * 255);
         LIT[k * 4 + 3] = Math.round(F.shade * 255);
-        if (flowT) { TINT[k * 4] = flowT[0]; TINT[k * 4 + 1] = flowT[1]; TINT[k * 4 + 2] = flowT[2]; TINT[k * 4 + 3] = 255; }
-        else if (tintAt) { const c = tintAt(lx + v[0], lz + v[2]); TINT[k * 4] = c[0]; TINT[k * 4 + 1] = c[1]; TINT[k * 4 + 2] = c[2]; } else TINT.set(WHITE.subarray(k * 4, k * 4 + 4), k * 4);
+        if (flowT) { TINT[k * 4] = flowT[0]; TINT[k * 4 + 1] = flowT[1]; TINT[k * 4 + 2] = flowT[2]; }
+        else if (tintAt) { const c = tintAt(lx + v[0], lz + v[2]); TINT[k * 4] = c[0]; TINT[k * 4 + 1] = c[1]; TINT[k * 4 + 2] = c[2]; } else TINT.set(WHITE.subarray(k * 4, k * 4 + 3), k * 4);
+        TINT[k * 4 + 3] = lcv;
         aoSum[k] = ao + (ss + sb) / cnt * 0.01;
       }
       const flip = aoSum[0] + aoSum[2] < aoSum[1] + aoSum[3];
@@ -233,7 +235,7 @@ const BOX_FACES = [
   [[0, 0, 1], [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], 0.9],
   [[0, 0, -1], [[1, 0, 0], [0, 0, 0], [0, 1, 0], [1, 1, 0]], 0.7],
 ];
-function boxes(buf, x, y, z, b, s, bl, opaqueAt, tintAt) {
+function boxes(buf, x, y, z, b, s, bl, opaqueAt, tintAt, lcol = 0) {
   const P = new Float32Array(12), UV = new Float32Array(8), LIT = new Uint8Array(16), TINT = new Uint8Array(16);
   for (const bx of BOXES[b]) {
     const c = [[bx[0] / 16, bx[3] / 16], [bx[1] / 16, bx[4] / 16], [bx[2] / 16, bx[5] / 16]];
@@ -256,7 +258,7 @@ function boxes(buf, x, y, z, b, s, bl, opaqueAt, tintAt) {
         UV[k * 2 + 1] = 1 - (tv + Math.min(0.999, Math.max(0.001, w)) * TS);
         LIT[k * 4] = s * 17; LIT[k * 4 + 1] = bl * 17; LIT[k * 4 + 2] = 255; LIT[k * 4 + 3] = Math.round(shade * 255);
         if (tintAt) TINT.set(tintAt(x + px, z + pz), k * 4); else TINT.set([128, 128, 128], k * 4);
-        TINT[k * 4 + 3] = 255;
+        TINT[k * 4 + 3] = lcol * 32;
       }
       buf.quad(P, UV, LIT, false, tile, f, TINT, true);
     });
@@ -264,12 +266,12 @@ function boxes(buf, x, y, z, b, s, bl, opaqueAt, tintAt) {
 }
 
 // Plantas: dos planos en diagonal, visibles de ambos lados
-function cross(buf, x, y, z, b, s, bl, tintAt) {
+function cross(buf, x, y, z, b, s, bl, tintAt, lcol = 0) {
   const tile = TEX_SIDE[b];
   const tu = tileU(tile), tv = tileV(tile);
   const P = new Float32Array(12), UV = new Float32Array(8), LIT = new Uint8Array(16), TINT = new Uint8Array(16);
   const c0 = tintAt ? tintAt(x + 0.5, z + 0.5) : [128, 128, 128];
-  for (let k = 0; k < 4; k++) TINT.set([c0[0], c0[1], c0[2], 255], k * 4);
+  for (let k = 0; k < 4; k++) TINT.set([c0[0], c0[1], c0[2], lcol * 32], k * 4);
   const e = 0.00002;
   UV.set([tu + e, 1 - (tv + TS - e), tu + TS - e, 1 - (tv + TS - e), tu + TS - e, 1 - (tv + e), tu + e, 1 - (tv + e)]);
   for (let k = 0; k < 4; k++) { LIT[k * 4] = s * 17; LIT[k * 4 + 1] = bl * 17; LIT[k * 4 + 2] = 255; LIT[k * 4 + 3] = 230; }
