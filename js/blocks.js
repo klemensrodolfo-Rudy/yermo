@@ -42,6 +42,8 @@ export const TILES = [
   'sand', 'palm_bark', 'palm_leaves', 'coral_red', 'coral_yellow',
   // v9.4: minijuegos
   'mg_red', 'mg_blue', 'mg_gold', 'mg_white', 'mg_table',
+  // v9.5: circuitos, música y pintura
+  'button_off', 'button_on', 'battery', 'note_block', 'music_box', 'canvas',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -325,6 +327,14 @@ def(236, { name: 'Bloque rojo', tex: tx(T.mg_red), hardness: 0.8, drop: 236 });
 def(237, { name: 'Bloque azul', tex: tx(T.mg_blue), hardness: 0.8, drop: 237 });
 def(238, { name: 'Meta dorada', tex: tx(T.mg_gold), hardness: 0.8, drop: 238, light: 8 });
 def(239, { name: 'Bloque blanco', tex: tx(T.mg_white), hardness: 0.8, drop: 239 });
+def(240, { name: 'Pulsador', tex: tx(T.button_off), hardness: 0.5, elec: 'switch' });
+def(241, { name: 'Pulsador', tex: tx(T.button_on), hardness: 0.5, elec: 'switch', drop: 240, hidden: true, light: 3 });
+def(242, { name: 'Placa de presión', tex: tx(T.metal_plate), solid: false, opaque: false, render: 'box', box: [[1, 0, 1, 15, 1, 15]], hardness: 0.5, elec: 'switch' });
+def(243, { name: 'Placa de presión', tex: tx(T.mg_gold), solid: false, opaque: false, render: 'box', box: [[1, 0, 1, 15, 0.5, 15]], hardness: 0.5, elec: 'switch', drop: 242, hidden: true });
+def(244, { name: 'Pila', tex: { top: T.battery, side: T.battery, bottom: T.metal_plate }, hardness: 1, elec: 'source' });
+def(245, { name: 'Bloque musical', tex: tx(T.note_block), hardness: 1, tool: 'axe', elec: 'device', container: 'note' });
+def(246, { name: 'Caja musical', tex: { top: T.music_box, side: T.note_block, bottom: T.planks }, hardness: 1, tool: 'axe', elec: 'device', container: 'musicbox' });
+def(247, { name: 'Lienzo', tex: { top: T.planks, side: T.canvas, bottom: T.planks }, hardness: 0.5, tool: 'axe', container: 'canvas' });
 def(226, { name: 'Cofre antiguo', tex: { top: T.chest_top, side: T.chest_side, bottom: T.chest_top, front: T.chest_front }, hardness: 1.5, tool: 'axe', drop: 0, loot: 'eldra' });
 def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12, portal: true });
 
@@ -740,6 +750,12 @@ export const RECIPES = [
   { out: [227, 1], in: [[260, 4], [28, 1], [27, 2]], station: 'mesa' },
   { out: [398, 1], in: [[256, 3], [336, 1]], station: 'mesa' },
   { out: [234, 1], in: [[23, 4], [353, 2]], station: 'mesa' },
+  { out: [240, 2], in: [[2, 1], [259, 1]], station: 'mesa' },
+  { out: [242, 2], in: [[27, 1], [259, 1]], station: 'mesa' },
+  { out: [244, 1], in: [[259, 2], [260, 1], [257, 2]], station: 'mesa', bp: 'electricidad' },
+  { out: [245, 1], in: [[23, 4], [259, 1]], station: 'mesa' },
+  { out: [246, 1], in: [[23, 4], [259, 2], [260, 1]], station: 'mesa' },
+  { out: [247, 2], in: [[23, 2], [176, 1]], station: 'mesa' },
   { out: [236, 8], in: [[176, 1], [23, 2]], station: 'mesa' },
   { out: [237, 8], in: [[176, 1], [9, 2]], station: 'mesa' },
   { out: [239, 8], in: [[9, 4]], station: 'mesa' },

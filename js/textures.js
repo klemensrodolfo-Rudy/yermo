@@ -853,6 +853,37 @@ HD.tile_white = (t) => {
   });
   crackLine(t, 1);
 };
+// ---------- v9.5: circuitos, música y pintura ----------
+const btn = (on) => (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), d = Math.hypot(x - 15.5, y - 15.5);
+  if (d < 8) { t.H(x, y, on ? 0.4 : 0.95); if (on) t.E(x, y, 0.6); return scl(on ? [255, 90, 70] : [200, 50, 40], 1.1 - d * 0.03); }
+  t.H(x, y, e < 2 ? 0.2 : 0.5); t.S(x, y, 0.4);
+  return scl([120, 124, 130], e < 2 ? 0.7 : 0.95 + (t.rnd() - 0.5) * 0.05);
+});
+HD.button_off = btn(false); HD.button_on = btn(true);
+HD.battery = (t) => t.fill((x, y) => {
+  const band = y > 8 && y < 13, e = Math.min(x, y, 31 - x, 31 - y);
+  t.H(x, y, e < 2 ? 0.2 : 0.7); t.S(x, y, 0.5);
+  if (band) { if ((x === 8 || x === 9) && y === 10) return [255, 255, 255]; return [230, 190, 40]; }
+  return scl(y < 9 ? [60, 60, 66] : [40, 120, 70], e < 2 ? 0.7 : 1 + (t.rnd() - 0.5) * 0.05);
+});
+HD.note_block = (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), grill = x > 6 && x < 25 && y > 6 && y < 25 && (x + y) % 3 === 0;
+  t.H(x, y, grill ? 0.2 : 0.7);
+  return grill ? [40, 28, 18] : scl([140, 92, 56], e < 2 ? 0.7 : 1 + (t.rnd() - 0.5) * 0.06 + Math.sin(y * 0.8) * 0.03);
+});
+HD.music_box = (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), key = y > 18 && y < 28 && x > 3 && x < 28;
+  if (key) { const black = x % 4 === 0; t.H(x, y, black ? 0.3 : 0.8); return black ? [20, 20, 20] : [240, 236, 226]; }
+  t.H(x, y, e < 2 ? 0.2 : 0.6);
+  return scl([150, 100, 60], e < 2 ? 0.7 : 1 + (t.rnd() - 0.5) * 0.05);
+});
+HD.canvas = (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y);
+  if (e < 3) { t.H(x, y, 0.4); return scl([120, 84, 48], 0.9 + (t.rnd() - 0.5) * 0.1); }
+  t.H(x, y, 0.5 + (t.rnd() - 0.5) * 0.1);
+  return scl([236, 230, 214], 1 + (t.rnd() - 0.5) * 0.04);
+});
 // ---------- v9.4: minijuegos ----------
 const padded = (c) => (t) => t.fill((x, y) => {
   const e = Math.min(x, y, 31 - x, 31 - y), n = t.fbm(x, y, 8, 2);

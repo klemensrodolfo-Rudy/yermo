@@ -221,6 +221,15 @@ export function setupGuide(ui, getGame) {
       <li><b>🙈 Escondidas</b> (2+): el que busca cuenta 30 s con la pantalla negra; encontrás a alguien acercándote a menos de 2 bloques.</li>
       <li><b>🚩 Captura la bandera</b> (2+): rojos contra azules; tocá la bandera rival, llevala a tu base, y si te toca un rival vuelve. Gana el primero en llegar a 3.</li></ul>
       <p>Los bloques ${icon(236)} rojo, ${icon(237)} azul y ${icon(239)} blanco también se fabrican, para armar tus propias pistas y canchas.</p>`,
+    'Circuitos, música y pintura': () => `
+      <h3>Circuitos</h3>
+      <p>La energía viaja por ${icon(75)} cables desde una fuente: ${icon(76)} generador (con combustible), ${icon(77)} panel solar (de día) o ${icon(244)} <b>pila</b> (siempre prendida). Interruptores: ${icon(135)} palanca, ${icon(240)} <b>pulsador</b> (clic derecho: se prende 1 segundo y medio), ${icon(242)} <b>placa de presión</b> (se prende cuando alguien o algo está parado encima) y ${icon(137)} sensor de movimiento. Lo que recibe energía: focos, alarmas, torretas, bombas, <b>puertas</b> (se abren solas si tienen un cable con energía al lado) y los bloques musicales.</p>
+      <p>Ejemplo: pila → cable → placa de presión delante de una puerta → la puerta se abre sola al pisarla.</p>
+      <h3>Música</h3>
+      <p>${icon(245)} <b>Bloque musical</b>: clic derecho para tocarlo y subir medio tono (Shift + clic para bajar). El instrumento depende del bloque de abajo: vidrio = campana, arena o tierra = tambor, madera = guitarra, piedra u hormigón = bajo, nieve o hielo = flauta, otro = piano. Si le llega energía, suena: poné varios con pulsadores o placas para armar un piano o un camino musical.</p>
+      <p>${icon(246)} <b>Caja musical</b>: escribí una melodía (do re mi…, con octavas, sostenidos y silencios), elegí instrumento y tempo. Trae canciones de ejemplo y suena con electricidad o con «Probar».</p>
+      <h3>Pintura</h3>
+      <p>${icon(247)} <b>Lienzo</b>: ponelo contra una pared y hacé clic derecho desde el lado donde querés el cuadro. Pintás 16 × 16 píxeles con 16 colores (también transparente) y lo ven todos.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

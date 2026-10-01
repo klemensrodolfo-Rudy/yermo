@@ -24,6 +24,7 @@ import { setupAccess, createExtras } from './extras.js';
 import { createModes, openRanking } from './modes.js';
 import { createSea } from './sea.js';
 import { createMinigames } from './minigames.js';
+import { createCreative } from './creative.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -961,7 +962,7 @@ async function startGame(meta, hello, cloudInfo) {
   mobs.onHitRemote = (id, dmg, dir) => net.sendHitMob(id, dmg, dir);
   ui.bind(inv, meta.mode === 'creative', known);
   if (!meta.inventory && !meta.remote) {
-    if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80].forEach((id) => inv.add(id, 64));
+    if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80, 245, 246, 247, 240, 244, 75].forEach((id) => inv.add(id, 64));
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'magic') [[385, 6], [353, 10], [379, 1], [26, 8]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'islands') [[398, 1], [402, 1], [403, 4], [26, 8], [267, 1]].forEach(([id, n]) => inv.add(id, n));
@@ -1010,8 +1011,9 @@ async function startGame(meta, hello, cloudInfo) {
   const useF2 = player.onUseItem;
   player.onUseItem = (...a) => SEAM.onUseItem(...a) || X.onUseItem(...a) || E.onUseItem(...a) || useF2(...a);
   const MG = game.minigames = createMinigames(fctx);
+  const CR = game.creative = createCreative(fctx);
   const blockF2 = player.onUseBlock;
-  player.onUseBlock = (...a) => MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
+  player.onUseBlock = (...a) => CR.onUseBlock(...a) || MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
   sim.onMarker = (...a) => E.onMarker(...a) || F2.onMarker(...a) || F.onMarker(...a);
   player.onInteractMob = (m, h) => E.onInteractMob(m, h) || F2.onInteractMob(m, h) || F.onInteractMob(m, h);
   player.onGun = F.onGun;
@@ -1060,7 +1062,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1453,7 +1455,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '9.4 · 2026-10-02';
+const VERSION = '9.5 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1515,6 +1517,7 @@ function loop(now) {
   game.modes?.update(dt);
   game.sea?.update(dt);
   game.minigames?.update(dt);
+  game.creative?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';

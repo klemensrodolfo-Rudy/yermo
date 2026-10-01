@@ -52,6 +52,23 @@ export class Sfx {
   broke(id) { this.sound(this.mat(id), 1.3); }
   place(id) { this.sound(this.mat(id), 0.9); this.tone({ freq: 120, dur: 0.06, gain: 0.15 }); }
   step(id) { if (id > 0) this.sound(this.mat(id), 0.35); }
+  // instrumentos de los bloques musicales: nota MIDI, tipo y volumen (0-1)
+  instrument(m, kind = 'piano', v = 1) {
+    if (!this.ctx) return;
+    const c = this.ctx, t = c.currentTime, f = 440 * Math.pow(2, (m - 69) / 12), g = c.createGain();
+    g.connect(this.master);
+    const osc = (type, freq, gain, dur, det = 0) => {
+      const o = c.createOscillator(); o.type = type; o.frequency.value = freq; o.detune.value = det;
+      const og = c.createGain(); og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(gain * v, t + 0.01); og.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(og); og.connect(g); o.start(t); o.stop(t + dur + 0.05); return o;
+    };
+    if (kind === 'drum') { this.tone({ freq: f / 2, dur: 0.25, gain: 0.35 * v, type: 'sine', slide: 0.4 }); this.burst({ freq: 1800, q: 0.8, dur: 0.08, gain: 0.12 * v, type: 'highpass' }); return; }
+    if (kind === 'bell') { osc('sine', f, 0.18, 2.2); osc('sine', f * 2.76, 0.06, 1.2); osc('sine', f * 5.4, 0.03, 0.6); return; }
+    if (kind === 'flute') { const o = osc('sine', f, 0.16, 0.9); const lfo = c.createOscillator(); lfo.frequency.value = 5; const lg = c.createGain(); lg.gain.value = f * 0.01; lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t + 1); return; }
+    if (kind === 'guitar') { const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = f * 4; lp.connect(g); const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; const og = c.createGain(); og.gain.setValueAtTime(0.14 * v, t); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.8); o.connect(og); og.connect(lp); o.start(t); o.stop(t + 0.85); return; }
+    if (kind === 'bass') { osc('triangle', f / 2, 0.3, 0.6); osc('sine', f / 4, 0.2, 0.5); return; }
+    osc('triangle', f, 0.2, 1.1); osc('sine', f * 2, 0.05, 0.6, 3);
+  }
   click() { this.tone({ freq: 660, dur: 0.05, gain: 0.08, type: 'square', slide: 0.9 }); }
   craft() { this.tone({ freq: 440, dur: 0.08, gain: 0.1, type: 'square', slide: 1.5 }); setTimeout(() => this.tone({ freq: 660, dur: 0.12, gain: 0.1, type: 'square', slide: 1.3 }), 70); }
   toolBreak() { this.burst({ freq: 2500, q: 5, dur: 0.4, gain: 0.5 }); this.tone({ freq: 300, dur: 0.3, gain: 0.2, type: 'sawtooth', slide: 0.3 }); }

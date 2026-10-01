@@ -31,7 +31,7 @@ const k3 = (x, y, z) => x + ',' + y + ',' + z;
 const p3 = (k) => k.split(',').map(Number);
 const CROP_IDS = new Set();
 for (const c of Object.values(CROPS)) for (let s = 0; s < 4; s++) CROP_IDS.add(c.base + s);
-const CONDUCT = new Set([75, 78, 136, 138]); // cables, cercos, palanca y sensor encendidos
+const CONDUCT = new Set([75, 78, 136, 138, 241, 243]); // cables, cercos, palanca, sensor, pulsador y placa encendidos
 const SEATS = new Set([111, 112, 113, 114]);
 
 export class Sim {
@@ -474,8 +474,26 @@ export class Sim {
     for (const [dx, dy, dz] of N6) { const k = k3(x + dx, y + dy, z + dz); if (this.powered.has(k) && this.world.getBlock(x + dx, y + dy, z + dz) === id) return true; }
     return false;
   }
+  // pulsador: se prende un ratito
+  pressButton(x, y, z) {
+    if (this.world.getBlock(x, y, z) !== 240) return;
+    this.world.setBlock(x, y, z, 241);
+    this.buttons = this.buttons || new Map();
+    this.buttons.set(k3(x, y, z), performance.now() + 1500);
+    this.acc.power = 10;
+  }
   tickPower() {
     const w = this.world;
+    // pulsadores que se apagan y placas de presión (alguien parado encima)
+    const now = performance.now();
+    if (this.buttons) for (const [k, t] of [...this.buttons]) if (now > t) { const [x, y, z] = p3(k); if (w.getBlock(x, y, z) === 241) w.setBlock(x, y, z, 240); this.buttons.delete(k); }
+    const ents0 = this.entities();
+    for (const k of this.elec) {
+      const [x, y, z] = p3(k), b = w.getBlock(x, y, z);
+      if (b !== 242 && b !== 243) continue;
+      const on = ents0.some((e) => Math.abs(e.x - x - 0.5) < 0.75 && Math.abs(e.z - z - 0.5) < 0.75 && e.y >= y - 0.2 && e.y < y + 0.9);
+      if (on && b === 242) w.setBlock(x, y, z, 243); else if (!on && b === 243) w.setBlock(x, y, z, 242);
+    }
     // sensores de movimiento: se activan con jugadores o criaturas a menos de 5 bloques
     const ents = this.entities();
     for (const k of this.elec) {
@@ -491,6 +509,7 @@ export class Sim {
       const b = w.getBlock(x, y, z);
       if (b === 76) { const c = this.containers.get(k); if (c && c.burn > 0) sources.push(k); }
       else if (b === 77 && this.daylight > 0.45 && this.skyOpen(x, y, z)) sources.push(k);
+      else if (b === 244) sources.push(k);
     }
     const powered = new Set(sources);
     const queue = [...sources];
@@ -501,11 +520,13 @@ export class Sim {
         const nk = k3(x + dx, y + dy, z + dz);
         if (powered.has(nk) || !this.elec.has(nk)) continue;
         const nb = w.getBlock(x + dx, y + dy, z + dz);
-        if (nb === 135 || nb === 137) continue; // palanca o sensor apagado: cortan el circuito
+        if (nb === 135 || nb === 137 || nb === 240 || nb === 242) continue; // palanca, sensor, pulsador o placa apagados: cortan el circuito
         powered.add(nk);
         if (CONDUCT.has(nb)) queue.push(nk);
       }
     }
+    // bloques musicales: suenan cuando les llega energía
+    for (const k of powered) if (!this.powered.has(k)) { const [x, y, z] = p3(k), b = w.getBlock(x, y, z); if (b === 245 || b === 246) this.onNote?.(x, y, z, b); }
     this.powered = powered;
     for (const k of this.elec) {
       const [x, y, z] = p3(k);
@@ -521,7 +542,7 @@ export class Sim {
     const seen = new Set();
     for (const k of powered) {
       const [x, y, z] = p3(k);
-      if (w.getBlock(x, y, z) !== 75 && w.getBlock(x, y, z) !== 136 && w.getBlock(x, y, z) !== 138) continue;
+      if (![75, 136, 138, 241, 243, 244].includes(w.getBlock(x, y, z))) continue;
       for (const [dx, dy, dz] of N6) {
         const d = BLOCKS[w.getBlock(x + dx, y + dy, z + dz)]?.door;
         if (!d) continue;
