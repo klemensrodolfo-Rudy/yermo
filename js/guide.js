@@ -1,5 +1,7 @@
 // Guía de consulta (menú principal y pausa).
 import { RECIPES, itemName, ITEMS, BLUEPRINT_NAMES } from './blocks.js';
+import { PET_TRICKS } from './nature.js';
+const PET_TRICKS_TXT = PET_TRICKS.slice(1).map((t, i) => `${i + 1}) ${t.toLowerCase()}`).join(', ');
 import { MOB_TYPES } from './entities.js';
 import { ACHIEVEMENTS } from './achievements.js';
 
@@ -230,6 +232,15 @@ export function setupGuide(ui, getGame) {
       <p>${icon(246)} <b>Caja musical</b>: escribí una melodía (do re mi…, con octavas, sostenidos y silencios), elegí instrumento y tempo. Trae canciones de ejemplo y suena con electricidad o con «Probar».</p>
       <h3>Pintura</h3>
       <p>${icon(247)} <b>Lienzo</b>: ponelo contra una pared y hacé clic derecho desde el lado donde querés el cuadro. Pintás 16 × 16 píxeles con 16 colores (también transparente) y lo ven todos.</p>`,
+    'Naturaleza y mascotas': () => `
+      <h3>${icon(248)} Plantines</h3>
+      <p>Las hojas de los árboles (y a veces las ramas secas del yermo) sueltan <b>plantines</b>. Plantalos con lugar arriba y en unos minutos crece un árbol solo (palmeras en el archipiélago). Así se puede volver a llenar de verde el yermo.</p>
+      <h3>Crías</h3>
+      <p>Los animales que domesticaste (y tus perros y lobos) tienen crías: dale su comida a dos de la misma especie que estén cerca (salen corazones) y nace una cría, que crece en unos 5 minutos.</p>
+      <h3>Mascotas que evolucionan</h3>
+      <p>Tu perro o lobo gana experiencia acompañándote y peleando a tu lado, y sube hasta el nivel 5: ${PET_TRICKS_TXT}. Clic derecho con la mano vacía para ponerle <b>nombre</b>, cambiar el <b>collar</b> o pedirle que se quede.</p>
+      <h3>Clima extremo y mareas</h3>
+      <p>En el desierto y las Tierras de Brasa se arman <b>tormentas de arena</b> que no dejan ver casi nada; en los pantanos y la Ciénaga sube una <b>niebla espesa</b>, sobre todo de noche. En el archipiélago la <b>marea</b> sube y baja dos veces por día y tapa las playas. Si pescás mucho en el mismo lugar, los peces se agotan por un rato.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

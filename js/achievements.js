@@ -70,6 +70,9 @@ export const ACHIEVEMENTS = [
   { id: 'minijuego', name: 'Campeón del recreo', desc: 'Ganá un minijuego.' },
   { id: 'musico', name: 'Compositor', desc: 'Guardá una melodía en una caja musical.' },
   { id: 'pintor', name: 'Artista del yermo', desc: 'Pintá un cuadro en un lienzo.' },
+  { id: 'arbol', name: 'Reverdecer', desc: 'Hacé crecer un árbol desde un plantín.' },
+  { id: 'cria', name: 'La familia crece', desc: 'Lográ que nazca una cría.' },
+  { id: 'mejoramigo', name: 'Mejores amigos', desc: 'Llevá a tu mascota al nivel 5.' },
 ];
 
 export class Achievements {

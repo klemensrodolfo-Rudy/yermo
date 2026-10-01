@@ -29,7 +29,11 @@ export function createSea(ctx) {
         mesh.add(a, c); mesh.position.set(q.x, top + 0.92, q.z); scene.add(mesh);
         const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([o, mesh.position]), lineMat); line.frustumCulled = false; scene.add(line);
         const ocean = g.gen.column(x, z).biome === BIOME.OCEAN;
-        bob = { mesh, line, x, z, wait: (ocean ? 2.5 : 4) + Math.random() * (ocean ? 5 : 8) * (g.weather?.rainK > 0.3 ? 0.6 : 1), biting: false, biteT: 0, ocean, y0: top + 0.92 };
+        // los peces se agotan si pescás mucho en el mismo lugar (y vuelven con el tiempo)
+        const spot = Math.floor(x / 24) + ',' + Math.floor(z / 24), F = (g.meta.fished = g.meta.fished || {}), now = g.meta.clock || 0;
+        const left = F[spot] ? Math.max(0, F[spot].n - (now - F[spot].t) / 240) : 0;
+        if (left > 6) flash('🐟 Acá ya casi no pican: probá en otro lado o volvé más tarde');
+        bob = { mesh, line, x, z, spot, wait: ((ocean ? 2.5 : 4) + Math.random() * (ocean ? 5 : 8) * (g.weather?.rainK > 0.3 ? 0.6 : 1)) * (1 + left * 0.45), biting: false, biteT: 0, ocean, y0: top + 0.92 };
         particles.burst(q.x - 0.5, top + 0.6, q.z - 0.5, [200, 220, 255], 6, 0.3);
         sfx.click();
         return true;
@@ -47,6 +51,9 @@ export function createSea(ctx) {
     else if (r < (sea ? 0.1 : 0.05)) { id = 401; }
     else if (r < (sea ? 0.2 : 0.12)) { id = 404; }
     p.give(id, n);
+    { const F = (g.meta.fished = g.meta.fished || {}), now = g.meta.clock || 0, f = F[bob.spot];
+      const left = f ? Math.max(0, f.n - (now - f.t) / 240) : 0; F[bob.spot] = { n: left + 1, t: now };
+      const keys = Object.keys(F); if (keys.length > 200) delete F[keys[0]]; }
     particles.burst(bob.mesh.position.x - 0.5, bob.mesh.position.y - 0.3, bob.mesh.position.z - 0.5, [200, 220, 255], 14, 0.6);
     sfx.pickup?.(); sfx.craft?.();
     flash(id === 399 ? '🎣 ¡Sacaste un pescado!' : id === 404 ? '🐟 ¡Un pez dorado!' : id === 353 ? `💰 ¡Sacaste ${n} fichas del agua!` : id === 397 ? '🎁 ¡Pescaste un regalo!' : '🤿 ¡Un tanque de buceo!');

@@ -682,11 +682,11 @@ export class Mobs {
   }
   remove(m) { this.scene.remove(m.group); m.group.traverse((o) => o.geometry?.dispose()); m.mats.forEach((x) => x.dispose()); this.list.delete(m.id); }
   boss() { for (const m of this.list.values()) if (m.def.boss && !m.dying) return m; return null; }
-  saveKeep() { return [...this.list.values()].filter((m) => (m.owner || m.def.stay || m.keep) && !m.dying).map((m) => ({ type: m.type, x: m.pos.x, y: m.pos.y, z: m.pos.z, owner: m.owner ?? null, name: m.petName ?? null, home: m.home ? [m.home.x, m.home.y, m.home.z] : null, marker: m.marker ?? null, quest: m.quest ?? null, keep: m.keep ?? null, role: m.role ?? null, tamed: m.tamed ?? null })); }
+  saveKeep() { return [...this.list.values()].filter((m) => (m.owner || m.def.stay || m.keep) && !m.dying).map((m) => ({ type: m.type, x: m.pos.x, y: m.pos.y, z: m.pos.z, owner: m.owner ?? null, name: m.petName ?? null, home: m.home ? [m.home.x, m.home.y, m.home.z] : null, marker: m.marker ?? null, quest: m.quest ?? null, keep: m.keep ?? null, role: m.role ?? null, tamed: m.tamed ?? null, xp: m.petXp ?? null, collar: m.collar ?? null })); }
   loadKeep(list) {
     for (const s of list || []) {
       const m = this.add(s.type, s.x, s.y, s.z);
-      m.owner = s.owner; m.petName = s.name; m.marker = s.marker; m.quest = s.quest; m.keep = s.keep; m.role = s.role; m.tamed = s.tamed;
+      m.owner = s.owner; m.petName = s.name; m.marker = s.marker; m.quest = s.quest; m.keep = s.keep; m.role = s.role; m.tamed = s.tamed; m.petXp = s.xp ?? 0; m.collar = s.collar ?? null;
       if (s.home) m.home = new THREE.Vector3(...s.home);
     }
   }
@@ -768,7 +768,7 @@ export class Mobs {
         if (!m.sit) for (const o of this.list.values()) { if (!o.def.hostile || o.dying) continue; const dd = o.pos.distanceTo(owner.pos); if (dd < pd) { pd = dd; prey = o; } }
         if (prey) {
           mx = prey.pos.x - m.pos.x; mz = prey.pos.z - m.pos.z; speed = d.speed;
-          if (prey.pos.distanceTo(m.pos) < 1.4 && m.attackCd <= 0) { m.attackCd = 1; this.hit(prey, d.dmg, new THREE.Vector3(mx, 0, mz).normalize(), null); m.attackAnim = 0.3; }
+          if (prey.pos.distanceTo(m.pos) < 1.4 && m.attackCd <= 0) { m.attackCd = 1; this.hit(prey, d.dmg * (m.petDmg || 1), new THREE.Vector3(mx, 0, mz).normalize(), null); m.attackAnim = 0.3; this.onPetHit?.(m, prey); }
         } else if (!m.sit && od > 3.5) { mx = owner.pos.x - m.pos.x; mz = owner.pos.z - m.pos.z; speed = od > 8 ? d.speed : d.speed * 0.6; }
       }
     } else if (d.npc && m.goal) {

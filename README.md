@@ -99,6 +99,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v9.5 — Circuitos, música y pintura**: pulsadores, placas de presión y pilas; bloques musicales con 6 instrumentos según el bloque de abajo; caja musical con melodías escritas (do re mi…) que suenan con electricidad; lienzos para pintar cuadros de 16 × 16.
 
+**v9.6 — Naturaleza viva**: plantines que crecen solos, crías de animales domesticados, mascotas con nombre, collar y 5 niveles (traen cosas, avisan del peligro), tormentas de arena, niebla espesa, mareas en el archipiélago y peces que se agotan.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

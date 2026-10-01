@@ -44,6 +44,8 @@ export const TILES = [
   'mg_red', 'mg_blue', 'mg_gold', 'mg_white', 'mg_table',
   // v9.5: circuitos, música y pintura
   'button_off', 'button_on', 'battery', 'note_block', 'music_box', 'canvas',
+  // v9.6
+  'sapling',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -66,7 +68,7 @@ export const TILE_FLAGS = new Uint8Array(256);
   const set = (names, f) => names.split(' ').forEach((n) => { if (T[n] != null) TILE_FLAGS[T[n]] |= f; });
   set('leaves', 16);
   set('sand coral_red coral_yellow', 1);
-  set('palm_leaves', 16);
+  set('palm_leaves sapling', 16);
   set('bedrock stone deepstone dirt ash mud gravel coal_ore scrap_ore copper_ore uranium_ore trinitite grass_top deadgrass_top snow_top sand_toxic rubble abyss mycelium_top concrete asphalt asphalt_under track camo mush_cap_blue mush_cap_purple log_top ice oak_barrel_top', 1);
   set('brick concrete_cracked planks log_side grass_side deadgrass_side snow_side mycelium_side rust metal_plate hull sandbag tile_white crate_side crate_top farmland mush_stem bar_top cloth', 2);
   set('clean_water toxic_water', 4);
@@ -106,7 +108,7 @@ def(12, { name: 'Metal oxidado', tex: tx(T.rust), hardness: 2.5, tool: 'pick', t
 def(13, { name: 'Ladrillo', tex: tx(T.brick), hardness: 2, tool: 'pick', tier: 1 });
 def(14, { name: 'Vidrio', tex: tx(T.glass), opaque: false, alpha: true, hardness: 0.3, drop: 0 });
 def(15, { name: 'Tronco muerto', tex: { top: T.log_top, side: T.log_side, bottom: T.log_top }, hardness: 1.5, tool: 'axe' });
-def(16, { name: 'Ramas secas', tex: tx(T.branches), opaque: false, alpha: true, hardness: 0.2, tool: 'axe', drop: 256, dropChance: 0.3 });
+def(16, { name: 'Ramas secas', tex: tx(T.branches), opaque: false, alpha: true, hardness: 0.2, tool: 'axe', drop: 256, dropChance: 0.3, extra: [[248, 1, 0.04]] });
 def(17, { name: 'Agua tóxica', tex: tx(T.toxic_water), solid: false, opaque: false, render: 'liquid', hardness: -1, drop: 0, liquid: 'toxic', level: 0 });
 def(18, { name: 'Carbón mineral', tex: tx(T.coal_ore), hardness: 2, tool: 'pick', tier: 1, drop: 257 });
 def(19, { name: 'Veta de chatarra', tex: tx(T.scrap_ore), hardness: 2.2, tool: 'pick', tier: 1, drop: 258, dropCount: 2 });
@@ -289,12 +291,12 @@ def(198, { name: 'Caja militar', tex: { top: T.camo, side: T.safe_side, bottom: 
 def(199, { name: 'Piso del mercado', tex: tx(T.pit_floor), hardness: 2, tool: 'pick', drop: 9, marker: 'undercity', hidden: true });
 def(200, { name: 'Caja del abismo', tex: { top: T.abyss, side: T.medcrate_side, bottom: T.abyss }, hardness: 2, tool: 'pick', drop: 0, loot: 'abyss', light: 3 });
 def(201, { name: 'Andén del subte', tex: tx(T.concrete), hardness: 2, tool: 'pick', tier: 1, drop: 9, marker: 'train', hidden: true });
-def(202, { name: 'Hojas de acacia', tex: tx(T.leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0 });
+def(202, { name: 'Hojas de acacia', tex: tx(T.leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[248, 1, 0.1]] });
 def(203, { name: 'Plaza del bioparque', tex: tx(T.concrete), hardness: 2, tool: 'pick', tier: 1, drop: 9, marker: 'zoo', hidden: true });
 def(204, { name: 'Centro de la base', tex: tx(T.concrete), hardness: 2, tool: 'pick', tier: 1, drop: 9, marker: 'base', hidden: true });
 // ---------- v9: Reinos de Eldra ----------
 def(205, { name: 'Basalto', tex: tx(T.basalt), hardness: 3, tool: 'pick', tier: 1 });
-def(206, { name: 'Hojas de roble', tex: tx(T.oak_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[385, 1, 0.08]] });
+def(206, { name: 'Hojas de roble', tex: tx(T.oak_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[385, 1, 0.08], [248, 1, 0.1]] });
 def(207, { name: 'Corteza plateada', tex: { top: T.log_top, side: T.silver_bark, bottom: T.log_top }, hardness: 2, tool: 'axe', drop: 209, dropCount: 2 });
 def(208, { name: 'Hojas de plata', tex: tx(T.silver_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, light: 4 });
 def(209, { name: 'Madera élfica', tex: tx(T.elf_planks), hardness: 1.5, tool: 'axe' });
@@ -320,7 +322,7 @@ def(229, { name: 'Arena', tex: tx(T.sand), hardness: 0.5, tool: 'shovel' });
 def(230, { name: 'Coral rojo', tex: tx(T.coral_red), hardness: 0.8, tool: 'pick' });
 def(231, { name: 'Coral amarillo', tex: tx(T.coral_yellow), hardness: 0.8, tool: 'pick' });
 def(232, { name: 'Palmera', tex: { top: T.log_top, side: T.palm_bark, bottom: T.log_top }, hardness: 1.5, tool: 'axe', drop: 15 });
-def(233, { name: 'Hojas de palmera', tex: tx(T.palm_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[403, 1, 0.15]] });
+def(233, { name: 'Hojas de palmera', tex: tx(T.palm_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[403, 1, 0.15], [248, 1, 0.06]] });
 def(234, { name: 'Mesa de minijuegos', tex: { top: T.mg_table, side: T.planks, bottom: T.planks }, hardness: 1.5, tool: 'axe', light: 4 });
 def(235, { name: 'Nieve de spleef', tex: { top: T.snow_top, side: T.snow_top, bottom: T.snow_top }, hardness: 0.05, drop: 0 });
 def(236, { name: 'Bloque rojo', tex: tx(T.mg_red), hardness: 0.8, drop: 236 });
@@ -335,6 +337,7 @@ def(244, { name: 'Pila', tex: { top: T.battery, side: T.battery, bottom: T.metal
 def(245, { name: 'Bloque musical', tex: tx(T.note_block), hardness: 1, tool: 'axe', elec: 'device', container: 'note' });
 def(246, { name: 'Caja musical', tex: { top: T.music_box, side: T.note_block, bottom: T.planks }, hardness: 1, tool: 'axe', elec: 'device', container: 'musicbox' });
 def(247, { name: 'Lienzo', tex: { top: T.planks, side: T.canvas, bottom: T.planks }, hardness: 0.5, tool: 'axe', container: 'canvas' });
+def(248, { name: 'Plantín', tex: tx(T.sapling), solid: false, opaque: false, render: 'cross', hardness: 0, drop: 248 });
 def(226, { name: 'Cofre antiguo', tex: { top: T.chest_top, side: T.chest_side, bottom: T.chest_top, front: T.chest_front }, hardness: 1.5, tool: 'axe', drop: 0, loot: 'eldra' });
 def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12, portal: true });
 

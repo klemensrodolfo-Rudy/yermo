@@ -853,6 +853,14 @@ HD.tile_white = (t) => {
   });
   crackLine(t, 1);
 };
+// ---------- v9.6: plantín ----------
+HD.sapling = (t) => t.fill((x, y) => {
+  const stem = Math.abs(x - 15.5) < 1.2 && y > 14;
+  if (stem) { t.H(x, y, 0.6); return [110, 80, 46]; }
+  const lobes = [[15.5, 9, 6], [10, 14, 4.5], [21, 13, 4.5]];
+  for (const [cx, cy, r] of lobes) { const d = Math.hypot(x - cx, y - cy); if (d < r) { t.M(x, y, 150); t.H(x, y, 1 - d / r); return scl([90, 160, 60], 1.15 - d / r * 0.4 + (t.rnd() - 0.5) * 0.1); } }
+  return { c: [80, 120, 50], a: 0 };
+});
 // ---------- v9.5: circuitos, música y pintura ----------
 const btn = (on) => (t) => t.fill((x, y) => {
   const e = Math.min(x, y, 31 - x, 31 - y), d = Math.hypot(x - 15.5, y - 15.5);

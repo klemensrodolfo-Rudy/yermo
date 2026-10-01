@@ -25,6 +25,7 @@ import { createModes, openRanking } from './modes.js';
 import { createSea } from './sea.js';
 import { createMinigames } from './minigames.js';
 import { createCreative } from './creative.js';
+import { createNature } from './nature.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -1012,6 +1013,9 @@ async function startGame(meta, hello, cloudInfo) {
   player.onUseItem = (...a) => SEAM.onUseItem(...a) || X.onUseItem(...a) || E.onUseItem(...a) || useF2(...a);
   const MG = game.minigames = createMinigames(fctx);
   const CR = game.creative = createCreative(fctx);
+  const NA = game.nature = createNature(fctx);
+  const mobF = player.onInteractMob;
+  player.onInteractMob = (m, h) => NA.onInteractMob(m, h) || mobF(m, h);
   const blockF2 = player.onUseBlock;
   player.onUseBlock = (...a) => CR.onUseBlock(...a) || MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
   sim.onMarker = (...a) => E.onMarker(...a) || F2.onMarker(...a) || F.onMarker(...a);
@@ -1062,7 +1066,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1455,7 +1459,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '9.5 · 2026-10-02';
+const VERSION = '9.6 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1518,6 +1522,7 @@ function loop(now) {
   game.sea?.update(dt);
   game.minigames?.update(dt);
   game.creative?.update(dt);
+  game.nature?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
