@@ -2,6 +2,7 @@
 import { itemName } from './blocks.js';
 
 export const NEWS = [
+  ['12.7', 'Fauna y aventuras', [[439, 'Cabras montés: se domestican y se ordeñan. Queso y dulce de leche.'], [271, 'Lagartijas en los cañones y murciélagos en las cuevas.'], [1121, '6 misiones nuevas en los pueblos y desafíos de cocinar, ordeñar y explorar.'], [423, 'Página de Cocina en el libro de colección.'], [1103, 'Tormentas de arena en los cañones y sonido de los géiseres.'], [1120, 'En línea, la carga de las baterías se ve igual para todos.']]],
   ['12.6', 'Orden y logros', [[1035, 'Categorías en la fabricación y en el modo creativo: Construir, Decorar, Máquinas, Equipo, Comida y Otros.'], [251, '8 logros nuevos para lo que se sumó en la v12.'], [191, 'Este panel de novedades.']]],
   ['12.5', 'Terreno sin repetición', [[2, 'La piedra, el pasto, la tierra y la arena cambian de tono por zonas.']]],
   ['12.4', 'Hogar', [[1129, 'Camas de colores: al morir elegís en cuál aparecer.'], [1132, 'Cocina, mesada con pileta y biblioteca de roble.'], [429, 'Sillón, mesa de luz, florero, macetas, cajonera y perchero.'], [437, 'Marcos para colgar copias de tus dibujos.'], [1139, 'Carteles de pared.']]],

@@ -94,6 +94,7 @@ export const ACHIEVEMENTS = [
   { id: 'obsidiana', name: 'Filo volcánico', desc: 'Fabricá una herramienta de obsidiana.' },
   { id: 'espeleo', name: 'Espeleólogo', desc: 'Encontrá un cristal de cueva.' },
   { id: 'galeria', name: 'Galería propia', desc: 'Colgá un cuadro con tu dibujo.' },
+  { id: 'pastor', name: 'Pastor del yermo', desc: 'Ordeñá una cabra domesticada.' },
   { id: 'cañones', name: 'Tierra roja', desc: 'Visitá los cañones rojos, el salar y el campo de géiseres.' },
 ];
 
@@ -150,6 +151,7 @@ export class Achievements {
     if (name === 'v9' || name === 'v10' || name === 'v12') u(id);
     if (name === 'craft' && id >= 423 && id <= 428) u('cocinero');
     if (name === 'craft' && id >= 417 && id <= 420) u('obsidiana');
+    if (name === 'milk') u('pastor');
     if (name === 'place' && ((id >= 120 && id <= 125) || (id >= 1052 && id <= 1057))) u('vitral');
     if (name === 'place' && id === 1121) u('molinero');
     if (name === 'break' && id === 1115) u('espeleo');

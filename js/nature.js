@@ -143,7 +143,7 @@ export function createNature(ctx) {
   const C = (h) => new THREE.Color(h);
   function weatherTick(dt) {
     const biome = g.gen.column(Math.floor(p.pos.x), Math.floor(p.pos.z)).biome;
-    const desert = biome === BIOME.DESERT || biome === BIOME.ASHEN, marsh = biome === BIOME.SWAMP || biome === BIOME.MIRE;
+    const desert = biome === BIOME.DESERT || biome === BIOME.ASHEN || biome === BIOME.CANYON, marsh = biome === BIOME.SWAMP || biome === BIOME.MIRE;
     // cada tanto se arma (o se pasa) un fenómeno del bioma
     localT -= dt;
     if (localT <= 0) { localT = 60 + Math.random() * 120; local = Math.random() < 0.4 ? 'on' : null; }

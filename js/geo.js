@@ -62,7 +62,7 @@ export function createGeo(ctx) {
         if (near) {
           const hgt = cyc < 0.6 ? cyc / 0.6 : 1;
           if (doEmit) { steam(G.x + 0.5, G.y + 1, G.z + 0.5, 9 + Math.random() * 5 * hgt, 1.4, 1.8 + Math.random() * 0.6); particles.burst(G.x, G.y + 1, G.z, [190, 220, 236], 4, 0.5); }
-          if (cyc < dt + 0.001 && dx * dx + dz * dz < 24 * 24) sfx.splash?.();
+          if (cyc < dt + 0.001 && dx * dx + dz * dz < 30 * 30) sfx.steam?.(1 - Math.sqrt(dx * dx + dz * dz) / 30);
         }
         // te lanza si estás parado encima o en el chorro
         const ry = p.pos.y - (G.y + 1);

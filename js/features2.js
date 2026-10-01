@@ -16,6 +16,7 @@ export const TAME = {
   ostrich: { food: [281, 282], veh: 'mostrich', name: 'avestruz', hint: 'dale semillas o cebada' },
   elephant: { food: [282, 285], veh: 'melephant', name: 'elefante', hint: 'dale cebada o papas', hard: true },
   horse: { food: [385, 282], veh: 'mhorse', name: 'caballo', hint: 'dale manzanas o cebada' },
+  goat: { food: [282, 281], name: 'cabra', hint: 'dale cebada o semillas', noRide: true },
 };
 import { EMOTES } from './net.js';
 import { realSeason } from './extras.js';
@@ -74,6 +75,9 @@ const DAILY = [
   { txt: 'Abrí 3 cajas de botín', ev: 'loot', n: 3, r: 4 },
   { txt: 'Comé 4 veces', ev: 'eat', n: 4, r: 2 },
   { txt: 'Sembrá 8 semillas', ev: 'plant', n: 8, r: 3 },
+  { txt: 'Cociná 2 comidas en el horno de barro o la cocina', ev: 'cook', n: 2, r: 5 },
+  { txt: 'Ordeñá una cabra', ev: 'milk', n: 1, r: 3 },
+  { txt: 'Encontrá 2 cristales de cueva', ev: 'break', m: 1115, n: 2, r: 6 },
 ];
 
 const WORKER_ROLES = {
@@ -1157,7 +1161,7 @@ export function createFeatures2(ctx) {
     const TM = TAME[t];
     if (TM) {
       const tamed = TM.pet ? m.owner === p.name : m.tamed;
-      if (hand?.id === 360) {
+      if (hand?.id === 360 && !TM.noRide) {
         if (!tamed) { flash(`Primero domesticalo (${TM.hint})`); return true; }
         if (!auth()) { flash('En línea, sólo el anfitrión puede ensillar por ahora'); return true; }
         g.mobs.remove(m);
@@ -1172,11 +1176,11 @@ export function createFeatures2(ctx) {
         if (Math.random() < (hand.id === 272 ? 0.55 : TM.hard ? 0.2 : 0.34)) {
           if (TM.pet) { m.owner = p.name; m.keep = true; } else { m.tamed = true; m.keep = true; m.fleeT = 0; m.provoked = false; }
           particles.burst(m.pos.x - 0.5, m.pos.y + 1, m.pos.z - 0.5, [255, 90, 120], 10, 0.5);
-          flash(`¡Domesticaste al ${TM.name}! Con una Montura (clic derecho) lo podés montar.`); p.onEvent('tame');
+          flash(TM.noRide ? `¡Domesticaste la ${TM.name}! Ordeñala con una botella vacía.` : `¡Domesticaste al ${TM.name}! Con una Montura (clic derecho) lo podés montar.`); p.onEvent('tame');
         } else flash('Come, pero todavía desconfía… seguí intentando');
         return true;
       }
-      if (tamed) { flash('Está domesticado. Usá una Montura para montarlo.'); return true; }
+      if (tamed) { flash(TM.noRide ? 'Está domesticada: ordeñala con una botella vacía o dale cebada para que tenga crías' : 'Está domesticado. Usá una Montura para montarlo.'); return true; }
     }
     return false;
   };

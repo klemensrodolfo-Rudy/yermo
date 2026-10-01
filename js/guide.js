@@ -154,6 +154,12 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Fauna nueva': () => `
+      <p><b>🐐 Cabras montés</b>: andan en grupo por los cañones rojos y los Montes de Hierroalto. Se domestican con ${icon(282)} cebada o ${icon(281)} semillas; una cabra domesticada se <b>ordeña con una ${icon(295)} botella vacía</b> (cada minuto y medio) y da ${icon(439)} leche. Con cebada tienen crías.</p>
+      <p>En la cocina o el horno de barro: ${icon(440)} <b>queso de cabra</b> (2 leches y sal) y ${icon(441)} <b>dulce de leche</b> (3 leches, te deja liviano).</p>
+      <p><b>🦎 Lagartijas</b> en los cañones, el desierto y el salar (escapan rápido). <b>🦇 Murciélagos</b> en las cuevas: no atacan, revolotean cerca del techo.</p>
+      <p>Los pueblos ahora piden cosas nuevas: guisos, cuarzo de las cuevas, un molino armado, sal del salar, obsidiana y queso. Hay desafíos diarios de cocinar, ordeñar y encontrar cristales, y una página de <b>Cocina</b> en el libro de colección.</p>
+      <p>Las <b>tormentas de arena</b> también llegan a los cañones rojos.</p>`,
     'Mecanismos y cocina': () => `
       <h3>Energía</h3>
       <p>${icon(1121)} <b>Molino de viento</b>: da energía mientras haya viento (más viento, más rápido giran las aspas). ${icon(1120)} <b>Batería</b>: se carga cuando le llega energía de un panel solar, molino o generador, y la devuelve cuando no hay otra fuente (de noche, sin viento). Clic derecho muestra la carga (hasta 15 minutos).</p>

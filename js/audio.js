@@ -106,6 +106,7 @@ export class Sfx {
   door(open) { this.tone({ freq: open ? 180 : 140, dur: 0.18, gain: 0.18, type: 'square', slide: open ? 1.4 : 0.7 }); this.burst({ freq: 900, q: 3, dur: 0.12, gain: 0.25 }); }
   drink() { for (let i = 0; i < 4; i++) setTimeout(() => this.tone({ freq: 300 + Math.random() * 120, dur: 0.07, gain: 0.12, type: 'sine', slide: 1.6 }), i * 120); }
   shoot() { this.tone({ freq: 900, dur: 0.12, gain: 0.2, type: 'triangle', slide: 0.3 }); this.burst({ freq: 2500, q: 2, dur: 0.08, gain: 0.3 }); }
+  steam(v = 1) { this.burst({ freq: 1600, q: 0.35, dur: 2.4, gain: 0.22 * v, type: 'bandpass' }); this.burst({ freq: 300, q: 0.6, dur: 1.2, gain: 0.18 * v, type: 'lowpass' }); }
   splash() { this.burst({ freq: 700, q: 0.8, dur: 0.35, gain: 0.35, type: 'lowpass' }); }
   pickup() { this.tone({ freq: 880, dur: 0.06, gain: 0.08, type: 'sine', slide: 1.5 }); }
   zap() { this.burst({ freq: 4000, q: 2, dur: 0.15, gain: 0.3, type: 'highpass' }); this.tone({ freq: 120, dur: 0.15, gain: 0.15, type: 'sawtooth', slide: 1 }); }

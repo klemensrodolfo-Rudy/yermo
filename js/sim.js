@@ -543,8 +543,10 @@ export class Sim {
       for (const k of batteries) {
         let c = this.containers.get(k);
         if (!c) { c = { type: 'battery', charge: 0 }; this.containers.set(k, c); }
-        if (powered.has(k)) c.charge = Math.min(BATTERY_MAX, (c.charge || 0) + 2);
+        const before = c.charge || 0;
+        if (powered.has(k)) c.charge = Math.min(BATTERY_MAX, before + 2);
         else if (c.charge > 0) { c.charge = Math.max(0, c.charge - 1); extra.push(k); }
+        if (Math.floor(c.charge / 30) !== Math.floor(before / 30) || (c.charge === 0) !== (before === 0)) this.touch(k);
       }
       if (extra.length) powered = spread([...sources, ...extra]);
     }

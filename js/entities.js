@@ -53,6 +53,9 @@ export const MOB_TYPES = {
   flamingo: { name: 'Flamenco', hp: 8, hw: 0.3, h: 1.8, speed: 2, flee: 4.5, hostile: false, drops: [[314, 1, 3, 1]] },
   penguin: { name: 'Pingüino', hp: 8, hw: 0.3, h: 1.1, speed: 1.6, flee: 2.5, hostile: false, drops: [[271, 1, 1, 0.6], [314, 1, 2, 0.8]] },
   hippo: { name: 'Hipopótamo', animal: true, hp: 70, hw: 0.8, h: 1.6, speed: 3, hostile: true, neutral: true, range: 12, dmg: 7, rad: 0, knock: 2.4, drops: [[271, 3, 5, 1], [336, 1, 2, 1]] },
+  lizard: { name: 'Lagartija', hp: 4, hw: 0.2, h: 0.2, speed: 4.6, flee: 6, hostile: false, drops: [[271, 1, 1, 0.3]] },
+  goat: { name: 'Cabra montés', hp: 12, hw: 0.35, h: 1.15, speed: 2.6, flee: 5, hostile: false, drops: [[271, 1, 2, 1], [336, 1, 1, 0.5]] },
+  bat: { name: 'Murciélago', hp: 3, hw: 0.2, h: 0.3, speed: 5, flee: 6, hostile: false, fly: true, caveFly: true, drops: [] },
   snake: { name: 'Serpiente', animal: true, hp: 6, hw: 0.25, h: 0.3, speed: 2.8, hostile: true, range: 8, dmg: 2, rad: 0, poison: true, drops: [[271, 1, 1, 0.3]] },
   monkey: { name: 'Mono', hp: 10, hw: 0.25, h: 1, speed: 5, flee: 6, hostile: false, drops: [[271, 1, 1, 0.5]] },
   rhino: { name: 'Rinoceronte', animal: true, hp: 80, hw: 0.7, h: 1.8, speed: 3, charge: 7.5, hostile: true, neutral: true, range: 18, dmg: 8, rad: 0, knock: 3, drops: [[271, 3, 5, 1], [336, 2, 3, 1]] },
@@ -140,6 +143,7 @@ const box = (w, h, d, mat, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d
 const MODEL_PAT = {
   boar: 'fur', ghoul: 'skin', rat: 'fur', crow: 'feather', behemoth: 'wrinkle', dog: 'fur', shroom: 'skin', wolf: 'fur', ratqueen: 'fur', leviathan: 'scales',
   alpha: 'skin', guardian: 'skin', scorpion: 'shell', orc: 'skin', troll: 'wrinkle', spider: 'fur', warg: 'fur', ent: 'shell', dragon: 'scales', horse: 'shortfur', lion: 'fur', giraffe: 'giraffe', elephant: 'wrinkle', zebra: 'zebra', gorilla: 'fur', bear: 'fur',
+  lizard: 'scales', goat: 'shortfur', bat: 'fur',
   crocodile: 'scales', ostrich: 'feather', kangaroo: 'shortfur', flamingo: 'feather', penguin: 'feather', hippo: 'wrinkle', snake: 'scales', monkey: 'fur', rhino: 'wrinkle',
 };
 
@@ -221,6 +225,8 @@ function buildModel(type) {
     head.add(box(0.14, 0.1, 0.02, eye, 0.17, 0.05, -0.31)); head.add(box(0.14, 0.1, 0.02, eye, -0.17, 0.05, -0.31));
     head.add(box(0.5, 0.12, 0.04, bone, 0, -0.18, -0.31));
     g.add(head); parts.head = head;
+  } else if (V12_ANIMALS.includes(type)) {
+    buildV12Animal(type, g, parts, M);
   } else if (ZOO_ANIMALS.includes(type)) {
     buildZooAnimal(type, g, parts, M);
   } else if (ELDRA_MOBS.includes(type)) {
@@ -352,6 +358,33 @@ function buildModel(type) {
 function legs(g, parts, mat, list, w, len, y) {
   parts.legs = parts.legs || [];
   for (const [x, z] of list) { const l = new THREE.Group(); l.position.set(x, y, z); l.add(box(w, len, w, mat, 0, -len / 2, 0)); g.add(l); parts.legs.push(l); }
+}
+// v12.7: animales de los biomas nuevos
+const V12_ANIMALS = ['lizard', 'goat', 'bat'];
+function buildV12Animal(type, g, parts, M) {
+  const eye = M(0x111111, false, null);
+  if (type === 'lizard') {
+    const skin = M(0xb8783a), dark = M(0x7a4a22, false, null);
+    g.add(box(0.2, 0.1, 0.42, skin, 0, 0.1, 0)); g.add(box(0.12, 0.02, 0.3, dark, 0, 0.16, 0));
+    const h = new THREE.Group(); h.position.set(0, 0.11, -0.27); h.add(box(0.15, 0.09, 0.16, skin, 0, 0, 0)); h.add(box(0.03, 0.03, 0.02, eye, 0.06, 0.03, -0.06)); h.add(box(0.03, 0.03, 0.02, eye, -0.06, 0.03, -0.06)); g.add(h); parts.head = h;
+    const t = new THREE.Group(); t.position.set(0, 0.1, 0.2); t.add(box(0.07, 0.06, 0.42, skin, 0, 0, 0.2)); g.add(t); parts.tail = t;
+    legs(g, parts, dark, [[0.13, -0.12], [-0.13, -0.12], [0.13, 0.13], [-0.13, 0.13]], 0.05, 0.08, 0.08);
+  } else if (type === 'goat') {
+    const fur = M(0xe8e0cc), dark = M(0x6a5a48, false, null), horn = M(0x9a8a70, false, null);
+    g.add(box(0.48, 0.48, 0.85, fur, 0, 0.78, 0));
+    legs(g, parts, fur, [[0.16, -0.3], [-0.16, -0.3], [0.16, 0.3], [-0.16, 0.3]], 0.13, 0.55, 0.55);
+    const h = new THREE.Group(); h.position.set(0, 1.08, -0.5); g.add(h); parts.head = h;
+    h.add(box(0.28, 0.3, 0.38, fur, 0, 0, -0.06)); h.add(box(0.2, 0.14, 0.12, dark, 0, -0.07, -0.28)); h.add(box(0.06, 0.16, 0.06, fur, 0, -0.24, -0.2));
+    h.add(box(0.05, 0.05, 0.02, eye, 0.11, 0.06, -0.2)); h.add(box(0.05, 0.05, 0.02, eye, -0.11, 0.06, -0.2));
+    for (const s of [1, -1]) { const hr = new THREE.Group(); hr.position.set(0.08 * s, 0.17, 0.02); hr.rotation.x = 0.9; hr.add(box(0.06, 0.28, 0.06, horn, 0, 0.12, 0)); hr.add(box(0.05, 0.05, 0.14, horn, 0, 0.25, 0.07)); h.add(hr); }
+    const t = new THREE.Group(); t.position.set(0, 0.95, 0.43); t.add(box(0.08, 0.12, 0.08, fur, 0, 0.05, 0)); g.add(t); parts.tail = t;
+  } else if (type === 'bat') {
+    const fur = M(0x3a2e2a), wing = M(0x2a2024, false, 'wrinkle'), red = M(0xff5a3a, true);
+    g.add(box(0.16, 0.2, 0.16, fur, 0, 0.15, 0));
+    const h = new THREE.Group(); h.position.set(0, 0.3, -0.04); h.add(box(0.14, 0.12, 0.12, fur, 0, 0, 0)); h.add(box(0.04, 0.08, 0.03, fur, 0.05, 0.09, 0)); h.add(box(0.04, 0.08, 0.03, fur, -0.05, 0.09, 0)); h.add(box(0.03, 0.03, 0.02, red, 0.04, 0.01, -0.07)); h.add(box(0.03, 0.03, 0.02, red, -0.04, 0.01, -0.07)); g.add(h); parts.head = h;
+    parts.wings = [];
+    for (const sx of [1, -1]) { const wg = new THREE.Group(); wg.position.set(0.08 * sx, 0.2, 0); wg.add(box(0.36, 0.03, 0.22, wing, 0.18 * sx, 0, 0)); g.add(wg); parts.wings.push(wg); }
+  }
 }
 function buildZooAnimal(type, g, parts, M) {
   const eye = M(0x111111, false, null), white = M(0xf0ece0, false, null);
@@ -924,11 +957,11 @@ export class Mobs {
     m.vel.z += (mz * speed - m.vel.z) * Math.min(1, acc * dt);
     if (d.fly) {
       // vuela alto y se tira en picada sobre el objetivo
-      let ty = (m.groundY ?? m.pos.y) + 6;
+      let ty = d.caveFly ? (m.homeY ?? m.pos.y) + Math.sin(performance.now() / 600 + m.id) * 0.8 : (m.groundY ?? m.pos.y) + 6;
       if (target) ty = near.pos.y + (nd < 5 ? 1 : 4);
       m.vel.y += ((ty - m.pos.y) * 2 - m.vel.y) * Math.min(1, dt * 3);
       m.groundAcc = (m.groundAcc || 0) - dt;
-      if (m.groundAcc <= 0) { m.groundAcc = 1; const gy = this.surfaceY(Math.floor(m.pos.x), Math.floor(m.pos.z)); if (gy != null) m.groundY = gy; }
+      if (m.groundAcc <= 0 && !d.caveFly) { m.groundAcc = 1; const gy = this.surfaceY(Math.floor(m.pos.x), Math.floor(m.pos.z)); if (gy != null) m.groundY = gy; }
     } else if (inWater) { m.vel.y = Math.min(m.vel.y + 20 * dt, 2.5); } else m.vel.y -= 28 * dt;
     const hx = this.move(m, 'x', m.vel.x * dt), hz = this.move(m, 'z', m.vel.z * dt);
     if ((hx || hz) && m.onGround && speed > 0 && !d.fly) m.vel.y = d.boss ? 9 : 7.8;
@@ -1128,6 +1161,16 @@ export class Mobs {
         return;
       }
     }
+    // v12.7: murciélagos en las cuevas (cerca del jugador si está bajo tierra)
+    {
+      const py = Math.floor(p.pos.y), psy = this.surfaceY(Math.floor(p.pos.x), Math.floor(p.pos.z));
+      if (psy != null && py < psy - 8 && count.bat < 5 && Math.random() < 0.35) {
+        const bx = Math.floor(p.pos.x + (Math.random() - 0.5) * 16), bz = Math.floor(p.pos.z + (Math.random() - 0.5) * 16);
+        for (let by = py + 1; by < py + 6; by++) if (this.world.getBlock(bx, by, bz) === 0 && this.world.getBlock(bx, by + 1, bz) === 0) { const m = this.add('bat', bx + 0.5, by + 0.5, bz + 0.5); if (m) m.homeY = by + 0.5; return; }
+      }
+    }
+    if (sy != null && (col.biome === BIOME.CANYON || col.biome === BIOME.PEAKS) && r > 0.72 && count.goat < 6) { herd('goat', 2 + Math.floor(Math.random() * 2)); return; }
+    if (sy != null && (col.biome === BIOME.CANYON || col.biome === BIOME.DESERT || col.biome === BIOME.SALT) && !night && r < 0.12 && count.lizard < 4) { herd('lizard', 1); return; }
     if (sy != null && col.biome === BIOME.TUNDRA && r > 0.92) { if (r > 0.97 && count.bear < 2) herd('bear', 1); else if (count.penguin < 6) herd('penguin', 3); return; }
     if (sy != null && (col.biome === BIOME.SWAMP || col.biome === BIOME.SALT) && r > 0.9) { if (r > 0.96 && count.crocodile < 3) herd('crocodile', 1); else if (count.flamingo < 6) herd('flamingo', 3); return; }
     if (sy != null && (col.biome === BIOME.DESERT || col.biome === BIOME.CANYON) && r > 0.94 && count.snake < 3) { herd('snake', 1); return; }

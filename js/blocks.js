@@ -745,6 +745,10 @@ export const ITEMS = {
   436: { name: 'Perchero', icon: 'decor', decor: 17, color: 0x7a5a36 },
   437: { name: 'Marco', icon: 'decor', color: 0xc89a5a, frame: true },
   438: { name: 'Cuadro con tu dibujo', icon: 'decor', color: 0xe8d8b0, stack: 1, artwork: true },
+  // v12.7: de las cabras
+  439: { name: 'Leche de cabra', icon: 'potion', color: 0xf4f0e6, thirst: 6, food: 2 },
+  440: { name: 'Queso de cabra', icon: 'cheese', food: 7 },
+  441: { name: 'Dulce de leche', icon: 'jar', food: 5, buff: 'frescura' },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -840,6 +844,9 @@ export const RECIPES = [
   { out: [59, 6], in: [[9, 3]], station: 'mesa' },
   { out: [60, 6], in: [[23, 3]], station: 'mesa' },
   { out: [9, 4], in: [[8, 2], [6, 2]], station: 'mesa' },
+  // v12.7: de las cabras
+  { out: [440, 1], in: [[439, 2], [422, 1]], station: 'cocina' },
+  { out: [441, 1], in: [[439, 3]], station: 'cocina' },
   // v12.4: hogar
   { out: [1129, 1], in: [[176, 3], [1058, 3]], station: 'mesa' },
   { out: [1130, 1], in: [[176, 3], [1058, 3], [122, 1]], station: 'mesa' },

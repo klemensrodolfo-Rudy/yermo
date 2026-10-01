@@ -40,6 +40,12 @@ const QUESTS = [
   (r) => ({ kind: 'fetch', item: 285, n: 10, reward: [[281, 8], [283, 4]], text: 'Plantamos papas pero se pudrieron. Traé 10 y te doy semillas.' }),
   (r) => ({ kind: 'kill', mob: 'alpha', n: 1, reward: [[313, 1], [348, 1]], text: 'Hay un laboratorio bajo tierra con algo terrible adentro. Terminalo.' }),
   (r) => ({ kind: 'fetch', item: 336, n: 6, reward: [[328, 1], [331, 4]], text: 'Se viene el frío: juntá cuero para abrigos.' }),
+  (r) => ({ kind: 'fetch', item: 423, n: 2 + Math.floor(r() * 2), reward: [[353, 14], [1129, 1]], text: 'Las noches están heladas: cociná guisos calientes para la gente.' }),
+  (r) => ({ kind: 'fetch', item: 416, n: 5 + Math.floor(r() * 3), reward: [[1121, 1], [75, 6]], text: 'Bajá a una cueva de cristales y traé cuarzo: queremos armar un molino.' }),
+  (r) => ({ kind: 'fetch', item: 1121, n: 1, reward: [[1120, 1], [1123, 2]], text: 'Queremos energía limpia: armá un molino de viento y traelo.' }),
+  (r) => ({ kind: 'fetch', item: 422, n: 8, reward: [[426, 2], [353, 8]], text: 'Sin sal no se conserva la carne: traé sal del salar.' }),
+  (r) => ({ kind: 'fetch', item: 1111, n: 4, reward: [[417, 1]], text: 'Necesitamos herramientas que no se rompan: traé obsidiana de las cuevas.' }),
+  (r) => ({ kind: 'fetch', item: 440, n: 2, reward: [[353, 12], [441, 1]], text: 'Los chicos quieren queso: conseguí leche de cabra y hacé queso.' }),
 ];
 export function makeQuest(seed) {
   const r = mulberry32(seed);

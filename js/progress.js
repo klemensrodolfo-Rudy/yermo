@@ -8,13 +8,14 @@ const esc = (s) => String(s ?? '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>'
 const ORES = []; for (let i = 1; i < BLOCKS.length; i++) if (BLOCKS[i] && !BLOCKS[i].hidden && /mineral|veta|cristal arcano/i.test(BLOCKS[i].name || '')) ORES.push(i);
 const ANIMALS = Object.entries(MOB_TYPES).filter(([, d]) => !d.npc && !d.human).map(([k]) => k);
 const FISH = [399, 404, 397, 401, 353];
+const COOK = [423, 424, 425, 426, 427, 428, 440, 441];
 const CRAFTABLE = [...new Set(RECIPES.map((r) => r.out[0]))];
 
 export const WEEKLY = [
   ['Pescá 8 veces', 'fish', 8], ['Fabricá 30 cosas', 'craft', 30], ['Rompé 150 bloques', 'break', 150], ['Eliminá 15 criaturas', 'kill', 15],
   ['Domesticá un animal', 'tame', 1], ['Plantá 10 veces', 'plant', 10], ['Cosechá 15 cultivos', 'harvest', 15], ['Comerciá 5 veces', 'trade', 5],
   ['Completá 2 misiones', 'quest', 2], ['Abrí 6 cofres o cajas', 'loot', 6], ['Sacá 3 fotos', 'photo', 3], ['Encontrá 2 notas de historias', 'story', 2],
-  ['Comé 12 veces', 'eat', 12], ['Saltá 200 veces', 'jump', 200], ['Poné 120 bloques', 'place', 120],
+  ['Comé 12 veces', 'eat', 12], ['Cociná 5 comidas', 'cook', 5], ['Ordeñá 3 veces', 'milk', 3], ['Saltá 200 veces', 'jump', 200], ['Poné 120 bloques', 'place', 120],
 ];
 export const PERKS = {
   corredor: ['🏃 Corredor', 'Te movés un 6% más rápido por nivel'],
@@ -40,6 +41,7 @@ export function createProgress(ctx) {
   const p = g.player, meta = g.meta;
   const api = {};
   const C = (meta.col = meta.col || { ores: [], biomes: [], recipes: [], fish: [], pages: {} });
+  C.cooked = C.cooked || [];
   const X = (meta.xp = meta.xp || { xp: 0, perks: {}, spent: 0 });
 
   // ---------- mejoras aplicadas al jugador ----------
@@ -69,6 +71,7 @@ export function createProgress(ctx) {
       { id: 'minerales', name: '💎 Minerales', have: ORES.filter((o) => C.ores.includes(o)), all: ORES, label: (o) => BLOCKS[o].name },
       { id: 'biomas', name: '🗺 Biomas', have: C.biomes.slice(), all: BIOME_NAMES.map((_, i) => i).filter((i) => i !== 11), label: (b) => BIOME_NAMES[b] },
       { id: 'recetas', name: '🛠 Recetas', have: CRAFTABLE.filter((r) => C.recipes.includes(r)), all: CRAFTABLE, label: (r) => itemName(r) },
+      { id: 'cocina', name: '🍲 Cocina', have: COOK.filter((f) => C.cooked.includes(f)), all: COOK, label: (f) => itemName(f) },
       { id: 'pesca', name: '🎣 Pesca', have: FISH.filter((f) => C.fish.includes(f)), all: FISH, label: (f) => itemName(f) },
     ];
   };
@@ -94,6 +97,8 @@ export function createProgress(ctx) {
     addXp(XP[n] || 0);
     if (n === 'break' && ORES.includes(id) && !C.ores.includes(id)) { C.ores.push(id); addXp(10); }
     if (n === 'craft' && !C.recipes.includes(id)) { C.recipes.push(id); addXp(3); }
+    if (n === 'cook' && !C.cooked.includes(id)) { C.cooked.push(id); addXp(5); }
+    if (n === 'milk') addXp(2);
     if (n === 'fish' && !C.fish.includes(id)) C.fish.push(id);
     const W = weekly();
     for (const c of W.list) {
