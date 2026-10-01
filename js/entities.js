@@ -4,7 +4,7 @@ import { SOLID, OPAQUE, SEA, TORCHES, LIQ, isWater, collBox, BLOCKS as BLOCKS_RE
 import { BIOME } from './worldgen.js';
 import { mulberry32 } from './noise.js';
 
-export const ELDRA_MOBS = ['orc', 'troll', 'spider', 'warg', 'ent', 'dragon', 'horse'];
+export const ELDRA_MOBS = ['orc', 'troll', 'spider', 'warg', 'ent', 'dragon', 'horse', 'robot'];
 export const ZOO_ANIMALS = ['lion', 'giraffe', 'elephant', 'zebra', 'gorilla', 'bear', 'crocodile', 'ostrich', 'kangaroo', 'flamingo', 'penguin', 'hippo', 'snake', 'monkey', 'rhino'];
 export const MOB_TYPES = {
   boar: {
@@ -68,6 +68,7 @@ export const MOB_TYPES = {
   elf: { name: 'Elfa de Lunaria', hp: 40, hw: 0.3, h: 2, speed: 1.6, hostile: false, npc: 'elf', drops: [] },
   dwarf: { name: 'Enano de Hierroalto', hp: 50, hw: 0.32, h: 1.45, speed: 1.4, hostile: false, npc: 'dwarf', drops: [], stay: true },
   halfling: { name: 'Mediano', hp: 20, hw: 0.28, h: 1.3, speed: 1.6, hostile: false, npc: 'halfling', drops: [], stay: true },
+  robot: { name: 'Profe Robi', hp: 100, hw: 0.32, h: 1.6, speed: 1.2, hostile: false, npc: 'robot', drops: [], stay: true },
   mage: { name: 'Mago de la torre', hp: 80, hw: 0.3, h: 2, speed: 1.1, hostile: false, npc: 'mage', drops: [], stay: true },
   // v6: humanos armados, empleados y el guardián del abismo
   bandit: { name: 'Bandido', hp: 22, hw: 0.3, h: 1.9, speed: 3.4, hostile: true, range: 24, dmg: 2, rad: 0, human: 'bandit', ranged: { cd: 1.8, range: 16, acc: 0.5, dmg: 3 },
@@ -603,6 +604,19 @@ function buildEldraMob(type, g, parts, M) {
       for (let i = 0; i < 5; i++) { const s = new THREE.Group(); s.position.set(0, 1.4 - i * 0.1, 1.5 + i * 0.6); const ww = 0.7 - i * 0.12; s.add(box(ww, ww, 0.65, scale, 0, 0, 0)); g.add(s); parts.segs.push(s); }
       break;
     }
+    case 'robot': {
+      const metal = M(0xc8ccd2, false, null), dark = M(0x3a3e44, false, null), blue = M(0x6ab0ff, true, null);
+      parts.legs = [];
+      for (const x of [0.13, -0.13]) { const l = new THREE.Group(); l.position.set(x, 0.55, 0); l.add(box(0.16, 0.55, 0.16, dark, 0, -0.27, 0)); l.add(box(0.22, 0.1, 0.3, metal, 0, -0.52, -0.04)); g.add(l); parts.legs.push(l); }
+      g.add(box(0.56, 0.55, 0.36, metal, 0, 0.85, 0)); g.add(box(0.3, 0.2, 0.02, blue, 0, 0.9, -0.19));
+      parts.arms = [];
+      for (const x of [0.36, -0.36]) { const a = new THREE.Group(); a.position.set(x, 1.08, 0); a.add(box(0.12, 0.5, 0.12, dark, 0, -0.22, 0)); a.add(box(0.16, 0.12, 0.16, metal, 0, -0.5, 0)); g.add(a); parts.arms.push(a); }
+      parts.armsRelaxed = true;
+      const h = H(0, 1.18, 0); h.add(box(0.46, 0.36, 0.4, metal, 0, 0.18, 0));
+      h.add(box(0.1, 0.08, 0.02, blue, 0.11, 0.2, -0.21)); h.add(box(0.1, 0.08, 0.02, blue, -0.11, 0.2, -0.21)); h.add(box(0.2, 0.03, 0.02, dark, 0, 0.08, -0.21));
+      h.add(box(0.04, 0.2, 0.04, dark, 0, 0.46, 0)); h.add(box(0.1, 0.1, 0.1, M(0xff5a4a, true, null), 0, 0.58, 0));
+      break;
+    }
     case 'horse': {
       const hide = M(0x7a5232), mane = M(0x2a1e14), hoof = M(0x1a1410, false, null);
       g.add(box(0.7, 0.75, 1.5, hide, 0, 1.25, 0));
@@ -620,7 +634,7 @@ function buildEldraMob(type, g, parts, M) {
 }
 
 let NEXT_ID = 1;
-const NPC_LABELS = { elf: ['Elfa', '#b8f0d0'], dwarf: ['Enano', '#e0a060'], halfling: ['Mediano', '#c8e07a'], mage: ['Mago', '#a8a8ff'], worker: ['Empleado', '#6ab0ff'], trader: ['Comerciante', '#ffd84a'], leader: ['Líder del asentamiento', '#ff8a4a'], instructor: ['Instructor Rolo', '#ff5a4a'], settler: ['Superviviente', '#d8d0c0'], dog: ['Tu perro', '#9cff3a'] };
+const NPC_LABELS = { robot: ['🤖 Profe Robi', '#9ad8ff'], elf: ['Elfa', '#b8f0d0'], dwarf: ['Enano', '#e0a060'], halfling: ['Mediano', '#c8e07a'], mage: ['Mago', '#a8a8ff'], worker: ['Empleado', '#6ab0ff'], trader: ['Comerciante', '#ffd84a'], leader: ['Líder del asentamiento', '#ff8a4a'], instructor: ['Instructor Rolo', '#ff5a4a'], settler: ['Superviviente', '#d8d0c0'], dog: ['Tu perro', '#9cff3a'] };
 function labelSprite(text, color) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 48;
   const x = c.getContext('2d');

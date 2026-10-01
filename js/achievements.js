@@ -75,6 +75,10 @@ export const ACHIEVEMENTS = [
   { id: 'mejoramigo', name: 'Mejores amigos', desc: 'Llevá a tu mascota al nivel 5.' },
   { id: 'aventura', name: 'Aventurero', desc: 'Terminá una aventura de la comunidad.' },
   { id: 'autor', name: 'Creador de mundos', desc: 'Publicá tu propia aventura.' },
+  { id: 'alumno', name: 'Buen alumno', desc: 'Subí de nivel con el Profe Robi.' },
+  { id: 'perfecto', name: '¡Diez felicitado!', desc: 'Acertá las 5 preguntas de un desafío a la primera.' },
+  { id: 'acertijo', name: 'Cerrajero sabio', desc: 'Abrí un cofre con acertijo.' },
+  { id: 'constructor', name: 'Maestro mayor de obras', desc: 'Terminá una construcción guiada.' },
 ];
 
 export class Achievements {

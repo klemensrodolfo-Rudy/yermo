@@ -250,6 +250,12 @@ export function setupGuide(ui, getGame) {
       <p>En un mundo del grupo, desde la pausa: mandale mensajes (y lo que tengas en la mano) a otro miembro aunque no esté conectado; le aparece cuando entra. <b>Marcar este lugar</b> pone una marca rosa en el mapa de todos.</p>
       <h3>🖼 Galería</h3>
       <p>Sacá una foto (F2 y después P) y en la pausa → <b>Galería del grupo</b> compartila con un epígrafe. Ahí ves las fotos de todos.</p>`,
+    'Aprender y construir': () => `
+      <h3>📚 Modo aprender</h3>
+      <p>Activá la regla <b>📚 Modo aprender</b> (al crear el mundo o en la pausa) y aparece el <b>🤖 Profe Robi</b> cerca del inicio. Hablale (clic derecho) y te pone desafíos de 5 preguntas: cuentas y palabras para completar. Va subiendo de nivel solo: sumas hasta 10 → sumas y restas → tablas del 2 al 5 → tablas hasta el 10 → divisiones. Cada respuesta correcta a la primera da 1 ficha, y 4 o 5 bien, un regalo.</p>
+      <p>${icon(253)} <b>Cofre con acertijo</b>: para abrirlo hay que responder una pregunta. El que lo pone puede escribir su propia pregunta y respuesta con <b>Shift + clic derecho</b> (por ejemplo, para que los chicos encuentren un premio). Si no tiene pregunta, inventa una cuenta.</p>
+      <h3>🏗 Construcción guiada</h3>
+      <p>En la pausa, <b>🏗 Construcción guiada</b>: elegí casita, torre, puente, fuente o cohete y aparece una silueta transparente delante tuyo. Poné los bloques donde marca, capa por capa; abajo a la izquierda te dice cuántos faltan de cada uno. Al terminar ganás 5 fichas.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

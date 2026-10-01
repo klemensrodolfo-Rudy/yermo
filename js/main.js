@@ -27,6 +27,7 @@ import { createMinigames } from './minigames.js';
 import { createCreative } from './creative.js';
 import { createNature } from './nature.js';
 import { createSocial, openAdventures } from './social.js';
+import { createLearn } from './learn.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -979,7 +980,7 @@ async function startGame(meta, hello, cloudInfo) {
   game.tutorial = new Tutorial(game, ui, sfx);
   // reglas del mundo: radiación y animales mutantes de día (se pueden cambiar en la pausa)
   game.applyRules = () => {
-    const r = Object.assign({ rad: true, dayMobs: true, armed: false, kids: false, realTime: false }, game.meta.rules);
+    const r = Object.assign({ rad: true, dayMobs: true, armed: false, kids: false, realTime: false, learn: false }, game.meta.rules);
     game.meta.rules = r;
     mobs.noArmed = !r.armed || r.kids;
     if (mobs.noArmed && isAuthority()) for (const m of [...mobs.list.values()]) if (m.def.ranged && m.def.human) mobs.remove(m);
@@ -1001,7 +1002,7 @@ async function startGame(meta, hello, cloudInfo) {
   const fctx = {
     game, ui, net, sfx, flash, scene, camera, renderer, uniforms, skyUniforms, settings, particles, voice, ext,
     skin: skinOf, isAuthority, openInventory, closeInventory, lockPointer, toggleMount, addChat,
-    saveGame, Storage,
+    saveGame, Storage, setPause,
     endRun: async () => { const id = game.meta.id, local = !game.meta.remote && !game.meta.cloud; $('#death').hidden = true; await quitToMenu(); if (local) { await Storage.deleteWorld(id); showMenu(); } },
     openPanel: (title, render) => { ui.player = player; ui.openPanel(nearbyStations(player.pos), title, render); document.exitPointerLock(); $('#hud').classList.add('dim'); },
   };
@@ -1017,12 +1018,12 @@ async function startGame(meta, hello, cloudInfo) {
   const CR = game.creative = createCreative(fctx);
   const NA = game.nature = createNature(fctx);
   game.social = createSocial(fctx);
-  const mobF = player.onInteractMob;
-  player.onInteractMob = (m, h) => NA.onInteractMob(m, h) || mobF(m, h);
+  const LE = game.learn = createLearn(fctx);
+  // clic derecho en bloques y criaturas: cada módulo mira primero lo suyo
   const blockF2 = player.onUseBlock;
-  player.onUseBlock = (...a) => CR.onUseBlock(...a) || MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
+  player.onUseBlock = (...a) => LE.onUseBlock(...a) || CR.onUseBlock(...a) || MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
   sim.onMarker = (...a) => E.onMarker(...a) || F2.onMarker(...a) || F.onMarker(...a);
-  player.onInteractMob = (m, h) => E.onInteractMob(m, h) || F2.onInteractMob(m, h) || F.onInteractMob(m, h);
+  player.onInteractMob = (m, h) => LE.onInteractMob(m, h) || NA.onInteractMob(m, h) || E.onInteractMob(m, h) || F2.onInteractMob(m, h) || F.onInteractMob(m, h);
   player.onGun = F.onGun;
   player.onReadNote = F.readNote;
   player.onLever = (x, y, z) => sim.toggleLever(x, y, z);
@@ -1069,7 +1070,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1151,7 +1152,7 @@ $('#createWorld').onclick = () => {
   const seed = preset.seed ?? (s ? (/^-?\d+$/.test(s) ? parseInt(s) : [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7)) : (Math.random() * 2e9) | 0);
   const meta = { id: 'w' + Date.now().toString(36), name, seed, mode: $('#wMode').value, worldType: $('#wType').value, renderDist: +$('#optDist').value || QUALITY[settings.quality].dist };
   if (preset.spawn) meta.spawnPref = preset.spawn;
-  meta.rules = { rad: $('#wRad').checked, dayMobs: $('#wDay').checked, armed: $('#wArmed').checked, kids: $('#wKids').checked, realTime: $('#wReal').checked };
+  meta.rules = { rad: $('#wRad').checked, dayMobs: $('#wDay').checked, armed: $('#wArmed').checked, kids: $('#wKids').checked, realTime: $('#wReal').checked, learn: $('#wLearn').checked };
   if ($('#wTut').checked) meta.tutorial = { step: 0, done: false };
   $('#newForm').hidden = true;
   startGame(meta);
@@ -1222,8 +1223,8 @@ function setPause(p) {
     $('#optName').value = game.player.name;
     const rules = game.meta.rules || {}, canRules = !net.isClient;
     $('#optRad').checked = rules.rad !== false; $('#optDay').checked = rules.dayMobs !== false; $('#optArmed').checked = !!rules.armed;
-    $('#optKids').checked = !!rules.kids; $('#optReal').checked = !!rules.realTime;
-    $('#optRad').disabled = $('#optDay').disabled = $('#optArmed').disabled = $('#optKids').disabled = $('#optReal').disabled = !canRules;
+    $('#optKids').checked = !!rules.kids; $('#optReal').checked = !!rules.realTime; $('#optLearn').checked = !!rules.learn;
+    $('#optRad').disabled = $('#optDay').disabled = $('#optArmed').disabled = $('#optKids').disabled = $('#optReal').disabled = $('#optLearn').disabled = !canRules;
     $('#rulesInfo').textContent = canRules ? '' : '(las decide el anfitrión)';
   }
 }
@@ -1272,13 +1273,14 @@ function renamePlayer() {
 }
 $('#optNameOk').onclick = renamePlayer;
 $('#optName').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); renamePlayer(); $('#optName').blur(); } });
-const RULE_MSG = { rad: ['☢ Radiación activada', 'Radiación desactivada'], dayMobs: ['Los animales mutantes vuelven a atacar de día', 'De día los animales mutantes ya no atacan'], armed: ['🔫 Vuelven los bandidos, piratas y soldados', 'Sin humanos armados en este mundo'], kids: ['🧸 Modo chicos: sin monstruos, sin hambre ni sed y sin radiación', 'Modo chicos desactivado'], realTime: ['🕐 Hora real: el día y la noche siguen tu reloj, y la estación es la de verdad', 'El tiempo vuelve a correr a ritmo de juego'] };
+const RULE_MSG = { rad: ['☢ Radiación activada', 'Radiación desactivada'], dayMobs: ['Los animales mutantes vuelven a atacar de día', 'De día los animales mutantes ya no atacan'], armed: ['🔫 Vuelven los bandidos, piratas y soldados', 'Sin humanos armados en este mundo'], kids: ['🧸 Modo chicos: sin monstruos, sin hambre ni sed y sin radiación', 'Modo chicos desactivado'], realTime: ['🕐 Hora real: el día y la noche siguen tu reloj, y la estación es la de verdad', 'El tiempo vuelve a correr a ritmo de juego'], learn: ['📚 Modo aprender: el Profe Robi te espera cerca del inicio', 'Modo aprender desactivado'] };
 const setRule = (k, v) => { if (!game || net.isClient) return; game.meta.rules = { ...(game.meta.rules || {}), [k]: v }; game.applyRules(); flash(RULE_MSG[k][v ? 0 : 1]); };
 $('#optRad').onchange = (e) => setRule('rad', e.target.checked);
 $('#optDay').onchange = (e) => setRule('dayMobs', e.target.checked);
 $('#optArmed').onchange = (e) => setRule('armed', e.target.checked);
 $('#optKids').onchange = (e) => setRule('kids', e.target.checked);
 $('#optReal').onchange = (e) => setRule('realTime', e.target.checked);
+$('#optLearn').onchange = (e) => setRule('learn', e.target.checked);
 $('#accBtn').onclick = () => { $('#pause').hidden = true; access.open(() => { $('#pause').hidden = false; }); };
 $('#openAccess').onclick = () => access.open();
 $('#openRanking').onclick = () => openRanking();
@@ -1463,7 +1465,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '9.7 · 2026-10-02';
+const VERSION = '9.8 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1528,6 +1530,7 @@ function loop(now) {
   game.creative?.update(dt);
   game.nature?.update(dt);
   game.social?.update(dt);
+  game.learn?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
