@@ -156,6 +156,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v13.2 — Pincel, portones y planos**: pincel para teñir hormigón, vidrio y camas, portón automático que se abre al acercarte y planos compartibles como código de texto.
 
+**v13.3 — Con amigos**: el mundo sigue mientras no estás (cultivos y baterías), paquetes de hasta 4 objetos por el buzón, carreras en globo con ranking y concurso semanal de construcción con votos (hay que volver a correr `supabase/schema.sql` para los votos).
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

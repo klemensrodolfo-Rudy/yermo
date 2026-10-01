@@ -168,20 +168,25 @@ export function createSocial(ctx) {
       if (!others.length) B.insertAdjacentHTML('beforeend', '<p class="muted">No hay otros miembros en este mundo todavía.</p>');
       else {
         const f = document.createElement('div');
-        const hand = inv.hand;
+        const bar = inv.slots.slice(0, 9).map((s, i) => [s, i]).filter(([s]) => s);
         f.innerHTML = `<select class="to">${others.map((m) => `<option value="${m.user_id}">${esc(m.name)}</option>`).join('')}</select>
           <textarea class="txt" rows="2" maxlength="300" placeholder="Mensaje" style="width:100%;font:inherit"></textarea>
-          ${hand ? `<label class="check"><input type="checkbox" class="att"> Adjuntar lo que tengo en la mano: ${hand.count} × ${esc(itemName(hand.id))}</label>` : '<p class="muted" style="font-size:14px">Para mandar objetos, tenelos en la mano.</p>'}
+          ${bar.length ? `<p style="margin:4px 0;font-size:15px">📦 Armá un paquete (hasta 4 cosas de tu barra):</p><div class="atts" style="display:flex;flex-wrap:wrap;gap:4px 12px">${bar.map(([s, i]) => `<label class="check" style="font-size:14px"><input type="checkbox" class="att" data-i="${i}"> ${s.count} × ${esc(itemName(s.id))}${s.art ? ' 🖼' : ''}${s.tx != null ? ' 🗺' : ''}</label>`).join('')}</div>` : '<p class="muted" style="font-size:14px">Para mandar objetos, tenelos en la barra.</p>'}
           <button class="send primary">Mandar</button>`;
         f.querySelector('.txt').addEventListener('keydown', (e) => e.stopPropagation());
         f.querySelector('.send').onclick = async (e) => {
-          const txt = f.querySelector('.txt').value.trim(), att = f.querySelector('.att')?.checked;
-          if (!txt && !att) return;
+          const txt = f.querySelector('.txt').value.trim(), picks = [...f.querySelectorAll('.att:checked')].slice(0, 4).map((c) => +c.dataset.i);
+          if (!txt && !picks.length) return;
           e.target.disabled = true;
           let items = null;
-          if (att && inv.hand) { const h = inv.hand; items = [{ id: h.id, count: h.count, dur: h.dur ?? null, q: h.q ?? null }]; inv.slots[inv.selected] = null; inv.onChange(); }
-          try { await Cloud.sendMail(meta.cloud, f.querySelector('.to').value, txt, items); flash('📬 Mensaje mandado'); openMail(); }
-          catch (er) { if (items) p.give(items[0].id, items[0].count, { dur: items[0].dur, q: items[0].q }); alert('No se pudo mandar: ' + er.message); e.target.disabled = false; }
+          if (picks.length) {
+            items = picks.map((i) => { const h = inv.slots[i]; return { id: h.id, count: h.count, dur: h.dur ?? null, q: h.q ?? null, art: h.art ?? null, note: h.note ?? null, tx: h.tx ?? null, tz: h.tz ?? null, label: h.label ?? null }; });
+            for (const i of picks) inv.slots[i] = null;
+            inv.onChange();
+          }
+          const extra = (x) => ({ dur: x.dur ?? undefined, q: x.q ?? undefined, art: x.art ?? undefined, note: x.note ?? undefined, tx: x.tx ?? undefined, tz: x.tz ?? undefined, label: x.label ?? undefined });
+          try { await Cloud.sendMail(meta.cloud, f.querySelector('.to').value, txt, items); flash(items ? `📦 Paquete mandado (${items.length})` : '📬 Mensaje mandado'); openMail(); }
+          catch (er) { if (items) for (const x of items) p.give(x.id, x.count, extra(x)); alert('No se pudo mandar: ' + er.message); e.target.disabled = false; }
         };
         B.appendChild(f);
       }
@@ -193,7 +198,7 @@ export function createSocial(ctx) {
         row.innerHTML = `<p><b>${esc(m.from_name)}</b> <small class="muted">${new Date(m.created_at).toLocaleString()}</small><br>${esc(m.text || '')}${it ? `<br>🎁 ${it}` : ''}</p>`;
         if (it && !m.taken) {
           const b = document.createElement('button'); b.className = 'primary'; b.textContent = 'Agarrar';
-          b.onclick = async () => { b.disabled = true; const items = await Cloud.takeMail(m.id); if (items) { for (const x of items) if (ITEMS[x.id] || isBlock(x.id)) p.give(x.id, x.count, { dur: x.dur ?? undefined, q: x.q ?? undefined }); sfx.craft(); flash('🎁 ¡Lo agarraste!'); } openMail(); };
+          b.onclick = async () => { b.disabled = true; const items = await Cloud.takeMail(m.id); if (items) { for (const x of items) if (ITEMS[x.id] || isBlock(x.id)) p.give(x.id, x.count, { dur: x.dur ?? undefined, q: x.q ?? undefined, art: x.art ?? undefined, note: x.note ?? undefined, tx: x.tx ?? undefined, tz: x.tz ?? undefined, label: x.label ?? undefined }); sfx.craft(); flash('🎁 ¡Lo agarraste!'); } openMail(); };
           row.appendChild(b);
         } else if (!it && !m.taken) Cloud.takeMail(m.id).catch(() => {});
         const del = document.createElement('button'); del.textContent = 'Borrar'; del.onclick = async () => { await Cloud.deleteMail(m.id); openMail(); };

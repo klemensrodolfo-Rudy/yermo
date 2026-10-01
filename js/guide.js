@@ -154,6 +154,11 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Con amigos': () => `
+      <p><b>🕰 El mundo sigue</b>: cuando volvés después de un rato, los cultivos crecieron y las baterías se cargaron según el tiempo que pasó (hasta un día). Te avisa al entrar.</p>
+      <p><b>📦 Paquetes</b>: en el buzón (mundo del grupo) podés mandar hasta 4 cosas de tu barra juntas, aunque el otro no esté. Los cuadros viajan con su dibujo y los mapas del tesoro con su destino.</p>
+      <p><b>🎈 Carrera en globo</b> (pausa → Juego): subite a un globo y pasá por 10 aros en el aire. El recorrido es el mismo para todos en el mundo, así que hay ranking del grupo.</p>
+      <p><b>🏆 Concurso semanal</b> (pausa → Comunidad): cada semana un tema («la casa más linda», «el puente más largo»…). Sacá una foto de lo que construiste, presentala y votá las de los demás.</p>`,
     'Pincel, portones y planos': () => `
       <p>${icon(444)} <b>Pincel</b> (palo, tela y una ficha): clic derecho al aire para elegir entre 12 colores; clic derecho sobre <b>hormigón, vidrio o una cama</b> para teñirlos. Se gasta de a poco.</p>
       <p>${icon(1147)} <b>Portón automático</b>: se abre solo cuando te acercás (o un amigo) y se cierra cuando te vas. Apilalos para armar un portón de garaje.</p>

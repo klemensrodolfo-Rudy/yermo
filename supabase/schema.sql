@@ -330,3 +330,20 @@ begin
     execute format('grant execute on function public.%s to authenticated', f);
   end loop;
 end $$;
+
+-- v13.3: votos del concurso semanal de construcción (un voto por foto y por usuario)
+create table if not exists public.yermo_votes (
+  photo_id bigint not null references public.yermo_photos(id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (photo_id, user_id)
+);
+alter table public.yermo_votes enable row level security;
+revoke all on public.yermo_votes from anon;
+grant select, insert, delete on public.yermo_votes to authenticated;
+drop policy if exists "yermo votes read" on public.yermo_votes;
+drop policy if exists "yermo votes add" on public.yermo_votes;
+drop policy if exists "yermo votes delete" on public.yermo_votes;
+create policy "yermo votes read" on public.yermo_votes for select to authenticated using (true);
+create policy "yermo votes add" on public.yermo_votes for insert to authenticated with check (user_id = auth.uid());
+create policy "yermo votes delete" on public.yermo_votes for delete to authenticated using (user_id = auth.uid());
