@@ -895,7 +895,10 @@ $('#createWorld').onclick = () => {
   $('#newForm').hidden = true;
   startGame(meta);
 };
-$('#joinWorld').onclick = () => { $('#joinForm').hidden = false; $('#newForm').hidden = true; $('#jCode').focus(); };
+$('#joinWorld').onclick = () => { $('#joinForm').hidden = false; $('#newForm').hidden = true; $('#jCode').focus(); setTimeout(() => $('#doJoin').scrollIntoView({ block: 'center', behavior: 'smooth' }), 350); };
+// Enter / «Ir» del teclado del celular confirma
+$('#jCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#jCode').blur(); $('#doJoin').click(); } });
+$('#jName').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#jCode').focus(); } });
 $('#cancelJoin').onclick = () => ($('#joinForm').hidden = true);
 function metaFromHello(hello, id) {
   const g = hello.guest;
