@@ -65,7 +65,7 @@ export const Cloud = {
   },
   async deleteWorld(id) { const { error } = await this.sb.from('yermo_worlds').delete().eq('id', id); if (error) throw new Error(error.message); },
   async loadWorld(id) {
-    const { data, error } = await this.sb.from('yermo_worlds').select('*').eq('id', id).single();
+    const { data, error } = await this.sb.from('yermo_worlds').select('id, name, seed, world_type, mode, meta, owner, updated_at').eq('id', id).single();
     if (error) throw new Error(error.message);
     return data;
   },
@@ -105,6 +105,25 @@ export const Cloud = {
       const { error } = await this.sb.from('yermo_chunks').upsert(rows.slice(i, i + 40));
       if (error) console.warn('nube: no se guardaron bloques', error.message);
     }
+  },
+
+  // ---------- miembros e invitaciones ----------
+  async joinByCode(code) {
+    const { data, error } = await this.sb.rpc('yermo_join_world', { code });
+    if (error) throw new Error(error.message);
+    if (!data?.length) throw new Error('No hay ningún mundo con ese código.');
+    return data[0];
+  },
+  async getInvite(id) { const { data } = await this.sb.rpc('yermo_get_invite', { w: id }); return data; },
+  async newInvite(id) { const { data } = await this.sb.rpc('yermo_new_invite', { w: id }); return data; },
+  async members(id) {
+    const { data, error } = await this.sb.from('yermo_members').select('user_id, name, role, joined_at').eq('world_id', id).order('joined_at');
+    if (error) throw new Error(error.message);
+    return data || [];
+  },
+  async removeMember(id, uid) {
+    const { error } = await this.sb.from('yermo_members').delete().eq('world_id', id).eq('user_id', uid);
+    if (error) throw new Error(error.message);
   },
 
   // ---------- jugadores ----------

@@ -534,7 +534,7 @@ async function hostCloud(id, tok) {
   }, 8000);
   $('#netInfo').hidden = false; $('#netInfo').textContent = `☁ ${row.name} · sos el anfitrión`;
   $('#pauseHost').hidden = true;
-  addChat(null, `☁ Abriste «${row.name}». Tus amigos entran solos desde «Mundo del grupo».`);
+  addChat(null, `☁ Abriste «${row.name}». Los miembros entran solos desde «Mundo del grupo».`);
   await saveCloud(true); // deja guardado el punto de inicio del mundo
 }
 async function joinCloud(id, code) {
@@ -569,22 +569,62 @@ async function renderCloud() {
   list.innerHTML = '<p class="muted">Buscando mundos…</p>';
   try {
     const worlds = await Cloud.listWorlds();
-    list.innerHTML = worlds.length ? '' : '<p class="empty">Todavía no hay mundos del grupo. Creá el primero.</p>';
+    list.innerHTML = worlds.length ? '' : '<p class="empty">Todavía no sos miembro de ningún mundo. Creá uno o sumate con el código que te pase un amigo.</p>';
     for (const w of worlds) {
       const row = document.createElement('div'); row.className = 'world';
       const d = new Date(w.updated_at);
-      row.innerHTML = `<div><b></b><small>${w.playing ? `<b>🟢 jugando: ${w.playing.replace(/[<>&]/g, '')}</b> · ` : '⚪ nadie conectado · '}${w.world_type === 'brew' ? '🍺 ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · ${w.players} jugador${w.players == 1 ? '' : 'es'} · ${d.toLocaleDateString()}</small></div><button class="play">Entrar</button>${w.owner === Cloud.user.id ? '<button class="del" title="Borrar mundo">✕</button>' : ''}`;
+      row.innerHTML = `<div><b></b><small>${w.playing ? `<b>🟢 jugando: ${w.playing.replace(/[<>&]/g, '')}</b> · ` : '⚪ nadie conectado · '}${w.world_type === 'brew' ? '🍺 ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · ${w.players} miembro${w.players == 1 ? '' : 's'}${w.owner === Cloud.user.id ? ' · 👑 tuyo' : ''}</small></div><button class="play">Entrar</button><button class="cfg" title="Código, miembros y opciones">⚙</button>`;
       row.querySelector('b').textContent = w.name;
       row.querySelector('.play').onclick = () => { row.querySelector('.play').disabled = true; enterCloud(w.id).catch((e) => { cloudMsg(e.message); row.querySelector('.play').disabled = false; }); };
-      const del = row.querySelector('.del');
-      if (del) del.onclick = async () => { if (confirm(`¿Borrar «${w.name}» para todo el grupo? No se puede deshacer.`)) { await Cloud.deleteWorld(w.id).catch((e) => cloudMsg(e.message)); renderCloud(); } };
+      row.querySelector('.cfg').onclick = () => cloudWorldCfg(w);
       list.appendChild(row);
     }
   } catch (e) {
     list.innerHTML = '';
-    cloudMsg(/yermo_list_worlds|does not exist|schema/i.test(e.message) ? 'Falta preparar la base: corré supabase/schema.sql en el SQL Editor de Supabase.' : e.message);
+    cloudMsg(/yermo_list_worlds|does not exist|schema|permission denied/i.test(e.message) ? 'Falta actualizar la base: corré supabase/schema.sql en el SQL Editor de Supabase.' : e.message);
   }
 }
+// ⚙ de un mundo: código de invitación, miembros, echar, cambiar código, salir o borrar
+async function cloudWorldCfg(w) {
+  const box = $('#cCfg');
+  const mine = w.owner === Cloud.user.id;
+  box.hidden = false; box.innerHTML = '<p class="muted">Cargando…</p>';
+  try {
+    const [members, code] = await Promise.all([Cloud.members(w.id), mine ? Cloud.getInvite(w.id) : null]);
+    box.innerHTML = '';
+    const H = (h) => box.insertAdjacentHTML('beforeend', h);
+    const btn = (t, fn, cls = '') => { const b = document.createElement('button'); b.textContent = t; if (cls) b.className = cls; b.onclick = fn; return b; };
+    H(`<p><b></b></p>`); box.querySelector('b').textContent = w.name;
+    if (mine) {
+      H(`<p>Código de invitación: <b style="font-size:24px;letter-spacing:3px;color:var(--accent)">${code}</b></p><p class="muted">Pasáselo sólo a quien quieras invitar. Con el código se suman una vez y queda en su cuenta.</p>`);
+      const r = document.createElement('div'); r.className = 'row2';
+      r.appendChild(btn('Copiar código', () => { navigator.clipboard?.writeText(code); cloudMsg('Código copiado'); }));
+      r.appendChild(btn('Cambiar código', async () => { if (!confirm('El código viejo deja de servir (los que ya son miembros siguen). ¿Cambiarlo?')) return; await Cloud.newInvite(w.id); cloudWorldCfg(w); }));
+      box.appendChild(r);
+    }
+    H('<h3 style="margin:10px 0 4px">Miembros</h3>');
+    for (const m of members) {
+      const row = document.createElement('div'); row.className = 'trade';
+      row.innerHTML = `<div class="tget">${m.role === 'owner' ? '👑 ' : ''}<span></span>${m.user_id === Cloud.user.id ? ' (vos)' : ''}</div>`;
+      row.querySelector('span').textContent = m.name || 'Jugador';
+      if (mine && m.user_id !== Cloud.user.id) row.appendChild(btn('Echar', async () => { if (!confirm(`¿Echar a ${m.name} de «${w.name}»? Para volver va a necesitar el código.`)) return; await Cloud.removeMember(w.id, m.user_id).catch((e) => cloudMsg(e.message)); cloudWorldCfg(w); renderCloud(); }));
+      box.appendChild(row);
+    }
+    if (mine) box.appendChild(btn('Borrar este mundo para todos', async () => { if (!confirm(`¿Borrar «${w.name}» para todo el grupo? No se puede deshacer.`)) return; await Cloud.deleteWorld(w.id).catch((e) => cloudMsg(e.message)); box.hidden = true; renderCloud(); }, 'danger'));
+    else box.appendChild(btn('Salir de este mundo', async () => { if (!confirm(`¿Salir de «${w.name}»? Para volver vas a necesitar el código.`)) return; await Cloud.removeMember(w.id, Cloud.user.id).catch((e) => cloudMsg(e.message)); box.hidden = true; renderCloud(); }));
+    box.appendChild(btn('Cerrar', () => { box.hidden = true; }));
+    box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  } catch (e) { box.innerHTML = ''; box.hidden = true; cloudMsg(e.message); }
+}
+async function cloudJoinCode() {
+  const code = $('#cJoinCode').value.trim();
+  if (code.length < 4) { cloudMsg('Escribí el código de invitación que te pasaron.'); return; }
+  cloudMsg('Buscando el mundo…');
+  try { const w = await Cloud.joinByCode(code); $('#cJoinCode').value = ''; cloudMsg(`¡Te sumaste a «${w.name}»! Tocá Entrar para jugar.`); renderCloud(); }
+  catch (e) { cloudMsg(e.message); }
+}
+$('#cJoin').onclick = cloudJoinCode;
+$('#cJoinCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); cloudJoinCode(); } });
 async function cloudAuth(signUp) {
   const u = $('#cUser').value.trim(), pw = $('#cPass').value;
   if (!u || !pw) { cloudMsg('Escribí usuario y contraseña.'); return; }
@@ -610,7 +650,7 @@ $('#cwCreate').onclick = async () => {
   if (preset.spawn) meta.spawnPref = preset.spawn;
   const id = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   cloudMsg('Creando el mundo…');
-  try { await Cloud.createWorld({ id, name, seed, worldType: preset.type || 'normal', mode: $('#cwMode').value, meta }); $('#cwName').value = ''; cloudMsg(''); await enterCloud(id); }
+  try { await Cloud.createWorld({ id, name, seed, worldType: preset.type || 'normal', mode: $('#cwMode').value, meta }); $('#cwName').value = ''; const code = await Cloud.getInvite(id); cloudMsg(`Mundo creado. Código para invitar: ${code} (lo ves siempre en ⚙)`); await sleep(1800); await enterCloud(id); }
   catch (e) { cloudMsg(e.message); }
 };
 
@@ -1373,7 +1413,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '8.1 · 2026-10-01';
+const VERSION = '8.2 · 2026-10-01';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles

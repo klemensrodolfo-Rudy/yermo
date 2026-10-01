@@ -9,7 +9,7 @@ Sandbox voxel postapocalíptico en 3D para el navegador. Three.js, sin dependenc
 
 ## Mundo del grupo (en la nube)
 
-Menú → **☁ Mundo del grupo**: cada uno crea su cuenta (usuario y contraseña) y ve los mundos del grupo. Al tocar **Entrar**, si alguien está jugando te conectás a su partida; si no, la abrís vos. El mundo y el progreso de cada uno quedan guardados en Supabase. Si el anfitrión se va, otro toma la posta solo.
+Menú → **☁ Mundo del grupo**: cada uno crea su cuenta (usuario y contraseña) y ve **sólo los mundos de los que es miembro**. Los mundos son privados: para sumarse a uno hace falta su **código de invitación**, que ve sólo el creador (en ⚙, donde también puede echar miembros o cambiar el código). Al tocar **Entrar**, si alguien está jugando te conectás a su partida; si no, la abrís vos. El mundo y el progreso de cada uno quedan guardados en Supabase. Si el anfitrión se va, otro toma la posta solo.
 
 Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schema.sql`](supabase/schema.sql) en el SQL Editor y desactivar *Authentication → Providers → Email → Confirm email*.
 

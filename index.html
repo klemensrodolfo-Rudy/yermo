@@ -272,6 +272,7 @@
     #toast { top: 14%; font-size: 15px; } #interactHint { font-size: 14px; }
   }
   #cWorlds .world small b { color: var(--accent2); }
+  #cCfg button { margin: 4px 4px 0 0; } #cCfg button.danger { border-color: var(--bad); color: #ff8a7a; }
   button.link { background: none; border: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
   /* v6 */
   #objective { position: absolute; left: 12px; top: 128px; max-width: 320px; background: rgba(20,18,15,.62); border-left: 3px solid #d9823b; padding: 6px 10px; font-size: 18px; line-height: 1.15; color: #f0e6d0; pointer-events: none; }
@@ -508,6 +509,9 @@
     <div id="cloudHome" hidden>
       <p>Hola, <b id="cName"></b> · <button id="cOut" class="link">cerrar sesión</button></p>
       <div id="cWorlds"></div>
+      <div id="cCfg" class="quest" hidden></div>
+      <h3>Unirme a un mundo</h3>
+      <div class="row2"><input id="cJoinCode" maxlength="12" placeholder="Código de invitación" autocapitalize="characters" autocomplete="off" spellcheck="false" enterkeyhint="go"><button id="cJoin" class="primary">Unirme</button></div>
       <h3>Crear un mundo nuevo para el grupo</h3>
       <input id="cwName" maxlength="40" placeholder="Nombre del mundo">
       <div class="row2" style="margin-top:6px"><select id="cwSeed"></select><select id="cwMode"><option value="survival">Supervivencia</option><option value="creative">Creativo</option></select></div>
