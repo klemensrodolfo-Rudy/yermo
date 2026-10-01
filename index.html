@@ -253,7 +253,7 @@
   /* pantallas bajas: menú compacto */
   @media (max-height: 520px) {
     #menu { gap: 10px; padding: 10px; } #menu h1 { font-size: clamp(34px, 14vh, 64px); letter-spacing: 4px; }
-    #menu .sub { margin-top: -6px; font-size: 14px; } .credits { display: none; }
+    #menu .sub { margin-top: -6px; font-size: 14px; } .credits { font-size: 12px; }
     .overlay { padding: 8px; }
   }
   /* celular acostado: todo más chico y sin pisarse */
@@ -327,7 +327,7 @@
       <div class="row"><button id="cancelNew">Cancelar</button><button id="createWorld" class="primary">Crear mundo</button></div>
     </div>
   </div>
-  <div class="credits">v7 · hecho con Three.js · arte, sonido y música procedurales</div>
+  <div class="credits"><span class="ver"></span> · hecho con Three.js · arte, sonido y música procedurales</div>
 </div>
 
 <div id="loading" hidden><div style="text-align:center"><div id="loadText">Generando…</div><div class="bar"><i></i></div></div></div>
@@ -386,6 +386,7 @@
 <div id="pause" class="overlay" hidden>
   <div class="card" style="width:min(420px,100%)">
     <h2 id="pauseTitle">Pausa</h2>
+    <p class="muted ver" style="margin:-8px 0 8px;font-size:14px"></p>
     <label>Distancia de visión: <span id="optDistV">6</span> sectores</label>
     <input id="optDistP" type="range" min="3" max="12" value="6">
     <label>Sensibilidad del mouse</label>

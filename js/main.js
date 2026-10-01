@@ -1169,6 +1169,9 @@ const input = new Input({
 // ---------- Bucle ----------
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
+// versión visible (cambiarla en cada actualización publicada)
+const VERSION = '7.3 · 2026-10-01';
+document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
 function loop(now) {
@@ -1367,7 +1370,7 @@ requestAnimationFrame(loop);
 showMenu();
 
 // ---------- App instalable (PWA) ----------
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {});
 let installEvt = null;
 const installed = () => matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
 addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; if (!installed()) $('#installApp').hidden = false; });

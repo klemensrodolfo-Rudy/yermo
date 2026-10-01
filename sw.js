@@ -1,10 +1,10 @@
 // Service worker de YERMO: permite instalarlo como app, jugar sin conexión y que siempre cargue la última versión.
 // Archivos propios: primero la red (si hay conexión se usa lo nuevo) y, si falla, la copia guardada.
 // Librerías del CDN (Three.js, PeerJS): primero la copia guardada (no cambian).
-const CACHE = 'yermo-v1';
+const CACHE = 'yermo-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+self.addEventListener('activate', (e) => e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())));
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;
