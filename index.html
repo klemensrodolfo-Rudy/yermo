@@ -271,6 +271,8 @@
     #info #biome { font-size: 15px; } #info { font-size: 13px; }
     #toast { top: 14%; font-size: 15px; } #interactHint { font-size: 14px; }
   }
+  #cWorlds .world small b { color: var(--accent2); }
+  button.link { background: none; border: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
   /* v6 */
   #objective { position: absolute; left: 12px; top: 128px; max-width: 320px; background: rgba(20,18,15,.62); border-left: 3px solid #d9823b; padding: 6px 10px; font-size: 18px; line-height: 1.15; color: #f0e6d0; pointer-events: none; }
   #objective small { display: block; color: #a89c88; font-size: 14px; }
@@ -296,6 +298,7 @@
     <div id="serverBox" class="serverbox" hidden>🖧 <b id="serverName">Servidor</b><button id="joinServer" class="primary">Entrar al servidor</button></div>
     <div id="worldList"></div>
     <button id="newWorld" class="primary" style="width:100%">+ Nuevo mundo</button>
+    <button id="openCloud" style="width:100%;margin-top:6px">☁ Mundo del grupo (en la nube, sin códigos)</button>
     <div class="menuRow"><button id="joinWorld">Unirse a partida online</button><button id="openLobby">Partidas públicas</button></div>
     <div class="menuRow"><button id="openSkin">Personaje</button><button id="openGuide">Guía</button></div>
     <button id="installApp" style="width:100%;margin-top:6px" hidden>📲 Instalar YERMO (pantalla completa, sin la barra)</button>
@@ -491,6 +494,27 @@
       <span>Sombrero</span><select id="skinHat"><option value="none">Ninguno</option><option value="casco">Casco</option><option value="gorro">Gorro rojo</option><option value="sombrero">Sombrero</option></select>
     </div>
     <button id="skinClose" class="primary" style="width:100%;margin-top:12px">Listo</button>
+  </div>
+</div>
+<div id="cloud" class="overlay" hidden>
+  <div class="card" style="width:min(540px,100%)">
+    <h2>☁ Mundo del grupo</h2>
+    <div id="cloudLogin">
+      <p class="muted">Con una cuenta tu progreso queda guardado en la nube: entrás desde cualquier celular o compu y jugás con tus amigos sin pasar códigos.</p>
+      <label for="cUser">Usuario</label><input id="cUser" maxlength="20" autocomplete="username" autocapitalize="off" spellcheck="false">
+      <label for="cPass">Contraseña</label><input id="cPass" type="password" autocomplete="current-password" enterkeyhint="go">
+      <div class="row2" style="margin-top:10px"><button id="cSignIn" class="primary">Entrar</button><button id="cSignUp">Crear cuenta</button></div>
+    </div>
+    <div id="cloudHome" hidden>
+      <p>Hola, <b id="cName"></b> · <button id="cOut" class="link">cerrar sesión</button></p>
+      <div id="cWorlds"></div>
+      <h3>Crear un mundo nuevo para el grupo</h3>
+      <input id="cwName" maxlength="40" placeholder="Nombre del mundo">
+      <div class="row2" style="margin-top:6px"><select id="cwSeed"></select><select id="cwMode"><option value="survival">Supervivencia</option><option value="creative">Creativo</option></select></div>
+      <button id="cwCreate" class="primary" style="width:100%;margin-top:8px">Crear mundo en la nube</button>
+    </div>
+    <p id="cMsg" class="hint" style="min-height:1.2em"></p>
+    <button id="cloudClose" style="width:100%">Volver</button>
   </div>
 </div>
 <div id="lobby" class="overlay" hidden>

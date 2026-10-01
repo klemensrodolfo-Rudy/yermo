@@ -7,6 +7,12 @@ Sandbox voxel postapocalíptico en 3D para el navegador. Three.js, sin dependenc
 - **Solo o con código de sala:** doble clic en **`Jugar.bat`** (o `node server.js`) → http://localhost:5173
 - **Servidor dedicado (mundo siempre online):** doble clic en **`Servidor.bat`** (o `node server.js --dedicado --mundo NOMBRE [--tipo brew] [--semilla S] [--creativo] [--pvp] [--puerto 5173]`). El mundo se guarda en `mundos/NOMBRE/`. Los amigos entran a `http://TU-IP:5173` y tocan **Entrar al servidor**.
 
+## Mundo del grupo (en la nube)
+
+Menú → **☁ Mundo del grupo**: cada uno crea su cuenta (usuario y contraseña) y ve los mundos del grupo. Al tocar **Entrar**, si alguien está jugando te conectás a su partida; si no, la abrís vos. El mundo y el progreso de cada uno quedan guardados en Supabase. Si el anfitrión se va, otro toma la posta solo.
+
+Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schema.sql`](supabase/schema.sql) en el SQL Editor y desactivar *Authentication → Providers → Email → Confirm email*.
+
 ## Controles
 
 | Tecla | Acción |

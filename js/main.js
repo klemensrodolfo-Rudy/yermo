@@ -19,6 +19,7 @@ import { Weather, Particles, WEATHER_NAMES } from './fx.js';
 import { Input } from './input.js';
 import { createFeatures } from './features.js';
 import { createFeatures2, TAME } from './features2.js';
+import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
 import { VEHICLE_TYPES } from './entities.js';
@@ -454,6 +455,7 @@ function dropFromPlayer(item, count, dur, q) {
 }
 
 async function saveGame(quiet) {
+  if (game?.meta.cloud) return saveCloud(quiet);
   if (!game || game.meta.remote) return;
   const { meta, player, inv, world } = game;
   meta.player = player.serialize();
@@ -471,6 +473,147 @@ async function saveGame(quiet) {
   await world.saveAll();
   if (!quiet) flash('Partida guardada');
 }
+// ---------- mundo del grupo (nube) ----------
+let cloudHost = null; // { id, tok, timer } cuando este navegador es el anfitrión del mundo del grupo
+let cloudSaving = false;
+async function saveCloud(quiet) {
+  if (!game || cloudSaving) return;
+  cloudSaving = true;
+  const { meta, player, inv, world } = game;
+  try {
+    meta.player = player.serialize();
+    meta.inventory = inv.serialize();
+    meta.equip = inv.serializeEquip();
+    meta.selected = inv.selected;
+    meta.blueprints = [...game.known];
+    if (!meta.remote) {
+      meta.time = game.time;
+      meta.containers = game.sim.serialize();
+      meta.vehicles = game.vehicles.save();
+      game.features?.save(meta);
+      meta.weather = game.weather.serialize();
+      await Promise.all([Cloud.saveWorldMeta(meta.cloud, meta), world.saveAll()]);
+    }
+    await Cloud.savePlayer(meta.cloud, Cloud.playerPart(meta));
+    if (!quiet) flash('Guardado en la nube');
+  } catch (e) { console.warn(e); if (!quiet) flash('No se pudo guardar en la nube'); } finally { cloudSaving = false; }
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const cloudMsg = (t) => { $('#cMsg').textContent = t; };
+async function enterCloud(id) {
+  cloudMsg('Entrando al mundo…');
+  for (let i = 0; i < 20; i++) {
+    const alive = await Cloud.aliveHost(id);
+    if (alive?.code) {
+      cloudMsg(`Conectando con ${alive.name}…`);
+      try { await joinCloud(id, alive.code); return; } catch (e) { net.close(); cloudMsg(`${alive.name} no responde, reintentando…`); await sleep(2500); continue; }
+    }
+    if (alive) { cloudMsg(`${alive.name} está abriendo el mundo…`); await sleep(2000); continue; }
+    const tok = (crypto.randomUUID?.() ?? String(Math.random()).slice(2)) + Date.now();
+    if (await Cloud.claimHost(id, tok)) { await hostCloud(id, tok); return; }
+    await sleep(1200);
+  }
+  throw new Error('No se pudo entrar al mundo del grupo. Probá de nuevo en un rato.');
+}
+async function hostCloud(id, tok) {
+  cloudMsg('Cargando el mundo desde la nube…');
+  const [row, keys, pdata] = await Promise.all([Cloud.loadWorld(id), Cloud.chunkKeys(id), Cloud.loadPlayer(id)]);
+  const meta = { ...(row.meta || {}), ...(pdata || {}), id: 'cloud-' + id, cloud: id, cloudName: row.name, name: row.name, seed: Number(row.seed), worldType: row.world_type, mode: row.mode };
+  if (!meta.renderDist) meta.renderDist = +$('#optDist').value || QUALITY[settings.quality].dist;
+  delete meta.remote;
+  cloudHost = { id, tok, timer: null };
+  $('#cloud').hidden = true;
+  await startGame(meta, null, { keys });
+  const name = Cloud.username;
+  const code = await net.host(game, scene, name);
+  await Cloud.setHostCode(id, tok, code);
+  cloudHost.timer = setInterval(async () => {
+    if (!cloudHost) return;
+    const ok = await Cloud.beat(cloudHost.id, cloudHost.tok).catch(() => true);
+    if (!ok) flash('⚠ Se perdió la conexión con la nube: guardá y volvé a entrar');
+  }, 8000);
+  $('#netInfo').hidden = false; $('#netInfo').textContent = `☁ ${row.name} · sos el anfitrión`;
+  $('#pauseHost').hidden = true;
+  addChat(null, `☁ Abriste «${row.name}». Tus amigos entran solos desde «Mundo del grupo».`);
+  await saveCloud(true); // deja guardado el punto de inicio del mundo
+}
+async function joinCloud(id, code) {
+  const pdata = await Cloud.loadPlayer(id);
+  const hello = await net.join(code, Cloud.username);
+  const meta = metaFromHello(hello, 'cloudc-' + id);
+  if (pdata) {
+    Object.assign(meta, pdata);
+    if (pdata.player) meta.player = { ...pdata.player };
+  }
+  meta.remote = true; meta.cloud = id;
+  $('#cloud').hidden = true;
+  await startGame(meta, hello);
+  $('#netInfo').textContent = `☁ ${hello.hostName ? 'con ' + hello.hostName : 'mundo del grupo'}`;
+}
+// menú de la nube
+async function openCloud() {
+  $('#cloud').hidden = false; cloudMsg('Conectando…');
+  try {
+    await Cloud.init();
+    cloudMsg('');
+    renderCloud();
+  } catch (e) { cloudMsg('No se pudo conectar con la nube: ' + (e.message || e)); }
+}
+async function renderCloud() {
+  const logged = !!Cloud.user;
+  $('#cloudLogin').hidden = logged; $('#cloudHome').hidden = !logged;
+  if (!logged) { $('#cUser').value = getName() || ''; return; }
+  $('#cName').textContent = Cloud.username;
+  if ($('#cwSeed').options.length === 0) for (const p of SEED_PRESETS) if (p.id !== 'custom') { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; $('#cwSeed').appendChild(o); }
+  const list = $('#cWorlds');
+  list.innerHTML = '<p class="muted">Buscando mundos…</p>';
+  try {
+    const worlds = await Cloud.listWorlds();
+    list.innerHTML = worlds.length ? '' : '<p class="empty">Todavía no hay mundos del grupo. Creá el primero.</p>';
+    for (const w of worlds) {
+      const row = document.createElement('div'); row.className = 'world';
+      const d = new Date(w.updated_at);
+      row.innerHTML = `<div><b></b><small>${w.playing ? `<b>🟢 jugando: ${w.playing.replace(/[<>&]/g, '')}</b> · ` : '⚪ nadie conectado · '}${w.world_type === 'brew' ? '🍺 ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · ${w.players} jugador${w.players == 1 ? '' : 'es'} · ${d.toLocaleDateString()}</small></div><button class="play">Entrar</button>${w.owner === Cloud.user.id ? '<button class="del" title="Borrar mundo">✕</button>' : ''}`;
+      row.querySelector('b').textContent = w.name;
+      row.querySelector('.play').onclick = () => { row.querySelector('.play').disabled = true; enterCloud(w.id).catch((e) => { cloudMsg(e.message); row.querySelector('.play').disabled = false; }); };
+      const del = row.querySelector('.del');
+      if (del) del.onclick = async () => { if (confirm(`¿Borrar «${w.name}» para todo el grupo? No se puede deshacer.`)) { await Cloud.deleteWorld(w.id).catch((e) => cloudMsg(e.message)); renderCloud(); } };
+      list.appendChild(row);
+    }
+  } catch (e) {
+    list.innerHTML = '';
+    cloudMsg(/yermo_list_worlds|does not exist|schema/i.test(e.message) ? 'Falta preparar la base: corré supabase/schema.sql en el SQL Editor de Supabase.' : e.message);
+  }
+}
+async function cloudAuth(signUp) {
+  const u = $('#cUser').value.trim(), pw = $('#cPass').value;
+  if (!u || !pw) { cloudMsg('Escribí usuario y contraseña.'); return; }
+  cloudMsg(signUp ? 'Creando la cuenta…' : 'Entrando…');
+  try {
+    await (signUp ? Cloud.signUp(u, pw) : Cloud.signIn(u, pw));
+    setName(Cloud.username); $('#jName').value = Cloud.username;
+    $('#cPass').value = ''; cloudMsg('');
+    renderCloud();
+  } catch (e) { cloudMsg(e.message); }
+}
+$('#openCloud').onclick = openCloud;
+$('#cloudClose').onclick = () => { $('#cloud').hidden = true; };
+$('#cSignIn').onclick = () => cloudAuth(false);
+$('#cSignUp').onclick = () => cloudAuth(true);
+$('#cPass').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); cloudAuth(false); } });
+$('#cOut').onclick = async () => { await Cloud.signOut(); renderCloud(); };
+$('#cwCreate').onclick = async () => {
+  const preset = SEED_PRESETS.find((x) => x.id === $('#cwSeed').value) || SEED_PRESETS[0];
+  const name = $('#cwName').value.trim() || 'Yermo del grupo';
+  const seed = preset.seed ?? ((Math.random() * 2e9) | 0);
+  const meta = { rules: { rad: true, dayMobs: true } };
+  if (preset.spawn) meta.spawnPref = preset.spawn;
+  const id = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  cloudMsg('Creando el mundo…');
+  try { await Cloud.createWorld({ id, name, seed, worldType: preset.type || 'normal', mode: $('#cwMode').value, meta }); $('#cwName').value = ''; cloudMsg(''); await enterCloud(id); }
+  catch (e) { cloudMsg(e.message); }
+};
+
 function flash(msg) {
   const el = $('#toast'); el.textContent = msg; el.classList.add('show');
   clearTimeout(flash.t); flash.t = setTimeout(() => el.classList.remove('show'), 2200);
@@ -650,7 +793,19 @@ $('#chatInput').addEventListener('keydown', (e) => {
   else if (e.key === 'Escape') { closeChat(); lockPointer(); }
 });
 net.onChat = addChat;
-net.onClosed = async (msg) => { if (game?.meta.remote) { await quitToMenu(); alert(msg); } };
+net.onClosed = async (msg) => {
+  if (!game?.meta.remote) return;
+  const cloudId = game.meta.cloud;
+  await quitToMenu();
+  if (cloudId) {
+    $('#cloud').hidden = false; renderCloud();
+    cloudMsg('El anfitrión salió: retomando el mundo…');
+    await sleep(600 + Math.random() * 2400);
+    enterCloud(cloudId).catch((e) => cloudMsg(e.message));
+    return;
+  }
+  alert(msg);
+};
 net.onAuthority = () => addChat(null, 'Ahora tu compu simula las criaturas y el clima de este servidor.');
 net.onRace = (m) => game?.race?.onNet(m);
 const voice = new Voice(net);
@@ -666,7 +821,7 @@ function goFullscreen() {
     r?.then(() => screen.orientation?.lock?.('landscape').catch(() => {})).catch(() => {});
   } catch { /* el navegador no lo permite */ }
 }
-async function startGame(meta, hello) {
+async function startGame(meta, hello, cloudInfo) {
   goFullscreen();
   $('#menu').hidden = true;
   $('#loading').hidden = false;
@@ -679,6 +834,12 @@ async function startGame(meta, hello) {
     world.noSave = true;
     world.remoteLoader = (k) => net.requestChunk(k);
     for (const k of hello.keys) world.savedKeys.add(k);
+  } else if (meta.cloud) {
+    // mundo del grupo: los bloques modificados vienen de (y vuelven a) la nube
+    for (const k of cloudInfo?.keys || []) world.savedKeys.add(k);
+    world.cloudLoad = (k) => Cloud.loadChunk(meta.cloud, k);
+    world.remoteLoader = (k) => Cloud.loadChunk(meta.cloud, k).then((data) => ({ data }));
+    world.cloudSave = (list) => Cloud.saveChunks(meta.cloud, list);
   } else await world.init();
   const wgen = new WorldGen(meta.seed, meta.worldType || 'normal');
   if (!meta.origin) meta.origin = meta.player ? { x: meta.player.x, y: meta.player.y, z: meta.player.z } : wgen.findSpawn(meta.spawnPref);
@@ -829,6 +990,7 @@ async function quitToMenu() {
 async function doQuit() {
   if (game.player.riding) toggleMount();
   await saveGame(true);
+  if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
   game.race?.end(); game.features?.dispose(); game.features2?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
@@ -1132,7 +1294,7 @@ $('#lobbyRefresh').onclick = loadLobby;
 $('#lobbyClose').onclick = () => { $('#lobby').hidden = true; };
 
 // ---------- Entrada ----------
-const overlayOpen = () => !$('#death').hidden || !$('#guide').hidden || !$('#help').hidden || !$('#noteReader').hidden || !$('#raceMenu').hidden || !!document.querySelector('.v6modal') || chatting;
+const overlayOpen = () => !$('#cloud').hidden || !$('#death').hidden || !$('#guide').hidden || !$('#help').hidden || !$('#noteReader').hidden || !$('#raceMenu').hidden || !!document.querySelector('.v6modal') || chatting;
 const inputActive = () => locked || (input && (input.touch || input.padActive));
 canvas.addEventListener('click', () => { if (game && !paused && !ui.open && !overlayOpen()) lockPointer(); });
 document.addEventListener('pointerlockchange', () => {
@@ -1211,7 +1373,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '8.0 · 2026-10-01';
+const VERSION = '8.1 · 2026-10-01';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1407,7 +1569,7 @@ function loop(now) {
     }
   }
   game.saveAcc += dt;
-  if (game.saveAcc > 45) { game.saveAcc = 0; saveGame(true); }
+  if (game.saveAcc > (game.meta.cloud ? 20 : 45)) { game.saveAcc = 0; saveGame(true); }
 }
 requestAnimationFrame(loop);
 showMenu();

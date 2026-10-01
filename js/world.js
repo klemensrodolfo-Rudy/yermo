@@ -76,7 +76,7 @@ export class World {
     const edits = this.pendingEdits.get(k);
     if (this.savedKeys.has(k)) {
       const [cx, cz] = k.split(',').map(Number);
-      const data = await Storage.loadChunk(this.meta.id, cx, cz).catch(() => null);
+      const data = this.cloudLoad ? await this.cloudLoad(k).catch(() => null) : await Storage.loadChunk(this.meta.id, cx, cz).catch(() => null);
       if (data) {
         if (edits) for (const [x, y, z, id] of edits) data[(x - cx * CHUNK) + ((z - cz * CHUNK) << 4) + (y << 8)] = id;
         return { data };
@@ -325,7 +325,7 @@ export class World {
       if (c && c.data) list.push({ cx: c.cx, cz: c.cz, data: c.data.slice() });
     }
     this.unsaved.clear();
-    if (list.length) await Storage.saveChunks(this.meta.id, list);
+    if (list.length) await (this.cloudSave ? this.cloudSave(list) : Storage.saveChunks(this.meta.id, list));
   }
 
   // DDA voxel raycast (liquids: detenerse también en fuentes de líquido)
