@@ -154,6 +154,12 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Cielo, mapa y fotos': () => `
+      <p><b>🌑 Eclipses</b>: muy de vez en cuando, cerca del mediodía, la luna tapa el sol: se hace casi de noche un rato y se ven las estrellas. <b>🌠 Lluvias de estrellas</b>: algunas noches el cielo se llena de estrellas fugaces.</p>
+      <p><b>🗺 Mapa grande</b>: arriba hay filtros para mostrar u ocultar lugares, gente, tus marcas, tesoros, tus camas y los géiseres.</p>
+      <p><b>📸 Modo foto</b>: ahora podés elegir la hora del día y el clima sólo para la foto (al salir vuelve todo como estaba).</p>
+      <p><b>📱 En el celular</b>: mantené apretado un objeto de la barra para ver qué es y para qué sirve.</p>
+      <p>El <b>agua quieta</b> (lagos, lagunas del salar) refleja el cielo como un espejo, y las <b>plantas</b> se aplastan cuando pasás encima.</p>`,
     'Tesoros y pueblos fantasma': () => `
       <p>${icon(442)} <b>Mapas del tesoro</b>: aparecen en cajas y cofres (más en los pueblos fantasma y en cofres del tesoro) y los vende el comerciante. Al usarlo queda marcado un lugar a 120-320 bloques, con distancia y dirección. Cuando te acercás aparece una ${icon(1143)} <b>X roja</b> en el piso: cavá dos bloques debajo y está el ${icon(228)} cofre del tesoro.</p>
       <p><b>Pueblos fantasma</b>: en lugares planos de los cañones rojos hay casillas de madera abandonadas, con techos caídos, ventanas rotas y ${icon(1144)} baúles con fichas, cuarzo, cuero y a veces un mapa o un cofre del tesoro.</p>

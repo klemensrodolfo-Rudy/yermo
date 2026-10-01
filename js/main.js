@@ -40,6 +40,7 @@ import { createMachines } from './machines.js';
 import { createHome } from './home.js';
 import { createNews } from './news.js';
 import { createWildlife } from './wildlife.js';
+import { createQol } from './qol.js';
 import { createTreasure } from './treasure.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
@@ -98,6 +99,8 @@ const uniforms = {
   hlPos: { value: new THREE.Vector3() }, hlDir: { value: new THREE.Vector3(0, 0, -1) }, hlOn: { value: 0 },
   // luz que lleva el jugador en la mano
   plPos: { value: new THREE.Vector3() }, plOn: { value: 0 }, plCol: { value: new THREE.Color(1, 0.72, 0.42) }, plR: { value: 10 },
+  // v13: pies del jugador (plantas que se aplastan) y colores del cielo (reflejo del agua quieta)
+  meP: { value: new THREE.Vector3(0, -999, 0) }, skyTopC: { value: new THREE.Color() }, skyHorC: { value: new THREE.Color() },
   // viento (dirección × fuerza) y lluvia, para plantas, hojas y agua
   wind: { value: new THREE.Vector2(0.3, 0.1) }, rain: { value: 0 },
   // nieve acumulada y sombras de nubes sobre el terreno
@@ -105,7 +108,7 @@ const uniforms = {
 };
 const vert = /* glsl */`
   attribute vec4 lit; attribute vec4 tinf; attribute vec4 tint; attribute vec3 lcol;
-  uniform float time; uniform vec2 wind;
+  uniform float time; uniform vec2 wind; uniform vec3 meP;
   varying vec2 vUv; varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
   flat varying vec4 vInf; varying vec3 vLcol;
   void main() {
@@ -121,6 +124,9 @@ const vert = /* glsl */`
       if (fc == 6) {
         float cellY = floor(tinf.x / 32.0) * 48.0 + 8.0;
         float ly = ((1.0 - uv.y) * 1536.0 - cellY) / 32.0;
+        // pisadas: la planta se aparta y se aplasta cuando pasás encima
+        { vec2 dd = wp.xz - meP.xz; float dist = length(dd), hy = abs(wp.y - meP.y - 0.5);
+          if (dist < 1.4 && hy < 1.2 && ly < 0.5) { float k = (1.4 - dist) / 1.4; wp.xz += normalize(dd + 0.0001) * k * 0.45; wp.y -= k * 0.38; } }
         if (ly < 0.5) {
           float amp = 0.05 + wk * 0.12;
           wp.x += sin(time * (1.7 + wk) + wp.x * 0.7 + wp.z * 0.3) * amp + wind.x * 0.12 * gust;
@@ -152,7 +158,7 @@ const frag = (water) => /* glsl */`
   uniform float fogHeight; uniform float moonLight;
   uniform vec3 hlPos; uniform vec3 hlDir; uniform float hlOn;
   uniform vec3 plPos; uniform float plOn; uniform vec3 plCol; uniform float plR;
-  uniform vec2 wind; uniform float rain; uniform float snow; uniform vec2 cloudOff; uniform float cloudCov;
+  uniform vec2 wind; uniform float rain; uniform float snow; uniform vec2 cloudOff; uniform float cloudCov; uniform vec3 skyTopC; uniform vec3 skyHorC;
   varying vec2 vUv;
   float vh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
   float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(vh(i), vh(i + vec2(1.0, 0.0)), f.x), mix(vh(i + vec2(0.0, 1.0)), vh(i + vec2(1.0, 1.0)), f.x), f.y); } varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
@@ -311,9 +317,13 @@ const frag = (water) => /* glsl */`
     if (tex.g > tex.b * 1.15) col += vec3(0.05,0.12,0.0) * (0.5 + 0.5*sin(vWorld.x*0.7 + time*1.3) * sin(vWorld.z*0.6 - time)); // sólo el agua tóxica
     if (waterFx > 0.5) {
       // reflejo del cielo (Fresnel) y brillo del sol con olas
-      vec3 Nw = normalize(vec3(sin(vWorld.x*1.7 + time*1.6)*0.06, 1.0, cos(vWorld.z*1.9 - time*1.3)*0.06) + (Np - N) * 0.5);
+      float calm = face == 2 ? 1.0 - smoothstep(0.05, 0.3, length(vTint.xy - 1.0)) : 0.0;
+      float rip = 0.06 * (1.0 - calm * 0.75);
+      vec3 Nw = normalize(vec3(sin(vWorld.x*1.7 + time*1.6)*rip, 1.0, cos(vWorld.z*1.9 - time*1.3)*rip) + (Np - N) * (0.5 - calm * 0.35));
       float fres = pow(1.0 - max(dot(V, Nw), 0.0), 3.0);
-      col = mix(col, fogColor * (0.4 + daylight * 0.8), fres * 0.6 * vLit.x);
+      vec3 Rw = reflect(-V, Nw);
+      vec3 refl = mix(skyHorC, skyTopC, pow(clamp(Rw.y, 0.0, 1.0), 0.55));
+      col = mix(col, mix(fogColor * (0.4 + daylight * 0.8), refl * 1.1, calm), (fres * (0.6 + calm * 0.3) + calm * 0.18) * vLit.x);
       float low = 1.0 - clamp(sunDir.y * 2.5, 0.0, 1.0);
       float spw = pow(max(dot(reflect(-sunDir, Nw), V), 0.0), mix(80.0, 14.0, low)) * vLit.x * smoothstep(-0.08, 0.05, sunDir.y);
       vec3 gold = mix(vec3(1.0, 0.8, 0.5), vec3(1.0, 0.3, 0.06), low);
@@ -368,26 +378,37 @@ const skyUniforms = {
   top: { value: new THREE.Color() }, horizon: { value: new THREE.Color() },
   sunDir: { value: new THREE.Vector3() }, sunCol: { value: new THREE.Color() }, night: { value: 0 }, moonPhase: { value: 1 },
   time: { value: 0 }, clouds: { value: 0.45 }, aurora: { value: 0 }, cloudDark: { value: 0 }, cloudOff: { value: new THREE.Vector2() },
+  eclipse: { value: 0 }, meteors: { value: 0 },
 };
 const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), new THREE.ShaderMaterial({
   uniforms: skyUniforms, side: THREE.BackSide, depthWrite: false,
   vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
   fragmentShader: `
     uniform vec3 top; uniform vec3 horizon; uniform vec3 sunDir; uniform vec3 sunCol; uniform float night; uniform float moonPhase;
-    uniform float time; uniform float clouds; uniform float aurora; uniform float cloudDark; uniform vec2 cloudOff;
+    uniform float time; uniform float clouds; uniform float aurora; uniform float cloudDark; uniform vec2 cloudOff; uniform float eclipse; uniform float meteors;
     varying vec3 vDir;
     float h(vec3 p){ return fract(sin(dot(p, vec3(12.9898,78.233,45.164)))*43758.5453); }
     float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
       return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y); }
     float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { v += a * n2(p); p = p * 2.03 + 17.1; a *= 0.5; } return v; }
+    // una estrella fugaz (slot = cuál, ph = avance 0-1)
+    float streak(vec3 d, float slot, float ph) {
+      vec3 a = normalize(vec3(h(vec3(slot, 3.0, 1.0)) - 0.5, 0.55 + h(vec3(slot, 4.0, 1.0)) * 0.35, h(vec3(slot, 5.0, 1.0)) - 0.5));
+      vec3 b = normalize(a + normalize(vec3(h(vec3(slot, 6.0, 1.0)) - 0.5, -0.35, h(vec3(slot, 7.0, 1.0)) - 0.5)) * 0.35);
+      float best = 0.0;
+      for (int i = 0; i < 6; i++) { float k = ph - float(i) * 0.05; if (k < 0.0) break; best = max(best, pow(max(dot(d, normalize(mix(a, b, k))), 0.0), 60000.0) * (1.0 - float(i) / 6.0)); }
+      return best;
+    }
     void main(){
       vec3 d = normalize(vDir);
       float t = pow(clamp(d.y, 0.0, 1.0), 0.55);
       vec3 col = mix(horizon, top, t);
       if (d.y < 0.0) col = horizon * (1.0 + d.y * 0.6);
       float s = max(dot(d, sunDir), 0.0);
-      col += sunCol * (pow(s, 900.0) * 3.0 + pow(s, 12.0) * 0.35);
+      col += sunCol * (pow(s, 900.0) * 3.0 * (1.0 - eclipse) + pow(s, 12.0) * 0.35 * (1.0 - eclipse * 0.85));
+      // eclipse: la luna tapa el sol y queda la corona
+      if (eclipse > 0.01) { float r = acos(clamp(dot(d, sunDir), -1.0, 1.0)); col += vec3(1.0, 0.92, 0.8) * eclipse * (exp(-pow((r - 0.03) / 0.008, 2.0)) * 1.6 + exp(-r * 18.0) * 0.25); }
       vec3 md = -sunDir; float m = max(dot(d, md), 0.0);
       // fase lunar: un disco oscuro desplazado tapa parte de la luna
       vec3 side = normalize(cross(md, vec3(0.0, 1.0, 0.0)));
@@ -400,12 +421,11 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), new THREE.Shad
       // estrellas fugaces: de vez en cuando una raya cruza el cielo de noche
       if (night > 0.5) {
         float slot = floor(time / 7.0), ph = fract(time / 7.0) / 0.13;
-        if (ph < 1.0 && h(vec3(slot, 1.0, 2.0)) < 0.55) {
-          vec3 a = normalize(vec3(h(vec3(slot, 3.0, 1.0)) - 0.5, 0.55 + h(vec3(slot, 4.0, 1.0)) * 0.35, h(vec3(slot, 5.0, 1.0)) - 0.5));
-          vec3 b = normalize(a + normalize(vec3(h(vec3(slot, 6.0, 1.0)) - 0.5, -0.35, h(vec3(slot, 7.0, 1.0)) - 0.5)) * 0.35);
-          float best = 0.0;
-          for (int i = 0; i < 6; i++) { float k = ph - float(i) * 0.05; if (k < 0.0) break; best = max(best, pow(max(dot(d, normalize(mix(a, b, k))), 0.0), 60000.0) * (1.0 - float(i) / 6.0)); }
-          col += vec3(1.0, 0.95, 0.85) * best * 2.5 * (night - 0.5) * 2.0;
+        if (ph < 1.0 && h(vec3(slot, 1.0, 2.0)) < 0.55) col += vec3(1.0, 0.95, 0.85) * streak(d, slot, ph) * 2.5 * (night - 0.5) * 2.0;
+        // lluvia de estrellas: muchas a la vez
+        if (meteors > 0.01) for (int j = 0; j < 5; j++) {
+          float per = 1.3 + float(j) * 0.47, sl = floor(time / per) + float(j) * 101.0, p2 = fract(time / per) / 0.22;
+          if (p2 < 1.0) col += vec3(0.95, 0.97, 1.0) * streak(d, sl, p2) * 2.2 * meteors * (night - 0.5) * 2.0;
         }
       }
       // aurora austral en los lugares fríos
@@ -566,17 +586,21 @@ function updateSky(t) {
     const f = w.k * 0.6;
     top.lerp(tint.clone().multiplyScalar(0.3 + day * 0.7), f); hor.lerp(tint.clone().multiplyScalar(0.3 + day * 0.7), f);
   }
+  const ecl = game.eclipse || 0;
+  if (ecl > 0) { top.multiplyScalar(1 - ecl * 0.78); hor.lerp(new THREE.Color(0x2a1e2a), ecl * 0.7); }
+  skyUniforms.eclipse.value = ecl; skyUniforms.meteors.value = game.meteors || 0;
   skyUniforms.top.value.copy(top);
   skyUniforms.horizon.value.copy(hor);
+  uniforms.skyTopC.value.copy(top); uniforms.skyHorC.value.copy(hor);
   const ang = (t - 0.25) * Math.PI * 2;
   skyUniforms.sunDir.value.set(Math.cos(ang), Math.sin(ang), 0.25).normalize();
   uniforms.sunDir.value.copy(skyUniforms.sunDir.value);
   skyUniforms.sunCol.value.setRGB(1, 0.75 + day * 0.15, 0.5 + day * 0.3).multiplyScalar(sunH > -0.1 ? 1 - w.k * 0.7 : 0);
-  skyUniforms.night.value = (1 - day) * (1 - w.k * 0.8);
+  skyUniforms.night.value = Math.max((1 - day) * (1 - w.k * 0.8), ecl * 0.75);
   skyUniforms.time.value = performance.now() / 1000;
   uniforms.rain.value = game?.weather ? game.weather.rainK : 0;
   skyUniforms.clouds.value = 0.42 + w.k * 0.5; skyUniforms.cloudDark.value = w.k;
-  uniforms.daylight.value = (0.1 + day * 0.9) * (1 - w.k * 0.25);
+  uniforms.daylight.value = (0.1 + day * 0.9) * (1 - w.k * 0.25) * (1 - ecl * 0.6);
   uniforms.skyTint.value.setRGB(1, 0.93 - dusk * 0.12, 0.85 - dusk * 0.25).lerp(new THREE.Color(0.55, 0.62, 0.9), 1 - day);
   uniforms.fogColor.value.copy(hor);
   const R = game.world.renderDist * 16 * w.fogMul;
@@ -1238,6 +1262,7 @@ async function startGame(meta, hello, cloudInfo) {
   const HO = game.home = createHome(fctx);
   game.news = createNews(fctx);
   const WL = game.wildlife = createWildlife(fctx);
+  game.qol = createQol(fctx);
   const TR = game.treasure = createTreasure(fctx);
   const useTR = player.onUseItem;
   player.onUseItem = (...a) => TR.onUseItem(...a) || useTR(...a);
@@ -1304,7 +1329,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); game.news?.dispose(); game.wildlife?.dispose(); game.treasure?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); game.news?.dispose(); game.wildlife?.dispose(); game.treasure?.dispose(); game.qol?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1737,7 +1762,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '12.9.1 · 2026-10-02';
+const VERSION = '13.0 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1831,6 +1856,7 @@ function loop(now) {
   game.machines?.update(dt);
   game.treasure?.update(dt);
   game.wildlife?.update(dt);
+  game.qol?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
@@ -1971,7 +1997,8 @@ function loop(now) {
   for (const mk of game.ux?.markers() || []) markers.push(mk);
   for (const mk of game.life?.markers() || []) markers.push(mk);
   for (const mk of game.together?.markers() || []) markers.push(mk);
-  mapView.update(dt, world, player, markers, bigMap);
+  for (const mk of game.qol?.markers() || []) markers.push(mk);
+  mapView.update(dt, world, player, game.qol ? game.qol.filter(markers) : markers, bigMap);
 
   // HUD
   hudAcc += dt;

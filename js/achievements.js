@@ -94,6 +94,7 @@ export const ACHIEVEMENTS = [
   { id: 'obsidiana', name: 'Filo volcánico', desc: 'Fabricá una herramienta de obsidiana.' },
   { id: 'espeleo', name: 'Espeleólogo', desc: 'Encontrá un cristal de cueva.' },
   { id: 'galeria', name: 'Galería propia', desc: 'Colgá un cuadro con tu dibujo.' },
+  { id: 'cielo', name: 'Mirá para arriba', desc: 'Viví un eclipse o una lluvia de estrellas.' },
   { id: 'globo', name: 'Viento en la cara', desc: 'Volá en globo aerostático.' },
   { id: 'tesoro', name: 'Cazatesoros', desc: 'Encontrá el tesoro de un mapa.' },
   { id: 'pastor', name: 'Pastor del yermo', desc: 'Ordeñá una cabra domesticada.' },
@@ -150,7 +151,7 @@ export class Achievements {
     if (name === 'refuel') u('nafta');
     if (name === 'spell') u('hechicero');
     if (name === 'fish') u('pescador');
-    if (name === 'v9' || name === 'v10' || name === 'v12') u(id);
+    if (name === 'v9' || name === 'v10' || name === 'v12' || name === 'v13') u(id);
     if (name === 'craft' && id >= 423 && id <= 428) u('cocinero');
     if (name === 'craft' && id >= 417 && id <= 420) u('obsidiana');
     if (name === 'milk') u('pastor');

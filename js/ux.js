@@ -45,7 +45,7 @@ export function createUX(ctx) {
     });
   }
   api.openWaypoints = openWaypoints;
-  api.markers = () => all().filter((w) => w.on !== false).map((w) => ({ x: w.x + 0.5, z: w.z + 0.5, color: w.color, kind: w.home ? 'home' : 'poi', label: w.name }));
+  api.markers = () => all().filter((w) => w.on !== false).map((w) => ({ x: w.x + 0.5, z: w.z + 0.5, color: w.color, kind: w.home ? 'home' : 'poi', label: w.name, cat: w.treasure ? 'tesoros' : w.home ? 'camas' : 'marcas' }));
   // en pantalla: etiqueta con la distancia; si queda fuera de la vista, se pega al borde
   const box = $('#wps'), els = new Map(), v = new THREE.Vector3();
   function drawWaypoints() {
@@ -116,18 +116,22 @@ export function createUX(ctx) {
   // ---------- modo foto ----------
   const FILTERS = { normal: ['Normal', ''], calido: ['Cálido', 'sepia(0.25) saturate(1.25) hue-rotate(-8deg)'], frio: ['Frío', 'saturate(0.9) hue-rotate(12deg) brightness(1.03)'],
     sepia: ['Sepia', 'sepia(0.85) contrast(1.05)'], bn: ['Blanco y negro', 'grayscale(1) contrast(1.15)'], drama: ['Dramático', 'contrast(1.35) saturate(1.3) brightness(0.95)'], sueno: ['Ensueño', 'saturate(1.4) brightness(1.08) contrast(0.9) blur(0.4px)'] };
-  let pf = 'normal', vign = true, countT = 0;
+  let pf = 'normal', vign = true, countT = 0, phHour = null, phWeather = null, saved = null;
   const bar = document.createElement('div'); bar.id = 'photoBar'; bar.hidden = true;
   const count = document.createElement('div'); count.id = 'photoCount'; count.hidden = true;
   document.body.append(bar, count);
   function renderBar() {
     bar.innerHTML = `${Object.entries(FILTERS).map(([k, [n]]) => `<button data-f="${k}" class="${k === pf ? 'on' : ''}">${n}</button>`).join('')}
       <button class="vg ${vign ? 'on' : ''}">Viñeta</button><label style="display:flex;align-items:center;gap:4px;margin:0">FOV <input class="pfov" type="range" min="30" max="110" value="${Math.round(p.baseFov || 75)}"></label>
+      <label style="display:flex;align-items:center;gap:4px;margin:0">🕒 <input class="phr" type="range" min="0" max="24" step="0.25" value="${phHour ?? Math.round(g.time * 96) / 4}"></label>
+      <select class="pwe"><option value="">Clima actual</option>${[['clear', 'Despejado'], ['rain', 'Lluvia'], ['snow', 'Nevada'], ['ash', 'Ceniza'], ['storm', 'Tormenta']].map(([k, n]) => `<option value="${k}" ${phWeather === k ? 'selected' : ''}>${n}</option>`).join('')}</select>
       <button class="tm">⏱ 3 s</button><button class="gp">🙌 Pose grupal</button><button class="sh primary">📸 Sacar (P)</button><button class="ex">✕ Salir (F2)</button>`;
     bar.querySelectorAll('[data-f]').forEach((b) => { b.onclick = () => { pf = b.dataset.f; renderBar(); }; });
     bar.querySelector('.vg').onclick = () => { vign = !vign; renderBar(); };
     bar.querySelector('.pfov').oninput = (e) => { p.baseFov = +e.target.value; };
     bar.querySelector('.tm').onclick = () => { countT = 3.2; };
+    bar.querySelector('.phr').oninput = (e) => { phHour = +e.target.value; };
+    bar.querySelector('.pwe').onchange = (e) => { phWeather = e.target.value || null; };
     bar.querySelector('.gp').onclick = () => { g.together?.groupPose('wave'); countT = 3.2; };
     bar.querySelector('.sh').onclick = () => { g.features.wantPhoto = true; };
     bar.querySelector('.ex').onclick = () => ctx.photoKey?.();
@@ -137,9 +141,12 @@ export function createUX(ctx) {
     const on = !!g.features.photo;
     if (on !== wasPhoto) {
       wasPhoto = on; bar.hidden = !on; g.photoFilter = on;
-      if (on) { renderBar(); document.exitPointerLock(); } else { ctx.renderer.domElement.style.filter = ''; document.querySelector('#vignette').style.opacity = ''; p.baseFov = settings.fov || 75; count.hidden = true; countT = 0; }
+      if (on) { saved = { time: g.time, type: g.weather.type, k: g.weather.k }; phHour = null; phWeather = null; renderBar(); document.exitPointerLock(); } else {
+        if (saved) { g.time = saved.time; if (phWeather) { g.weather.type = saved.type; g.weather.k = saved.k; } saved = null; } ctx.renderer.domElement.style.filter = ''; document.querySelector('#vignette').style.opacity = ''; p.baseFov = settings.fov || 75; count.hidden = true; countT = 0; }
     }
     if (!on) return;
+    if (phHour != null) g.time = (phHour / 24) % 1;
+    if (phWeather) { g.weather.type = phWeather; g.weather.k = phWeather === 'clear' ? 0 : 1; }
     const f = FILTERS[pf][1];
     ctx.renderer.domElement.style.filter = f;
     document.querySelector('#vignette').style.opacity = vign ? 1.6 : 0;

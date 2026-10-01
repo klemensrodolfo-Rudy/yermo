@@ -2,6 +2,7 @@
 import { itemName } from './blocks.js';
 
 export const NEWS = [
+  ['13.0', 'Cielo, mapa y fotos', [[1035, 'Eclipses de sol y lluvias de estrellas.'], [442, 'Filtros en el mapa grande, con tus camas y los géiseres.'], [247, 'Modo foto con hora y clima a elección.'], [47, 'Agua quieta que refleja el cielo y plantas que se aplastan al pasar.'], [191, 'En el celular, mantené apretado un objeto para ver su descripción.']]],
   ['12.9', 'Globo aerostático', [[443, 'Un globo para recorrer el mundo desde arriba, despacio y con poca nafta.'], [251, 'Logro «Viento en la cara».']]],
   ['12.8', 'Tesoros', [[442, 'Mapas del tesoro: una X en el piso y un cofre enterrado.'], [1144, 'Pueblos fantasma en los cañones rojos.'], [258, 'El comerciante compra y vende lo nuevo.'], [251, 'Logro Cazatesoros.']]],
   ['12.7', 'Fauna y aventuras', [[439, 'Cabras montés: se domestican y se ordeñan. Queso y dulce de leche.'], [271, 'Lagartijas en los cañones y murciélagos en las cuevas.'], [1121, '6 misiones nuevas en los pueblos y desafíos de cocinar, ordeñar y explorar.'], [423, 'Página de Cocina en el libro de colección.'], [1103, 'Tormentas de arena en los cañones y sonido de los géiseres.'], [1120, 'En línea, la carga de las baterías se ve igual para todos.']]],
