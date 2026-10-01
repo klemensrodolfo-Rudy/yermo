@@ -135,7 +135,7 @@ export function setupGuide(ui, getGame) {
     'Historia y facciones': () => `
       <p>La <b>historia principal</b> sigue una vieja señal de radio: mesa de trabajo → refugio → asentamientos → fichas → facciones → el laboratorio → el <b>Abismo</b> → el Guardián. El objetivo actual se ve arriba a la izquierda y en el diario (<b>J</b>).</p>
       <h3>Facciones</h3>
-      <p><b>Cerveceros del Valle</b> (vender cerveza, el concurso), <b>Chatarreros</b> (misiones, comercio, repartos, piratas) y <b>Hermandad del Acero</b> (bandidos y soldados renegados). Con reputación se desbloquean sus tiendas (en el diario, cerca de un comerciante o líder). Matar inocentes baja la reputación.</p>
+      <p><b>Cerveceros del Valle</b> (vender cerveza, el concurso), <b>Chatarreros</b> (misiones, comercio, repartos, piratas) y <b>Hermandad del Acero</b> (jefes, hordas y, si están activados, bandidos). Con reputación se desbloquean sus tiendas (en el diario, cerca de un comerciante o líder). Matar inocentes baja la reputación.</p>
       <h3>Desafíos del día</h3><p>Tres desafíos nuevos cada amanecer, pagan fichas. Completar los tres da 5 fichas extra.</p>
       <h3>Eventos</h3><p>Cada 6–11 minutos: <b>caravanas</b> de comerciantes, <b>meteoritos</b> (uranio y una caja del abismo) o <b>aviones caídos</b> (caja militar). Aparecen en el mapa.</p>`,
     'Fichas y negocios': () => `
@@ -148,8 +148,8 @@ export function setupGuide(ui, getGame) {
       <p><b>Estaciones</b>: primavera, verano, otoño e invierno (3 días cada una). Cambian la temperatura y la velocidad de los cultivos; en invierno nieva.</p>
       <p><b>Tormenta eléctrica</b>: caen rayos donde hay cielo abierto (prefieren lo alto y lo metálico) y prenden fuego. <b>Tornado</b>: un embudo que arrastra, levanta y rompe cosas livianas; bajo techo estás a salvo.</p>
       <p><b>Fuego</b>: quema madera, plantas y tela y se propaga. Lo apagan el agua, la lluvia y los <b>aspersores</b>. Los terrenos protegidos no se queman. ${icon(355)} El encendedor prende fuego.</p>
-      <p><b>Asaltos</b>: algunas noches una banda de bandidos viene a tu base (tu catre): rompen puertas y roban de los cofres. Matalos para recuperar lo robado. Los guardias y las torretas ayudan.</p>
-      <p><b>Mar de chatarra</b>: barcos varados y <b>piratas</b>. <b>Zona militar</b>: alambrados, tanques, cajas militares, <b>soldados renegados</b> y ¡<b>minas</b>! (se ven como un círculo en el piso).</p>
+      <p><b>Mar de chatarra</b>: barcos varados. <b>Zona militar</b>: alambrados, tanques, cajas militares y ¡<b>minas</b>! (se ven como un círculo en el piso).</p>
+      <p><b>Humanos armados</b> (opcional, regla del mundo, apagada por defecto): bandidos que asaltan tu base de noche y roban de los cofres, piratas en el mar de chatarra y soldados renegados en la zona militar.</p>
       <h3>Armas nuevas</h3><p>${icon(356)} Arco (flechas), ${icon(358)} granadas (explotan a los 2 s), ${icon(359)} lanzallamas (mantené clic derecho) y ${icon(369)} minas propias. Los planos de <b>Explosivos</b> salen de laboratorios y cajas militares.</p>`,
     'El Abismo': () => `
       <p>En el piso más profundo de cada laboratorio, junto al núcleo, hay un ${icon(197)} <b>portal violeta</b>. Del otro lado está el <b>Abismo</b>: salas y pasillos tallados en roca, infinitos hacia abajo.</p>
@@ -168,6 +168,10 @@ export function setupGuide(ui, getGame) {
       <h3>Pistas propias y campeonato</h3>
       <p>Poné una ${icon(185)} <b>bandera de largada</b> y varias ${icon(184)} <b>banderas de control</b> formando un circuito (se unen por cercanía, hasta 120 bloques entre sí). Los ${icon(186)} conos sirven de borde. Clic derecho en la bandera de largada para correr.</p>
       <p><b>Campeonato</b> (5 fichas): 5 fechas de 2 vueltas contra Rolo, La Chispa, Tuerca y Nafta Gómez. Puntos 10-6-4-3-2-1. El campeón gana un trofeo y 30 fichas.</p>`,
+    'Base equipada': () => `
+      <p>Tipo de mundo <b>🧰 Base equipada</b> (semilla del mismo nombre): arrancás en una base con todo listo para explorar y probar, como un creativo pero ya armado.</p>
+      <p><b>Hangar</b> con moto, moto de cross, moto de pista, auto, auto de carrera y camión · <b>helipuerto</b> con helicóptero · <b>muelle</b> con bote · <b>vías</b> alrededor con tren y vagoneta · <b>corral</b> con cebra, avestruz, elefante, jabalí y lobo ensillados · <b>taller</b> con todas las estaciones y 5 cofres llenos (materiales, herramientas, vehículos y nafta, comida, electricidad).</p>
+      <p>Todos los planos ya están aprendidos. Viene en Creativo, pero se puede elegir Supervivencia (arrancás con herramientas de acero y provisiones).</p>`,
     'Bioparque': () => `
       <p>Después del colapso nadie cuidó el <b>bioparque</b>: los animales andan sueltos entre los recintos rotos (◆ dorado en el mapa). Con la semilla <b>🦁 Bioparque</b> arrancás en la entrada.</p>
       <h3>Quién es quién</h3>

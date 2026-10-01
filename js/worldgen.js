@@ -69,6 +69,60 @@ export class WorldGen {
     return best;
   }
 
+  // ---------- base equipada: hangar, helipuerto, muelle, vías, corral y taller ----------
+  baseCamp(cx, cz, set) {
+    const bs = this.baseSite();
+    if (!bs) return;
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, y = bs.y, R = bs.R;
+    if (x0 > bs.x + R + 1 || x0 + 15 < bs.x - R - 1 || z0 > bs.z + R + 1 || z0 + 15 < bs.z - R - 1) return;
+    const S = (wx, yy, wz, id) => set(wx - x0, yy, wz - z0, id);
+    for (let lz = 0; lz < CHUNK; lz++) for (let lx = 0; lx < CHUNK; lx++) {
+      const wx = x0 + lx, wz = z0 + lz, dx = wx - bs.x, dz = wz - bs.z, d = Math.max(Math.abs(dx), Math.abs(dz));
+      if (d > R) continue;
+      for (let yy = y + 1; yy < y + 14; yy++) S(wx, yy, wz, 0);
+      for (let yy = y - 3; yy < y; yy++) S(wx, yy, wz, 4);
+      // piso: plaza de hormigón y pasto alrededor
+      S(wx, y, wz, d <= 25 ? 9 : 84);
+      // vías: un circuito cuadrado alrededor de la plaza
+      if (d === 29) { S(wx, y, wz, 9); S(wx, y + 1, wz, 101); }
+      // cerco perimetral con entrada al sur
+      if (d === R && !(dz === -R && Math.abs(dx) <= 3)) S(wx, y + 1, wz, 85);
+      // muelle: estanque de agua limpia para el bote
+      if (dx >= 8 && dx <= 22 && dz >= -23 && dz <= -11) { const rim = dx === 8 || dx === 22 || dz === -23 || dz === -11; S(wx, y, wz, rim ? 13 : 47); if (!rim) S(wx, y - 1, wz, 47); }
+      // helipuerto
+      const hx = dx + 13, hz = dz + 16, hr = Math.hypot(hx, hz);
+      if (hr <= 5) S(wx, y, wz, hr > 4.2 ? 149 : (Math.abs(hx) <= 2 && (Math.abs(hz) <= 2) && (Math.abs(hx) === 2 || hz === 0) ? 13 : 9));
+      // hangar al norte (abierto hacia el sur)
+      if (dx >= -25 && dx <= 9 && dz >= 13 && dz <= 22) {
+        const wall = dz === 22 || dx === -25 || dx === 9;
+        for (let yy = y + 1; yy <= y + 5; yy++) S(wx, yy, wz, yy === y + 5 ? 59 : wall ? 27 : 0);
+        if (dz === 13 && (dx - 1) % 7 === 0) for (let yy = y + 1; yy < y + 5; yy++) S(wx, yy, wz, 27);
+        if (dz === 20 && (dx + 25) % 6 === 3) S(wx, y + 4, wz, 28);
+      }
+      // corral para las monturas
+      if (dx >= -25 && dx <= -5 && dz >= -2 && dz <= 10) {
+        const edge = dx === -25 || dx === -5 || dz === -2 || dz === 10;
+        if (edge && !(dx === -5 && dz >= 3 && dz <= 5)) S(wx, y + 1, wz, 85);
+        if (!edge) S(wx, y, wz, 84);
+      }
+      // taller: estaciones, cofres, cama y luz
+      if (dx >= 10 && dx <= 23 && dz >= 6 && dz <= 22) {
+        const wall = dx === 10 || dx === 23 || dz === 6 || dz === 22;
+        for (let yy = y + 1; yy <= y + 4; yy++) S(wx, yy, wz, yy === y + 4 ? 59 : wall ? (yy === y + 2 && (dx + dz) % 3 === 0 ? 14 : 13) : 0);
+        if (wall && dz === 6 && dx >= 15 && dx <= 17) { S(wx, y + 1, wz, 0); S(wx, y + 2, wz, 0); }
+        if (dx === 16 && dz === 14) S(wx, y + 3, wz, 28);
+      }
+      // faroles
+      if ((Math.abs(dx) === 25 || Math.abs(dz) === 25) && (dx + dz) % 10 === 0 && d === 25) { for (let k = 1; k <= 3; k++) S(wx, y + k, wz, 85); S(wx, y + 4, wz, 28); }
+      if (dx === 0 && dz === 0) S(wx, y, wz, 204); // marcador: vehículos, cofres y carteles
+    }
+    // estaciones del taller (pegadas a la pared norte y este)
+    const ST = [[11, 21, 24], [12, 21, 25], [13, 21, 183], [14, 21, 179], [15, 21, 108], [16, 21, 79], [22, 20, 76], [22, 19, 33], [22, 12, 38], [22, 11, 38], [22, 10, 38], [22, 9, 38], [22, 8, 38]];
+    for (const [ox, oz, id] of ST) { const wx = bs.x + ox, wz = bs.z + oz; if (wx >= x0 && wx < x0 + 16 && wz >= z0 && wz < z0 + 16) S(wx, y + 1, wz, id); }
+    const sg = [bs.x + 4, bs.z - 22]; if (sg[0] >= x0 && sg[0] < x0 + 16 && sg[1] >= z0 && sg[1] < z0 + 16) S(sg[0], y + 1, sg[1], 191);
+  }
+  baseChests() { const bs = this.baseSite(); return [[22, 12], [22, 11], [22, 10], [22, 9], [22, 8]].map(([ox, oz]) => [bs.x + ox, bs.y + 1, bs.z + oz]); }
+
   // ---------- bioparque (zoológico abandonado) ----------
   zooAt(gx, gz) {
     const s = this.seed, k = gx + ',' + gz;
@@ -280,8 +334,31 @@ export class WorldGen {
     return pts;
   }
 
+  // mundo «Base equipada»: una base plana cerca del inicio con todo listo
+  baseSite() {
+    if (this.type !== 'base') return null;
+    if (this._base !== undefined) return this._base;
+    this._base = null;
+    for (let r = 0; r < 700 && !this._base; r += 16) for (let a = 0; a < 24; a++) {
+      const x = Math.round(Math.cos(a / 24 * Math.PI * 2) * r), z = Math.round(Math.sin(a / 24 * Math.PI * 2) * r);
+      const c = this.baseColumn(x, z);
+      if ([BIOME.FOREST, BIOME.BREW, BIOME.DESERT].includes(c.biome) && c.h > SEA + 2 && c.h < 62) { this._base = { x, z, y: Math.max(c.h, SEA + 3), R: 34 }; break; }
+    }
+    if (!this._base) this._base = { x: 0, z: 0, y: SEA + 6, R: 34 };
+    return this._base;
+  }
+
   column(wx, wz) {
     if (wx >= ABYSS_X - 64) return { h: 120, biome: BIOME.ABYSS, urbanT: 0, cityLevel: 47, temp: 0, level: abyssLevel(wx) };
+    const bs = this.baseSite();
+    if (bs) {
+      const d = Math.max(Math.abs(wx - bs.x), Math.abs(wz - bs.z));
+      if (d < bs.R + 18) {
+        const b = this.baseColumn(wx, wz);
+        const t = smooth(bs.R + 18, bs.R, d);
+        return { ...b, h: Math.round(lerp(b.h, bs.y, t)), urbanT: d < bs.R ? 0 : b.urbanT, biome: d < bs.R && b.biome === BIOME.CITY ? BIOME.FOREST : b.biome, base: d < bs.R + 3 };
+      }
+    }
     const zoo = this.zooNear(wx, wz);
     if (zoo) {
       const b = this.baseColumn(wx, wz);
@@ -488,7 +565,7 @@ export class WorldGen {
       if (c.h <= SEA) continue;
       const dens = c.biome === BIOME.FOREST ? 0.015 : c.biome === BIOME.SWAMP ? 0.008 : c.biome === BIOME.DESERT ? 0.0015 : c.biome === BIOME.BREW ? 0.004 : c.biome === BIOME.TUNDRA ? 0.004 : 0;
       if (c.biome === BIOME.MUSHROOM) { if (r < 0.011) this.giantMushroom(set, setAir, wx - x0, c.h + 1, wz - z0, wx, wz); continue; }
-      if (c.biome === BIOME.CIRCUIT || c.biome === BIOME.ZOO) continue;
+      if (c.biome === BIOME.CIRCUIT || c.biome === BIOME.ZOO || c.base) continue;
       if (c.biome === BIOME.CITY) continue;
       const lx = wx - x0, lz = wz - z0;
       if (r < dens) this.deadTree(set, setAir, lx, c.h + 1, lz, wx, wz);
@@ -532,6 +609,7 @@ export class WorldGen {
     this.breweries(cx, cz, set);
     this.circuits(cx, cz, set, colAt);
     this.zoos(cx, cz, set, colAt);
+    this.baseCamp(cx, cz, set);
     this.settlements(cx, cz, set);
     this.labs(cx, cz, set);
     this.wrecks(cx, cz, set);
@@ -1260,6 +1338,8 @@ export class WorldGen {
   }
 
   findSpawn(pref) {
+    const bs = this.baseSite();
+    if (bs) return { x: bs.x + 0.5, y: bs.y + 1.5, z: bs.z - 22.5 };
     if (pref === 'zoo') {
       const z = this.nearestZoo(0, 0);
       if (z) return { x: z.x + 0.5, y: z.y + 2, z: z.z + z.R - 10.5 };

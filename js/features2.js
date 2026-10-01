@@ -4,9 +4,9 @@
 // arco, granadas, lanzallamas y minas, monturas, el Abismo, planos de obra, ascensores, gestos, carteles
 // y música dinámica.
 import * as THREE from 'three';
-import { BLOCKS, ITEMS, itemName, SOLID, LIQ, FLAMMABLE, PLACEABLE, CROPS } from './blocks.js';
+import { BLOCKS, ITEMS, itemName, SOLID, LIQ, FLAMMABLE, PLACEABLE, CROPS, maxStack } from './blocks.js';
 import { BIOME, BIOME_NAMES, ABYSS_X, ABYSS_W, abyssLevel, abyssStart } from './worldgen.js';
-import { VEHICLE_TYPES } from './entities.js';
+import { VEHICLE_TYPES, MOB_TYPES } from './entities.js';
 
 // animales que se domestican con comida y después se montan con una Montura
 export const TAME = {
@@ -35,7 +35,7 @@ export const SEASON_DAYS = 3;
 export const FACTIONS = {
   cerv: { name: 'Cerveceros del Valle', color: '#e0c23a', desc: 'Guardianes de la cebada y el lúpulo. Aman la buena cerveza.' },
   chat: { name: 'Chatarreros', color: '#ff8a4a', desc: 'Comerciantes y asentamientos. La chatarra es su moneda.' },
-  acero: { name: 'Hermandad del Acero', color: '#8ab0d8', desc: 'Ex militares que limpian el yermo de bandidos.' },
+  acero: { name: 'Hermandad del Acero', color: '#8ab0d8', desc: 'Ex militares que limpian el yermo: les gusta que derrotes jefes, resistas hordas y (si están activados) frenes a los bandidos.' },
 };
 const FSHOP = {
   cerv: [{ need: 10, cost: 4, get: [291, 4] }, { need: 10, cost: 6, get: [283, 6] }, { need: 25, cost: 10, get: [86, 2] }, { need: 40, cost: 18, get: [318, 3, 5] }, { need: 60, cost: 25, get: [363, 1] }],
@@ -149,9 +149,11 @@ export function createFeatures2(ctx) {
       if (id === 'bandit' || id === 'soldier') rep('acero', 3, 'bandidos');
       if (id === 'pirate') rep('chat', 3, 'piratas');
       if (['trader', 'settler', 'leader', 'worker'].includes(id)) { rep('chat', -20, 'mataste a un inocente'); rep('cerv', -10); }
+      if (MOB_TYPES[id]?.boss) rep('acero', 8, 'derrotaste a un jefe');
       if (id === 'guardian') { p.onEvent('v6', 'guardian'); if (inAbyss()) P.guardians[abyssLevel(p.pos.x)] = true; }
     }
     if (n === 'raceWin') addStat('raceWins');
+    if (n === 'hordeSurvived') rep('acero', 5, 'resististe la horda');
   };
   function advanceCampaign() {
     const st = CAMPAIGN[P.camp];
@@ -169,7 +171,7 @@ export function createFeatures2(ctx) {
     const seed = (meta.seed ^ (day() * 2654435761)) >>> 0;
     const idx = [];
     let s = seed;
-    while (idx.length < 3) { s = (Math.imul(s ^ (s >>> 15), 2246822507) + 3266489909) >>> 0; const i = s % DAILY.length; if (!idx.includes(i)) idx.push(i); }
+    while (idx.length < 3) { s = (Math.imul(s ^ (s >>> 15), 2246822507) + 3266489909) >>> 0; const i = s % DAILY.length; if (!idx.includes(i) && (meta.rules?.armed || !Array.isArray(DAILY[i].m))) idx.push(i); }
     P.daily = { day: day(), list: idx.map((i) => ({ i, prog: 0, done: false })) };
   }
 
@@ -805,7 +807,7 @@ export function createFeatures2(ctx) {
         const x = Math.floor(p.pos.x + (Math.random() - 0.5) * 50), z = Math.floor(p.pos.z + (Math.random() - 0.5) * 50);
         if (Math.hypot(x - p.pos.x, z - p.pos.z) < 12) continue;
         if (w.getBlock(x, 20, z) !== 0 || w.getBlock(x, 21, z) !== 0 || !SOLID[w.getBlock(x, 19, z)]) continue;
-        const pool = ['ghoul', 'ghoul', 'rat', lvl >= 2 && 'soldier', lvl >= 3 && 'wolf', lvl >= 4 && 'shroom', lvl >= 6 && 'scorpion'].filter(Boolean);
+        const pool = ['ghoul', 'ghoul', 'rat', lvl >= 2 && (meta.rules?.armed ? 'soldier' : 'wolf'), lvl >= 3 && 'wolf', lvl >= 4 && 'shroom', lvl >= 6 && 'scorpion'].filter(Boolean);
         g.mobs.add(pool[Math.floor(Math.random() * pool.length)], x + 0.5, 20, z + 0.5, undefined, lvl);
         break;
       }
@@ -1066,6 +1068,7 @@ export function createFeatures2(ctx) {
   };
   function raidCheck() {
     const t = g.time, night = t > 0.8 || t < 0.2;
+    if (!meta.rules?.armed) return;
     if (!night || day() < 2 || meta.raidDay === day() || g.mobs.horde) return;
     const base = meta.spawn;
     if (!base || Math.hypot(base.x - p.pos.x, base.z - p.pos.z) > 70) return;
@@ -1093,6 +1096,7 @@ export function createFeatures2(ctx) {
       for (let i = 0; i < n; i++) g.mobs.add(type, x + 0.5 + i, y, z + 0.5);
     };
     const r = Math.random();
+    if (!meta.rules?.armed) return; // humanos armados desactivados (regla del mundo)
     if (col.biome === BIOME.SCRAPSEA && count('pirate') < 4 && r < 0.3) place('pirate', 1 + (r < 0.1 ? 1 : 0));
     else if (col.biome === BIOME.MILITARY && count('soldier') < 4 && r < 0.3) place('soldier', 1 + (r < 0.08 ? 1 : 0));
     else if (g.time > 0.78 || g.time < 0.22 ? r < 0.015 : r < 0.006) { if (count('bandit') < 3 && col.biome !== BIOME.BREW) place('bandit', 2); }
@@ -1178,6 +1182,32 @@ export function createFeatures2(ctx) {
       for (const m of g.mobs.list.values()) if (m.type === 'trader' && m.keep && Math.hypot(m.pos.x - x, m.pos.z - z) < 40) return true;
       const tr = g.mobs.add('trader', x + 0.5, y + 1, z - 1.5); tr.keep = true; tr.home = tr.pos.clone();
       for (let i = 0; i < 2; i++) { const s = g.mobs.add('settler', x + 0.5 + (i ? 3 : -3), y + 1, z + 3.5); s.home = s.pos.clone(); }
+      return true;
+    }
+    if (type === 'base') {
+      const V = (dx, dz, t, yaw = 0, dy = 1.02) => g.vehicles.spawn(new THREE.Vector3(x + dx + 0.5, y + dy, z + dz + 0.5), yaw, t);
+      [['moto', -22], ['cross', -19], ['racebike', -16], ['car', -12], ['racecar', -7], ['truck', 1]].forEach(([t, ox]) => V(ox, 18, t, Math.PI));
+      V(-13, -16, 'heli', 0, 1.2);
+      V(15, -17, 'boat', 0, 0.6);
+      V(29, 0, 'cart', 0, 1.02); V(-29, -8, 'train', 0, 1.02);
+      [['mzebra', -20, 2], ['mostrich', -15, 2], ['melephant', -11, 6], ['mboar', -21, 8], ['mwolf', -16, 8]].forEach(([t, ox, oz]) => V(ox, oz, t, Math.PI / 2));
+      const fill = [
+        [[9, 64], [13, 64], [23, 64], [14, 64], [27, 64], [28, 32], [26, 64], [65, 16], [38, 8], [2, 64], [15, 64], [60, 64], [59, 64], [191, 16]],
+        [[268, 1], [269, 1], [270, 1], [276, 1], [356, 1], [357, 64], [302, 1], [304, 1], [303, 1], [306, 16], [329, 1], [355, 1], [361, 1], [362, 1], [274, 8]],
+        [[339, 16], [360, 4], [365, 2], [101, 64], [101, 64], [312, 1], [345, 1], [340, 1], [342, 1], [364, 1], [183, 1]],
+        [[272, 64], [285, 64], [281, 32], [283, 32], [329, 2], [271, 32]],
+        [[76, 2], [77, 8], [75, 64], [73, 16], [135, 4], [137, 4], [188, 2], [187, 64], [189, 8], [190, 4], [179, 1], [353, 64]],
+      ];
+      g.gen.baseChests().forEach(([cx_, cy_, cz_], i) => {
+        const k = k3(cx_, cy_, cz_);
+        if (sim.containers.get(k)) return;
+        const slots = new Array(27).fill(null);
+        let j = 0;
+        for (const [id, n] of fill[i] || []) for (let left = n; left > 0 && j < 27; j++) { const c = Math.min(left, maxStack(id)); slots[j] = { id, count: c }; left -= c; }
+        sim.containers.set(k, { type: 'chest', slots, progress: 0, burn: 0 }); sim.touch(k);
+      });
+      const sk = k3(x + 4, y + 1, z - 22);
+      sim.containers.set(sk, { type: 'sign', text: 'BASE EQUIPADA · TODO LISTO · CONTROLES EN LA GUÍA' }); sim.touch(sk);
       return true;
     }
     if (type === 'zoo') {

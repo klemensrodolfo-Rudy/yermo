@@ -278,6 +278,7 @@ def(200, { name: 'Caja del abismo', tex: { top: T.abyss, side: T.medcrate_side, 
 def(201, { name: 'Andén del subte', tex: tx(T.concrete), hardness: 2, tool: 'pick', tier: 1, drop: 9, marker: 'train', hidden: true });
 def(202, { name: 'Hojas de acacia', tex: tx(T.leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0 });
 def(203, { name: 'Plaza del bioparque', tex: tx(T.concrete), hardness: 2, tool: 'pick', tier: 1, drop: 9, marker: 'zoo', hidden: true });
+def(204, { name: 'Centro de la base', tex: tx(T.concrete), hardness: 2, tool: 'pick', tier: 1, drop: 9, marker: 'base', hidden: true });
 def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12, portal: true });
 
 // colisión: normalizar a lista de cajas

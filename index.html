@@ -188,7 +188,9 @@
   .grow.ach { opacity: 0.45; } .grow.ach.got { opacity: 1; border-left: 3px solid #e0c23a; } .grow .medal { font-size: 22px; }
   .serverbox { display: flex; align-items: center; gap: 8px; background: #1c2a14; border: 2px solid #4a7a2a; padding: 8px 10px; margin-bottom: 10px; } .serverbox b { flex: 1; font-weight: normal; }
   code { background: #0e0c0a; padding: 0 5px; }
-  select { cursor: pointer; }
+  select { cursor: pointer; appearance: none; -webkit-appearance: none; background: #1e1913 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23d9823b'/%3E%3C/svg%3E") no-repeat right 10px center / 12px 8px; padding-right: 32px; border-color: #6a5a46; }
+  select:hover, select:focus { border-color: var(--accent); outline: none; }
+  select option { background: #1e1913; color: var(--text); }
   /* táctil */
   #touch { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
   body.ctl:not(.playing) #touch { display: none; } /* sólo mientras se juega: en menús tapaban los botones */
@@ -321,7 +323,7 @@
       <p id="seedDesc" class="muted" style="margin:4px 0 0"></p>
       <div class="row">
         <div><label for="wType">Tipo de mundo</label>
-          <select id="wType"><option value="normal">Normal</option><option value="brew">🍺 Cervecero</option></select></div>
+          <select id="wType"><option value="normal">Normal</option><option value="brew">🍺 Cervecero</option><option value="base">🧰 Base equipada</option></select></div>
         <div><label for="wMode">Modo</label>
           <select id="wMode"><option value="survival">Supervivencia</option><option value="creative">Creativo</option></select></div>
         <div><label for="optDist">Distancia</label>
@@ -330,6 +332,7 @@
       <label class="check"><input type="checkbox" id="wTut" checked> Tutorial guiado (recomendado la primera vez)</label>
       <label class="check"><input type="checkbox" id="wRad" checked> ☢ Radiación (cráteres, uranio, lluvia ácida, agua tóxica)</label>
       <label class="check"><input type="checkbox" id="wDay" checked> 🦂 Animales mutantes que atacan de día (escorpiones, cuervos, lobos, ratas, hongos)</label>
+      <label class="check"><input type="checkbox" id="wArmed"> 🔫 Humanos armados (bandidos, piratas y soldados que disparan y asaltan tu base)</label>
       <div class="row"><button id="cancelNew">Cancelar</button><button id="createWorld" class="primary">Crear mundo</button></div>
     </div>
   </div>
@@ -406,6 +409,7 @@
     <label>Reglas del mundo <small id="rulesInfo" class="muted"></small></label>
     <label class="check"><input type="checkbox" id="optRad"> ☢ Radiación</label>
     <label class="check"><input type="checkbox" id="optDay"> 🦂 Animales mutantes atacan de día</label>
+    <label class="check"><input type="checkbox" id="optArmed"> 🔫 Humanos armados (bandidos, piratas, soldados)</label>
     <label for="optQuality">Calidad gráfica</label>
     <select id="optQuality"><option value="bajo">Baja (PC lenta)</option><option value="medio">Media</option><option value="alto">Alta</option></select>
     <label>Texturas <small id="packInfo" class="muted"></small></label>

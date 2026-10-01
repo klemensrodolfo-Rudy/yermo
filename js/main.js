@@ -646,7 +646,7 @@ $('#cwCreate').onclick = async () => {
   const preset = SEED_PRESETS.find((x) => x.id === $('#cwSeed').value) || SEED_PRESETS[0];
   const name = $('#cwName').value.trim() || 'Yermo del grupo';
   const seed = preset.seed ?? ((Math.random() * 2e9) | 0);
-  const meta = { rules: { rad: true, dayMobs: true } };
+  const meta = { rules: { rad: true, dayMobs: true, armed: false } };
   if (preset.spawn) meta.spawnPref = preset.spawn;
   const id = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   cloudMsg('Creando el mundo…');
@@ -894,6 +894,8 @@ async function startGame(meta, hello, cloudInfo) {
   const weather = new Weather(scene, meta.weather);
   const known = new Set(meta.blueprints || []);
   if (meta.worldType === 'brew') known.add('cerveza');
+  // base equipada: todos los planos aprendidos (menos armas de fuego)
+  if (meta.worldType === 'base') for (const k of Object.keys(BLUEPRINT_NAMES)) if (k !== 'armas') known.add(k);
   mobs.sim = sim; drops.sim = sim;
   player.mobs = mobs; player.sim = sim;
   game = { meta, world, sim, player, inv, mobs, drops, vehicles, projectiles, weather, known, sfx, time: meta.time ?? 0.3, saveAcc: 0, shake: 0, geiger: 0, lastTime: meta.time ?? 0.3 };
@@ -951,6 +953,7 @@ async function startGame(meta, hello, cloudInfo) {
   if (!meta.inventory && !meta.remote) {
     if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80].forEach((id) => inv.add(id, 64));
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
+    else if (meta.worldType === 'base') [[268, 1], [269, 1], [270, 1], [276, 1], [26, 32], [272, 16], [329, 1], [306, 4], [360, 1], [339, 2], [24, 1]].forEach(([id, n]) => inv.add(id, n));
   }
   // mundo cervecero: siempre arrancás con un balde (también los que se unen online y los mundos ya creados)
   if (meta.worldType === 'brew' && meta.mode !== 'creative' && ![277, 278, 279, 280].some((id) => inv.count(id) > 0) && !meta.bucketGift) {
@@ -961,8 +964,10 @@ async function startGame(meta, hello, cloudInfo) {
   game.tutorial = new Tutorial(game, ui, sfx);
   // reglas del mundo: radiación y animales mutantes de día (se pueden cambiar en la pausa)
   game.applyRules = () => {
-    const r = Object.assign({ rad: true, dayMobs: true }, game.meta.rules);
+    const r = Object.assign({ rad: true, dayMobs: true, armed: false }, game.meta.rules);
     game.meta.rules = r;
+    mobs.noArmed = !r.armed;
+    if (!r.armed && isAuthority()) for (const m of [...mobs.list.values()]) if (m.def.ranged) mobs.remove(m);
     player.noRad = !r.rad;
     if (player.noRad) { player.rad = 0; player.radExposure = 0; }
     mobs.peacefulDay = !r.dayMobs;
@@ -1091,6 +1096,7 @@ const SEED_PRESETS = [
   { id: '317b', seed: 317, type: 'brew', name: '🍺 Ruta del Lúpulo', desc: 'Mundo cervecero con una ciudad en ruinas a unos 110 bloques para saquear.' },
   { id: 'settlement', seed: 3, type: 'normal', spawn: 'settlement', name: '🏘 Asentamiento', desc: 'Arrancás dentro de un pueblo de sobrevivientes con su líder, que da misiones y comercia.' },
   { id: 'circuit', seed: 1, type: 'normal', spawn: 'circuit', name: '🏁 Autódromo', desc: 'Arrancás en los boxes de un autódromo abandonado: autos, motos, carreras y el instructor.' },
+  { id: 'base', seed: 556, type: 'base', mode: 'creative', name: '🧰 Base equipada', desc: 'Arrancás en una base con todo listo: helicóptero, bote, autos, motos, camión, tren y vagoneta sobre vías, monturas, taller y cofres llenos. Todos los planos aprendidos. Viene en Creativo, pero podés elegir Supervivencia.' },
   { id: 'zoo', seed: 5, type: 'normal', spawn: 'zoo', name: '🦁 Bioparque', desc: 'Arrancás en la entrada de un zoológico abandonado: leones, jirafas, elefantes, cebras, gorilas, pingüinos, hipopótamos y más andan sueltos. Algunos se domestican y se montan.' },
   { id: 'custom', name: '✏ Personalizada…', desc: 'Escribí tu propia semilla (número o palabra). La misma semilla genera siempre el mismo mundo.' },
 ];
@@ -1101,6 +1107,7 @@ $('#wSeedSel').onchange = () => {
   $('#wSeed').hidden = p.id !== 'custom';
   if (p.id === 'custom') $('#wSeed').focus();
   if (p.type) $('#wType').value = p.type;
+  if (p.mode) { $('#wMode').value = p.mode; $('#wTut').checked = p.mode === 'survival'; }
 };
 $('#wSeedSel').onchange();
 $('#createWorld').onclick = () => {
@@ -1110,7 +1117,7 @@ $('#createWorld').onclick = () => {
   const seed = preset.seed ?? (s ? (/^-?\d+$/.test(s) ? parseInt(s) : [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7)) : (Math.random() * 2e9) | 0);
   const meta = { id: 'w' + Date.now().toString(36), name, seed, mode: $('#wMode').value, worldType: $('#wType').value, renderDist: +$('#optDist').value || QUALITY[settings.quality].dist };
   if (preset.spawn) meta.spawnPref = preset.spawn;
-  meta.rules = { rad: $('#wRad').checked, dayMobs: $('#wDay').checked };
+  meta.rules = { rad: $('#wRad').checked, dayMobs: $('#wDay').checked, armed: $('#wArmed').checked };
   if ($('#wTut').checked) meta.tutorial = { step: 0, done: false };
   $('#newForm').hidden = true;
   startGame(meta);
@@ -1180,8 +1187,8 @@ function setPause(p) {
     $('#achBtn').textContent = `Logros (${game.ach.count()}/${ACHIEVEMENTS.length})`;
     $('#optName').value = game.player.name;
     const rules = game.meta.rules || {}, canRules = !net.isClient;
-    $('#optRad').checked = rules.rad !== false; $('#optDay').checked = rules.dayMobs !== false;
-    $('#optRad').disabled = $('#optDay').disabled = !canRules;
+    $('#optRad').checked = rules.rad !== false; $('#optDay').checked = rules.dayMobs !== false; $('#optArmed').checked = !!rules.armed;
+    $('#optRad').disabled = $('#optDay').disabled = $('#optArmed').disabled = !canRules;
     $('#rulesInfo').textContent = canRules ? '' : '(las decide el anfitrión)';
   }
 }
@@ -1230,9 +1237,11 @@ function renamePlayer() {
 }
 $('#optNameOk').onclick = renamePlayer;
 $('#optName').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); renamePlayer(); $('#optName').blur(); } });
-const setRule = (k, v) => { if (!game || net.isClient) return; game.meta.rules = { ...(game.meta.rules || {}), [k]: v }; game.applyRules(); flash(k === 'rad' ? (v ? '☢ Radiación activada' : 'Radiación desactivada') : (v ? 'Los animales mutantes vuelven a atacar de día' : 'De día los animales mutantes ya no atacan')); };
+const RULE_MSG = { rad: ['☢ Radiación activada', 'Radiación desactivada'], dayMobs: ['Los animales mutantes vuelven a atacar de día', 'De día los animales mutantes ya no atacan'], armed: ['🔫 Vuelven los bandidos, piratas y soldados', 'Sin humanos armados en este mundo'] };
+const setRule = (k, v) => { if (!game || net.isClient) return; game.meta.rules = { ...(game.meta.rules || {}), [k]: v }; game.applyRules(); flash(RULE_MSG[k][v ? 0 : 1]); };
 $('#optRad').onchange = (e) => setRule('rad', e.target.checked);
 $('#optDay').onchange = (e) => setRule('dayMobs', e.target.checked);
+$('#optArmed').onchange = (e) => setRule('armed', e.target.checked);
 // paquetes de texturas: plantilla para editar y carga de un PNG propio (se guarda en el navegador)
 function usePack(url, save) {
   const img = new Image();
@@ -1413,7 +1422,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '8.2 · 2026-10-01';
+const VERSION = '8.3 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
