@@ -48,6 +48,8 @@ export const TILES = [
   'sapling',
   // v12: hormigón de colores (primeros bloques con id de 16 bits)
   'conc_rojo', 'conc_naranja', 'conc_amarillo', 'conc_lima', 'conc_verde', 'conc_cian', 'conc_celeste', 'conc_azul', 'conc_violeta', 'conc_rosa', 'conc_negro', 'conc_blanco',
+  // v12.1: materiales
+  'sandstone', 'tuff', 'stone_pol', 'stone_carv', 'deepstone_pol', 'deepstone_carv', 'deepstone_brk', 'sandstone_pol', 'sandstone_carv', 'sandstone_brk', 'basalt_pol', 'basalt_carv', 'basalt_brk', 'tuff_pol', 'tuff_carv', 'tuff_brk', 'glass_cyan', 'glass_sky', 'glass_pink', 'glass_white', 'glass_smoke', 'glass_lime', 'planks_oak', 'planks_palm', 'door_wood', 'door_oak', 'door_palm', 'door_elf', 'old_tiles', 'rusty_sign', 'hanging_cables', 'broken_glass',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -150,15 +152,18 @@ def(60, { name: 'Losa de tablas', tex: tx(T.planks), opaque: false, render: 'box
 const LADDER_BOX = { '1,0': [0, 0, 0, 1, 16, 16], '-1,0': [15, 0, 0, 16, 16, 16], '0,1': [0, 0, 0, 16, 16, 1], '0,-1': [0, 0, 15, 16, 16, 16] };
 [[61, [1, 0]], [62, [-1, 0]], [63, [0, 1]], [64, [0, -1]]].forEach(([id, wall]) =>
   def(id, { name: 'Escalera de mano', tex: tx(T.ladder), solid: false, opaque: false, render: 'box', box: [LADDER_BOX[wall.join(',')]], hardness: 0.5, tool: 'axe', drop: 61, ladder: wall, hidden: id !== 61 }));
-// puertas: 65..72 (eje x/z, cerrada/abierta, abajo/arriba). 65 = ítem.
+// puertas: base..base+7 (eje x/z, cerrada/abierta, abajo/arriba). base = ítem (65 = metal).
 const DOORS = [];
+function doorSet(base, name, tile, tool, hardness) {
 for (const open of [0, 1]) for (const axis of ['x', 'z']) for (const top of [0, 1]) {
-  const id = 65 + open * 4 + (axis === 'z' ? 2 : 0) + top;
+  const id = base + open * 4 + (axis === 'z' ? 2 : 0) + top;
   // cerrada: panel centrado; abierta: panel girado contra el borde
   const panel = !open ? (axis === 'x' ? [0, 0, 6.5, 16, 16, 9.5] : [6.5, 0, 0, 9.5, 16, 16]) : (axis === 'x' ? [0, 0, 0, 3, 16, 16] : [0, 0, 0, 16, 16, 3]);
-  def(id, { name: 'Puerta de metal', tex: tx(T.door_metal), solid: !open, opaque: false, render: 'box', box: [panel], hardness: 2, tool: 'pick', drop: 65, door: { open, axis, top }, hidden: id !== 65 });
+  def(id, { name, tex: tx(tile), solid: !open, opaque: false, render: 'box', box: [panel], hardness, tool, drop: base, door: { open, axis, top, base }, hidden: id !== base });
   DOORS.push(id);
 }
+}
+doorSet(65, 'Puerta de metal', T.door_metal, 'pick', 2);
 def(73, { name: 'Foco eléctrico', tex: tx(T.bulb_off), hardness: 0.6, elec: 'device', drop: 73 });
 def(74, { name: 'Foco eléctrico', tex: tx(T.bulb_on), hardness: 0.6, elec: 'device', drop: 73, light: 15, hidden: true });
 def(75, { name: 'Cable', tex: tx(T.cable), solid: false, opaque: false, render: 'box', box: [[0, 0, 6.5, 16, 1.5, 9.5], [6.5, 0, 0, 9.5, 1.5, 16]], hardness: 0.2, elec: 'wire' });
@@ -317,7 +322,7 @@ def(218, { name: 'Montón de oro', tex: tx(T.gold_pile), hardness: 1, tool: 'sho
 def(219, { name: 'Altar de runas', tex: { top: T.rune_top, side: T.rune_side, bottom: T.stone_bricks }, hardness: 3, tool: 'pick', station: 'runas', light: 7 });
 def(220, { name: 'Mesa de alquimia', tex: { top: T.alchemy_top, side: T.alchemy_side, bottom: T.elf_planks }, hardness: 1.5, tool: 'axe', station: 'alquimia' });
 def(221, { name: 'Orbe de luz', tex: tx(T.light_orb), solid: false, opaque: false, render: 'cross', hardness: 0, drop: 0, light: 15, hidden: true });
-def(222, { name: 'Roble', tex: { top: T.log_top, side: T.oak_bark, bottom: T.log_top }, hardness: 1.8, tool: 'axe', drop: 15 });
+def(222, { name: 'Roble', tex: { top: T.log_top, side: T.oak_bark, bottom: T.log_top }, hardness: 1.8, tool: 'axe' });
 def(223, { name: 'Guarida del dragón', tex: tx(T.basalt), hardness: 3, tool: 'pick', drop: 205, marker: 'dragon', hidden: true });
 def(224, { name: 'Torre del mago', tex: tx(T.stone_bricks), hardness: 3, tool: 'pick', drop: 210, marker: 'mage', hidden: true });
 def(225, { name: 'Plaza de la aldea', tex: tx(T.stone_bricks), hardness: 3, tool: 'pick', drop: 210, marker: 'village', hidden: true });
@@ -326,7 +331,7 @@ def(228, { name: 'Cofre del tesoro', tex: { top: T.chest_top, side: T.chest_side
 def(229, { name: 'Arena', tex: tx(T.sand), hardness: 0.5, tool: 'shovel' });
 def(230, { name: 'Coral rojo', tex: tx(T.coral_red), hardness: 0.8, tool: 'pick' });
 def(231, { name: 'Coral amarillo', tex: tx(T.coral_yellow), hardness: 0.8, tool: 'pick' });
-def(232, { name: 'Palmera', tex: { top: T.log_top, side: T.palm_bark, bottom: T.log_top }, hardness: 1.5, tool: 'axe', drop: 15 });
+def(232, { name: 'Palmera', tex: { top: T.log_top, side: T.palm_bark, bottom: T.log_top }, hardness: 1.5, tool: 'axe' });
 def(233, { name: 'Hojas de palmera', tex: tx(T.palm_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[403, 1, 0.15], [248, 1, 0.06]] });
 def(234, { name: 'Mesa de minijuegos', tex: { top: T.mg_table, side: T.planks, bottom: T.planks }, hardness: 1.5, tool: 'axe', light: 4 });
 def(235, { name: 'Nieve de spleef', tex: { top: T.snow_top, side: T.snow_top, bottom: T.snow_top }, hardness: 0.05, drop: 0 });
@@ -371,6 +376,46 @@ def(1032, { name: 'Hormigón violeta', tex: tx(T.conc_violeta), hardness: 2, too
 def(1033, { name: 'Hormigón rosa', tex: tx(T.conc_rosa), hardness: 2, tool: 'pick', tier: 1 });
 def(1034, { name: 'Hormigón negro', tex: tx(T.conc_negro), hardness: 2, tool: 'pick', tier: 1 });
 def(1035, { name: 'Hormigón blanco', tex: tx(T.conc_blanco), hardness: 2, tool: 'pick', tier: 1 });
+// ---------- v12.1: materiales ----------
+def(1036, { name: 'Arenisca', tex: tx(T.sandstone), hardness: 1.2, tool: 'pick', tier: 1 });
+def(1037, { name: 'Toba', tex: tx(T.tuff), hardness: 1.2, tool: 'pick', tier: 1 });
+def(1038, { name: 'Roca pulida', tex: tx(T.stone_pol), hardness: 2, tool: 'pick', tier: 1 });
+def(1039, { name: 'Roca cincelada', tex: tx(T.stone_carv), hardness: 2, tool: 'pick', tier: 1 });
+def(1040, { name: 'Roca profunda pulida', tex: tx(T.deepstone_pol), hardness: 2, tool: 'pick', tier: 1 });
+def(1041, { name: 'Ladrillos de roca profunda', tex: tx(T.deepstone_brk), hardness: 2, tool: 'pick', tier: 1 });
+def(1042, { name: 'Roca profunda cincelada', tex: tx(T.deepstone_carv), hardness: 2, tool: 'pick', tier: 1 });
+def(1043, { name: 'Arenisca pulida', tex: tx(T.sandstone_pol), hardness: 2, tool: 'pick', tier: 1 });
+def(1044, { name: 'Ladrillos de arenisca', tex: tx(T.sandstone_brk), hardness: 2, tool: 'pick', tier: 1 });
+def(1045, { name: 'Arenisca cincelada', tex: tx(T.sandstone_carv), hardness: 2, tool: 'pick', tier: 1 });
+def(1046, { name: 'Basalto pulido', tex: tx(T.basalt_pol), hardness: 2, tool: 'pick', tier: 1 });
+def(1047, { name: 'Ladrillos de basalto', tex: tx(T.basalt_brk), hardness: 2, tool: 'pick', tier: 1 });
+def(1048, { name: 'Basalto cincelado', tex: tx(T.basalt_carv), hardness: 2, tool: 'pick', tier: 1 });
+def(1049, { name: 'Toba pulida', tex: tx(T.tuff_pol), hardness: 2, tool: 'pick', tier: 1 });
+def(1050, { name: 'Ladrillos de toba', tex: tx(T.tuff_brk), hardness: 2, tool: 'pick', tier: 1 });
+def(1051, { name: 'Toba cincelada', tex: tx(T.tuff_carv), hardness: 2, tool: 'pick', tier: 1 });
+def(1052, { name: 'Vidrio cian', tex: tx(T.glass_cyan), opaque: false, alpha: true, hardness: 0.3, drop: 0, tinted: true });
+def(1053, { name: 'Vidrio celeste', tex: tx(T.glass_sky), opaque: false, alpha: true, hardness: 0.3, drop: 0, tinted: true });
+def(1054, { name: 'Vidrio rosa', tex: tx(T.glass_pink), opaque: false, alpha: true, hardness: 0.3, drop: 0, tinted: true });
+def(1055, { name: 'Vidrio blanco', tex: tx(T.glass_white), opaque: false, alpha: true, hardness: 0.3, drop: 0, tinted: true });
+def(1056, { name: 'Vidrio ahumado', tex: tx(T.glass_smoke), opaque: false, alpha: true, hardness: 0.3, drop: 0, tinted: true });
+def(1057, { name: 'Vidrio lima', tex: tx(T.glass_lime), opaque: false, alpha: true, hardness: 0.3, drop: 0, tinted: true });
+def(1058, { name: 'Tablas de roble', tex: tx(T.planks_oak), hardness: 1.5, tool: 'axe' });
+def(1059, { name: 'Tablas de palmera', tex: tx(T.planks_palm), hardness: 1.5, tool: 'axe' });
+def(1060, { name: 'Cerco de madera', tex: tx(T.planks), opaque: false, render: 'box', box: [[6, 0, 6, 10, 16, 10], [0, 6, 7, 16, 8, 9], [0, 12, 7, 16, 14, 9], [7, 6, 0, 9, 8, 16], [7, 12, 0, 9, 14, 16]], hardness: 1, tool: 'axe' });
+def(1061, { name: 'Cerco de roble', tex: tx(T.planks_oak), opaque: false, render: 'box', box: [[6, 0, 6, 10, 16, 10], [0, 6, 7, 16, 8, 9], [0, 12, 7, 16, 14, 9], [7, 6, 0, 9, 8, 16], [7, 12, 0, 9, 14, 16]], hardness: 1, tool: 'axe' });
+def(1062, { name: 'Cerco de palmera', tex: tx(T.planks_palm), opaque: false, render: 'box', box: [[6, 0, 6, 10, 16, 10], [0, 6, 7, 16, 8, 9], [0, 12, 7, 16, 14, 9], [7, 6, 0, 9, 8, 16], [7, 12, 0, 9, 14, 16]], hardness: 1, tool: 'axe' });
+def(1063, { name: 'Cerco élfico', tex: tx(T.elf_planks), opaque: false, render: 'box', box: [[6, 0, 6, 10, 16, 10], [0, 6, 7, 16, 8, 9], [0, 12, 7, 16, 14, 9], [7, 6, 0, 9, 8, 16], [7, 12, 0, 9, 14, 16]], hardness: 1, tool: 'axe' });
+def(1096, { name: 'Pared derruida', tex: tx(T.brick), opaque: false, render: 'box', box: [[0, 0, 0, 16, 9, 16], [0, 9, 0, 11, 13, 16], [0, 13, 0, 5, 16, 16]], hardness: 1.5, tool: 'pick', drop: 30 });
+def(1097, { name: 'Azulejos viejos', tex: tx(T.old_tiles), hardness: 1, tool: 'pick' });
+def(1098, { name: 'Cartel oxidado', tex: tx(T.rusty_sign), solid: false, opaque: false, render: 'box', box: [[7, 0, 7, 9, 9, 9, T.rust], [0, 8, 7, 16, 16, 9]], hardness: 0.6, tool: 'pick' });
+def(1099, { name: 'Caños viejos', tex: tx(T.pipe), opaque: false, render: 'box', box: [[0, 2, 2, 16, 6, 6], [0, 9, 9, 16, 14, 14], [0, 0, 11, 16, 3, 14]], hardness: 0.8, tool: 'pick' });
+def(1100, { name: 'Cables colgando', tex: tx(T.hanging_cables), solid: false, opaque: false, render: 'cross', hardness: 0.1, drop: 75 });
+def(1101, { name: 'Ventana rota', tex: tx(T.broken_glass), opaque: false, alpha: true, hardness: 0.3, drop: 0 });
+doorSet(1064, 'Puerta de madera', T.door_wood, 'axe', 1.5);
+doorSet(1072, 'Puerta de roble', T.door_oak, 'axe', 1.5);
+doorSet(1080, 'Puerta de palmera', T.door_palm, 'axe', 1.5);
+doorSet(1088, 'Puerta élfica', T.door_elf, 'axe', 1.5);
+export const V121 = { sandstone: 1036, tuff: 1037, stone_pol: 1038, stone_carv: 1039, deepstone_pol: 1040, deepstone_brk: 1041, deepstone_carv: 1042, sandstone_pol: 1043, sandstone_brk: 1044, sandstone_carv: 1045, basalt_pol: 1046, basalt_brk: 1047, basalt_carv: 1048, tuff_pol: 1049, tuff_brk: 1050, tuff_carv: 1051, glass_cyan: 1052, glass_sky: 1053, glass_pink: 1054, glass_white: 1055, glass_smoke: 1056, glass_lime: 1057, planks_oak: 1058, planks_palm: 1059, fence_wood: 1060, fence_oak: 1061, fence_palm: 1062, fence_elf: 1063, door_wood: 1064, door_oak: 1072, door_palm: 1080, door_elf: 1088, ruin_wall: 1096, old_tiles: 1097, rusty_sign: 1098, pipes: 1099, hanging_cables: 1100, broken_glass: 1101 };
 export const CONC_COLORS = [1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035];
 
 export const BLOCKS = B;
@@ -404,6 +449,19 @@ for (const b of B) {
     TEX_FRONT[b.id] = b.tex.front ?? b.tex.side;
   }
 }
+// vitrales: la luz de las lámparas que los atraviesa toma su color (índice de LCOL + 1)
+export const GLASS_TINT = new Uint8Array(MAXB);
+GLASS_TINT[120] = 4;
+GLASS_TINT[121] = 1;
+GLASS_TINT[122] = 9;
+GLASS_TINT[123] = 8;
+GLASS_TINT[124] = 2;
+GLASS_TINT[125] = 5;
+GLASS_TINT[1052] = 7;
+GLASS_TINT[1053] = 4;
+GLASS_TINT[1054] = 11;
+GLASS_TINT[1055] = 8;
+GLASS_TINT[1057] = 2;
 export const isWater = (id) => LIQ[id] === 1 || LIQ[id] === 2;
 export const isLiquid = (id) => LIQ[id] > 0;
 export const liquidId = (kind, level) => (kind === 1 ? (level ? 39 + level : 17) : kind === 2 ? (level ? 47 + level : 47) : (level ? 55 + Math.ceil(level / 2) : 55));
@@ -661,7 +719,7 @@ export const voxBytes = (v) => new Uint8Array(v.buffer, v.byteOffset, v.byteLeng
 export const TORCHES = new Set([26, 34, 35, 36, 37]);
 export const wallTorchFor = (dx, dz) => BLOCKS.find((b) => b?.wall && b.wall[0] === dx && b.wall[1] === dz)?.id;
 export const ladderFor = (dx, dz) => BLOCKS.find((b) => b?.ladder && b.ladder[0] === dx && b.ladder[1] === dz)?.id;
-export const doorId = (open, axis, top) => 65 + open * 4 + (axis === 'z' ? 2 : 0) + top;
+export const doorId = (open, axis, top, base = 65) => base + open * 4 + (axis === 'z' ? 2 : 0) + top;
 export const itemName = (id) => (isBlock(id) ? B[id]?.name : ITEMS[id]?.name) ?? '?';
 export const maxStack = (id) => (ITEMS[id]?.durability || ITEMS[id]?.stack === 1 ? 1 : ITEMS[id]?.stack ?? 64);
 // bloques que se prenden fuego (madera, plantas, tela)
@@ -699,6 +757,45 @@ export const RECIPES = [
   { out: [59, 6], in: [[9, 3]], station: 'mesa' },
   { out: [60, 6], in: [[23, 3]], station: 'mesa' },
   { out: [9, 4], in: [[8, 2], [6, 2]], station: 'mesa' },
+  // v12.1: materiales
+  { out: [1036, 4], in: [[229, 4]], station: 'horno' },
+  { out: [1037, 4], in: [[6, 4], [8, 1]], station: 'horno' },
+  { out: [1038, 4], in: [[2, 4]], station: 'mesa' },
+  { out: [1039, 2], in: [[1038, 2]], station: 'mesa' },
+  { out: [1040, 4], in: [[3, 4]], station: 'mesa' },
+  { out: [1041, 4], in: [[1040, 4]], station: 'mesa' },
+  { out: [1042, 2], in: [[1040, 2]], station: 'mesa' },
+  { out: [1043, 4], in: [[1036, 4]], station: 'mesa' },
+  { out: [1044, 4], in: [[1043, 4]], station: 'mesa' },
+  { out: [1045, 2], in: [[1043, 2]], station: 'mesa' },
+  { out: [1046, 4], in: [[205, 4]], station: 'mesa' },
+  { out: [1047, 4], in: [[1046, 4]], station: 'mesa' },
+  { out: [1048, 2], in: [[1046, 2]], station: 'mesa' },
+  { out: [1049, 4], in: [[1037, 4]], station: 'mesa' },
+  { out: [1050, 4], in: [[1049, 4]], station: 'mesa' },
+  { out: [1051, 2], in: [[1049, 2]], station: 'mesa' },
+  { out: [1052, 4], in: [[14, 4], [230, 1]], station: 'horno' },
+  { out: [1053, 4], in: [[14, 4], [147, 1]], station: 'horno' },
+  { out: [1054, 4], in: [[14, 4], [231, 1]], station: 'horno' },
+  { out: [1055, 4], in: [[14, 4], [83, 1]], station: 'horno' },
+  { out: [1056, 4], in: [[14, 4], [18, 1], [6, 1]], station: 'horno' },
+  { out: [1057, 4], in: [[14, 4], [202, 1]], station: 'horno' },
+  { out: [1058, 4], in: [[222, 1]], station: null },
+  { out: [1059, 4], in: [[232, 1]], station: null },
+  { out: [1060, 4], in: [[23, 4], [256, 2]], station: 'mesa' },
+  { out: [1061, 4], in: [[1058, 4], [256, 2]], station: 'mesa' },
+  { out: [1062, 4], in: [[1059, 4], [256, 2]], station: 'mesa' },
+  { out: [1063, 4], in: [[209, 4], [256, 2]], station: 'mesa' },
+  { out: [1064, 1], in: [[23, 6]], station: 'mesa' },
+  { out: [1072, 1], in: [[1058, 6]], station: 'mesa' },
+  { out: [1080, 1], in: [[1059, 6]], station: 'mesa' },
+  { out: [1088, 1], in: [[209, 6]], station: 'mesa' },
+  { out: [1097, 4], in: [[83, 4], [8, 1]], station: 'mesa' },
+  { out: [1096, 2], in: [[13, 2], [30, 1]], station: 'mesa' },
+  { out: [1098, 1], in: [[12, 2]], station: 'mesa' },
+  { out: [1099, 2], in: [[187, 2]], station: 'mesa' },
+  { out: [1100, 2], in: [[75, 2]], station: null },
+  { out: [1101, 2], in: [[14, 2]], station: null },
   ...[1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035].map((c) => ({ out: [c, 8], in: [[9, 8], [353, 1]], station: 'mesa' })),
   { out: [32, 2], in: [[6, 2], [4, 2]], station: 'mesa' },
   { out: [277, 1], in: [[260, 3]], station: 'mesa' },

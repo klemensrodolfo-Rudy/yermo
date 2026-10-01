@@ -1,6 +1,6 @@
 // Construye la geometría de un chunk a partir de un volumen con borde (padding)
 // e incluye luz de cielo + luz de bloques con BFS e iluminación suave + AO.
-import { SHAPE_BOXES, DECOR, BLOCKS as BK, CHUNK, HEIGHT, OPAQUE, EMIT, LCOL, RENDER, TEX_TOP, TEX_SIDE, TEX_BOTTOM, TEX_FRONT, TORCH_DIR, LIQ, LIQ_LEVEL, BOXES, ATLAS, TILE_FLAGS } from './blocks.js';
+import { SHAPE_BOXES, DECOR, BLOCKS as BK, CHUNK, HEIGHT, OPAQUE, EMIT, LCOL, RENDER, TEX_TOP, TEX_SIDE, TEX_BOTTOM, TEX_FRONT, TORCH_DIR, LIQ, LIQ_LEVEL, BOXES, ATLAS, TILE_FLAGS, GLASS_TINT } from './blocks.js';
 
 export const PAD = 14;
 export const W = CHUNK + PAD * 2; // 44
@@ -11,7 +11,7 @@ const tileU = (t) => ((t % ATLAS.cols) * ATLAS.cell + ATLAS.pad) / ATLAS.size;
 const tileV = (t) => (Math.floor(t / ATLAS.cols) * ATLAS.cell + ATLAS.pad) / ATLAS.size;
 const WHITE = new Uint8Array([128, 128, 128, 0, 128, 128, 128, 0, 128, 128, 128, 0, 128, 128, 128, 0]);
 // color de cada tipo de luz (ver LCOL en blocks.js), en 0-255
-const LPAL = [[255, 179, 102], [140, 255, 102], [204, 128, 255], [179, 217, 255], [255, 77, 56], [255, 128, 46], [102, 230, 255], [255, 242, 217]];
+const LPAL = [[255, 179, 102], [140, 255, 102], [204, 128, 255], [179, 217, 255], [255, 77, 56], [255, 128, 46], [102, 230, 255], [255, 242, 217], [255, 226, 90], [96, 128, 255], [255, 130, 190]];
 const WARM = new Uint8Array([255, 179, 102, 255, 179, 102, 255, 179, 102, 255, 179, 102]);
 const flatCol = (id) => { const c = LPAL[id] || LPAL[0]; return new Uint8Array([...c, ...c, ...c, ...c]); };
 
@@ -68,12 +68,12 @@ function bfs(vol, L, q, qh, qt, C) {
     const x = i % W, z = ((i / W) | 0) % W, y = (i / WW) | 0;
     const nl = l - 1;
     // 6 vecinos
-    if (x > 0) { const j = i - 1; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (x < W - 1) { const j = i + 1; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (z > 0) { const j = i - W; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (z < W - 1) { const j = i + W; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (y > 0) { const j = i - WW; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
-    if (y < HEIGHT - 1) { const j = i + WW; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (x > 0) { const j = i - 1; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = GLASS_TINT[vol[j]] ? GLASS_TINT[vol[j]] - 1 : C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (x < W - 1) { const j = i + 1; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = GLASS_TINT[vol[j]] ? GLASS_TINT[vol[j]] - 1 : C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (z > 0) { const j = i - W; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = GLASS_TINT[vol[j]] ? GLASS_TINT[vol[j]] - 1 : C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (z < W - 1) { const j = i + W; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = GLASS_TINT[vol[j]] ? GLASS_TINT[vol[j]] - 1 : C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (y > 0) { const j = i - WW; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = GLASS_TINT[vol[j]] ? GLASS_TINT[vol[j]] - 1 : C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
+    if (y < HEIGHT - 1) { const j = i + WW; if (!OPAQUE[vol[j]] && L[j] < nl) { L[j] = nl; if (C) C[j] = GLASS_TINT[vol[j]] ? GLASS_TINT[vol[j]] - 1 : C[i]; q[qt] = j; qt = (qt + 1) % cap; } }
   }
 }
 
@@ -185,7 +185,7 @@ export function buildMesh(vol, tintAt, shapes) {
       const tu = tileU(tile), tv = tileV(tile);
       const e = 0.00002;
       let aoSum = [0, 0, 0, 0];
-      const lcv = (ny >= 0 && ny < HEIGHT ? lc[li(nx, ny, nz)] : 0) * 32;
+      const lcv = Math.min(255, (ny >= 0 && ny < HEIGHT ? lc[li(nx, ny, nz)] : 0) * 32);
       for (let k = 0; k < 4; k++) {
         const v = F.v[k];
         let vy = v[1];

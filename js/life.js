@@ -99,7 +99,7 @@ export function createLife(ctx) {
       }
       for (let dx = 1; dx < 5; dx++) for (let dz = 1; dz < 5; dz++) w.setBlock(x0 + dx, y + 4, z0 + dz, roof);
       w.setBlock(x0 + 2, y + 5, z0 + 2, roof); w.setBlock(x0 + 3, y + 5, z0 + 3, roof);
-      w.setBlock(x0 + 3, y, z0, doorId(0, 'x', 0)); w.setBlock(x0 + 3, y + 1, z0, doorId(0, 'x', 1));
+      w.setBlock(x0 + 3, y, z0, doorId(0, 'x', 0, 1064)); w.setBlock(x0 + 3, y + 1, z0, doorId(0, 'x', 1, 1064));
       w.setBlock(x0 + 1, y, z0 + 4, 33); w.setBlock(x0 + 4, y + 2, z0 + 4, 26); w.setBlock(x0 + 4, y, z0 + 1, 38);
       T.houses.push([x0, z0]);
       const s = g.mobs.add(magic ? 'halfling' : 'settler', x0 + 2.5, y + 0.1, z0 + 2.5); s.keep = true; s.home = s.pos.clone();

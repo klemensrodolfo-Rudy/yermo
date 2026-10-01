@@ -303,6 +303,14 @@ export function setupGuide(ui, getGame) {
       <p>Fabricala (2 lingotes de acero y una tabla) y hacé clic derecho sobre un bloque común (piedra, madera, ladrillo, hormigón…). Cada toque cambia la forma: <b>losa</b> → <b>losa de arriba</b> → <b>escalón</b> (mirando para donde estás vos) → <b>panel</b> → <b>alfombra</b> → otra vez cubo. Conserva el material. Al romperla te devuelve el bloque.</p>
       <h3>Decoración</h3>
       <p>${icon(406)} Maceta · ${icon(407)} Farol · ${icon(408)} Mesa · ${icon(409)} Silla · ${icon(410)} Estante · ${icon(411)} Barril · ${icon(412)} Banco · ${icon(413)} Alfombra roja · ${icon(414)} Caja. Se fabrican en la mesa de trabajo y se apoyan arriba de un bloque mirando hacia vos; con la sierra se giran.</p>
+      <h3>Piedras</h3>
+      <p>Roca, roca profunda, arenisca (arena en el horno), basalto y toba (ceniza y grava en el horno) tienen versión <b>pulida</b> (4 del material en la mesa), <b>ladrillos</b> y <b>cincelada</b> (a partir de la pulida).</p>
+      <h3>Maderas, cercos y puertas</h3>
+      <p>El roble y la palmera ahora sueltan su propio tronco: dan <b>tablas de roble</b> y <b>de palmera</b>. Con cada madera (común, roble, palmera y élfica) se hace un <b>cerco</b> (4 tablas y 2 palos) y una <b>puerta</b> (6 tablas).</p>
+      <h3>Vitrales</h3>
+      <p>Hay 12 vidrios de color. La luz de antorchas y lámparas que pasa por un vitral toma su color.</p>
+      <h3>Ruinas</h3>
+      <p>Pared derruida, azulejos viejos, cartel oxidado, caños viejos, cables colgando y ventana rota, para armar escenarios abandonados.</p>
       <h3>Hormigón de colores</h3>
       <p>12 colores (rojo, naranja, amarillo, lima, verde, cian, celeste, azul, violeta, rosa, negro y blanco). En la mesa de trabajo: 8 de hormigón y una ficha dan 8 del color que elijas.</p>
       <h3>Herramientas de obra</h3>

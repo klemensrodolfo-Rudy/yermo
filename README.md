@@ -132,6 +132,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v12.0 — Lugar para crecer**: los bloques pasan a guardarse en 16 bits (hasta ~3300 bloques nuevos, desde el id 1024; del 256 al 1023 siguen siendo ítems) y el atlas de texturas pasa a 1536×1536 (hasta 1024 texturas). Los mundos guardados antes se convierten solos al cargarlos (en el navegador, en la nube y en el servidor dedicado). Primeros bloques nuevos: hormigón de 12 colores.
 
+**v12.1 — Materiales**: familias de piedra (pulida, ladrillos y cincelada de roca, roca profunda, arenisca, basalto y toba), 6 vidrios nuevos y luz teñida por los vitrales, tablas de roble y palmera, cercos y puertas de 4 maderas, y 6 bloques de ruina.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

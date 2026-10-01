@@ -469,7 +469,8 @@ const tintGlass = (col) => (t) => {
   for (let i = 3; i < 8; i++) t.px(i, i - 1, [240, 240, 240], 150);
 };
 DRAW.glass_red = tintGlass(0xd83a2a); DRAW.glass_green = tintGlass(0x5ad83a); DRAW.glass_blue = tintGlass(0x3a7ad8);
-DRAW.glass_yellow = tintGlass(0xe8d03a); DRAW.glass_purple = tintGlass(0x9a3ad8); DRAW.glass_orange = tintGlass(0xe8883a);
+DRAW.glass_yellow = tintGlass(0xe8d03a);
+DRAW.glass_cyan = tintGlass(0x3ac8d0); DRAW.glass_sky = tintGlass(0x8ac0f0); DRAW.glass_pink = tintGlass(0xf08ac0); DRAW.glass_white = tintGlass(0xf0f0ea); DRAW.glass_smoke = tintGlass(0x3a3a40); DRAW.glass_lime = tintGlass(0xa8e83a); DRAW.glass_purple = tintGlass(0x9a3ad8); DRAW.glass_orange = tintGlass(0xe8883a);
 for (let s = 0; s < 4; s++) {
   DRAW['barley' + s] = plant(s, s < 3 ? 0x6a8a34 : 0xb89a4a, s < 3 ? 0x8aa04a : 0xe0c060, 4);
   DRAW['potato' + s] = (t) => {
@@ -1150,6 +1151,97 @@ HD.tires = (t) => t.fill((x, y) => {
 HD.cloth = (t) => t.fill((x, y) => { const w = (x + y) % 4 < 2 ? 1.05 : 0.93, n = t.fbm(x, y, 4, 3); t.H(x, y, 0.5 + (w - 1) * 3); return scl([154, 138, 106], w * (0.85 + n * 0.25)); });
 HD.bar_top = (t) => { HD.planks(t); for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const c = t.G(x, y); t.P(x, y, scl(mixc(c, [110, 60, 30], 0.35), 0.9)); t.S(x, y, 0.35); } };
 
+// v12.1: familias de piedra, maderas, puertas y ruinas
+const polished = (c) => (t) => t.fill((x, y) => {
+  const n = t.fbm(x, y, 4, 3, 4), v = t.anoise(x, y, 4, 2, 7);
+  let k = 0.93 + n * 0.1 - Math.max(0, v - 0.72) * 0.25 + (t.rnd() - 0.5) * 0.025;
+  if (x === 0 || y === 0) k *= 1.14; else if (x === 31 || y === 31) k *= 0.74;
+  t.H(x, y, x === 0 || y === 0 || x === 31 || y === 31 ? 0.35 : 0.75); t.S(x, y, 0.22);
+  return scl(c, k);
+});
+const bricksBig = (c) => (t) => t.fill((x, y) => {
+  const row = y >> 4, off = row % 2 ? 8 : 0, bx = (x + off) >> 4, lx = (x + off) % 16, ly = y % 16;
+  if (ly === 15 || lx === 15) { t.H(x, y, 0.08); return scl(c, 0.55 + t.rnd() * 0.08); }
+  const r = mulberry32(row * 37 + bx * 11 + 3)(), n = t.fbm(x, y, 8, 3, 2);
+  let k = 0.84 + r * 0.16 + (n - 0.5) * 0.18 + (t.rnd() - 0.5) * 0.05;
+  if (ly === 0 || lx === 0) k *= 1.1; if (ly === 14 || lx === 14) k *= 0.84;
+  t.H(x, y, 0.7 + n * 0.2 - (ly === 14 || lx === 14 ? 0.1 : 0));
+  return scl(c, k);
+});
+const carved = (c) => (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), d = Math.abs(x - 15.5) + Math.abs(y - 15.5), r = Math.hypot(x - 15.5, y - 15.5);
+  const n = t.fbm(x, y, 4, 3, 5);
+  let k = 0.9 + n * 0.12 + (t.rnd() - 0.5) * 0.04, h = 0.6 + n * 0.2;
+  if (e < 3) { k *= e === 0 ? 1.12 : 1.04; h = 0.85; }
+  else if (e === 3) { k *= 0.6; h = 0.1; }
+  else if (d > 8 && d < 10) { k *= 0.62; h = 0.1; }
+  else if (r < 3.5) { k *= 1.1; h = 0.9; }
+  t.H(x, y, h);
+  return scl(c, k);
+});
+HD.sandstone = (t) => t.fill((x, y) => {
+  const n = t.fbm(x, y, 4, 3, 1), band = Math.sin(y * 0.75 + n * 4) * 0.05;
+  t.H(x, y, 0.55 + band * 3 + n * 0.2);
+  return scl([200, 170, 116], 0.9 + band + n * 0.1 + (t.rnd() - 0.5) * 0.05);
+});
+HD.tuff = (t) => t.fill((x, y) => {
+  const c = t.cells(x, y, 8, 4, 1), n = t.fbm(x, y, 4, 3, 3), pore = c.f1 < 0.16 && c.rid > 0.55;
+  t.H(x, y, pore ? 0.05 : 0.6 + n * 0.25);
+  return scl(mixc([150, 140, 124], [128, 120, 110], c.rid), pore ? 0.5 : 0.88 + n * 0.16 + (t.rnd() - 0.5) * 0.06);
+});
+HD.stone_pol = polished([116, 111, 104]); HD.stone_carv = carved([116, 111, 104]);
+HD.deepstone_pol = polished([76, 76, 88]); HD.deepstone_carv = carved([76, 76, 88]); HD.deepstone_brk = bricksBig([76, 76, 88]);
+HD.sandstone_pol = polished([200, 170, 116]); HD.sandstone_carv = carved([200, 170, 116]); HD.sandstone_brk = bricksBig([200, 170, 116]);
+HD.basalt_pol = polished([62, 60, 66]); HD.basalt_carv = carved([62, 60, 66]); HD.basalt_brk = bricksBig([62, 60, 66]);
+HD.tuff_pol = polished([150, 140, 124]); HD.tuff_carv = carved([150, 140, 124]); HD.tuff_brk = bricksBig([150, 140, 124]);
+// madera recoloreada a partir de las tablas comunes
+const recolor = (base, c) => (t) => { base(t); for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const g = t.G(x, y), k = (g[0] + g[1] + g[2]) / 324; t.P(x, y, scl(c, k), g[3]); } };
+HD.planks_oak = recolor((t) => HD.planks(t), [120, 84, 52]);
+HD.planks_palm = recolor((t) => HD.planks(t), [176, 146, 98]);
+const woodDoor = (c, win) => (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), seam = x % 8 === 0, bar = (y >= 5 && y <= 7) || (y >= 24 && y <= 26);
+  const grain = t.anoise(x, y, 2, 16, (x >> 3) + 1) * 0.3, knob = Math.hypot(x - 25, y - 16) < 1.6;
+  if (knob) { t.H(x, y, 1); t.S(x, y, 0.6); return [190, 170, 90]; }
+  if (win && x > 9 && x < 22 && y > 9 && y < 20) { t.H(x, y, 0.3); t.S(x, y, 0.8); return { c: [170, 200, 210], a: 120 }; }
+  if (e < 2) { t.H(x, y, 0.9); return scl(c, 0.72); }
+  if (bar) { t.H(x, y, 0.8); return scl(c, 0.95 + grain); }
+  t.H(x, y, seam ? 0.1 : 0.55 + grain);
+  return scl(c, seam ? 0.6 : 0.8 + grain + (t.rnd() - 0.5) * 0.05);
+});
+HD.door_wood = woodDoor([138, 110, 76], false); HD.door_oak = woodDoor([120, 84, 52], true);
+HD.door_palm = woodDoor([176, 146, 98], false); HD.door_elf = woodDoor([150, 168, 140], true);
+HD.old_tiles = (t) => t.fill((x, y) => {
+  const tx_ = x >> 3, ty = y >> 3, r = mulberry32(tx_ * 13 + ty * 7 + 1)(), grout = x % 8 === 7 || y % 8 === 7;
+  if (r < 0.14) { t.H(x, y, 0.1); return scl([110, 106, 98], 0.8 + t.rnd() * 0.2); }
+  if (grout) { t.H(x, y, 0.2); return [120, 114, 100]; }
+  const stain = t.fbm(x, y, 4, 3, 8);
+  t.H(x, y, 0.8); t.S(x, y, 0.35);
+  return scl(mixc([226, 228, 220], [196, 178, 120], Math.max(0, stain - 0.45) * 1.6), 0.92 + r * 0.1 + (t.rnd() - 0.5) * 0.04);
+});
+HD.rusty_sign = (t) => t.fill((x, y) => {
+  const n = t.fbm(x, y, 4, 4, 2), rust = n > 0.52;
+  const band = y > 9 && y < 22, letter = band && x > 3 && x < 28 && (x % 5 < 3) && ((y > 11 && y < 14) || (y > 16 && y < 20) || x % 5 === 0);
+  t.H(x, y, rust ? 0.4 : 0.7); t.S(x, y, rust ? 0.05 : 0.3);
+  if (rust) return scl([122, 64, 30], 0.75 + n * 0.4);
+  if (letter) return [230, 220, 190];
+  return band ? scl([40, 86, 120], 0.9 + n * 0.2) : scl([150, 140, 120], 0.85 + n * 0.2);
+});
+HD.hanging_cables = (t) => {
+  t.clear();
+  for (let i = 0; i < 4; i++) {
+    let x = 4 + i * 8 + t.rnd() * 3; const len = 14 + t.rnd() * 18;
+    for (let y = 0; y < len; y++) { x += Math.sin(y * 0.3 + i) * 0.25; const c = i % 2 ? [30, 30, 32] : [60, 40, 30]; t.P(x, y, c, 255); t.P(x + 1, y, scl(c, 0.7), 255); }
+  }
+};
+HD.broken_glass = (t) => {
+  HD.glass(t);
+  const cx = 12 + t.rnd() * 8, cy = 12 + t.rnd() * 8;
+  for (let y = 2; y < 30; y++) for (let x = 2; x < 30; x++) {
+    const a = Math.atan2(y - cy, x - cx), r = Math.hypot(x - cx, y - cy), jag = 6 + Math.sin(a * 7) * 3 + Math.sin(a * 13) * 1.5;
+    if (r < jag) t.P(x, y, [0, 0, 0], 0);
+    else if (Math.abs(Math.sin(a * 5)) < 0.06) t.P(x, y, [230, 236, 236], 200);
+  }
+};
 // v12: hormigón de colores
 const concColor = (c) => (t) => {
   t.fill((x, y) => {

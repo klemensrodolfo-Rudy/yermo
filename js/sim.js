@@ -548,14 +548,14 @@ export class Sim {
         if (!d) continue;
         const by = d.top ? y + dy - 1 : y + dy, dk = k3(x + dx, by, z + dz);
         seen.add(dk);
-        if (!d.open) { w.setBlock(x + dx, by, z + dz, doorId(1, d.axis, 0)); w.setBlock(x + dx, by + 1, z + dz, doorId(1, d.axis, 1)); this.autoDoors.add(dk); }
+        if (!d.open) { w.setBlock(x + dx, by, z + dz, doorId(1, d.axis, 0, d.base)); w.setBlock(x + dx, by + 1, z + dz, doorId(1, d.axis, 1, d.base)); this.autoDoors.add(dk); }
       }
     }
     for (const dk of [...this.autoDoors]) {
       if (seen.has(dk)) continue;
       const [x, y, z] = p3(dk);
       const d = BLOCKS[w.getBlock(x, y, z)]?.door;
-      if (d?.open) { w.setBlock(x, y, z, doorId(0, d.axis, 0)); w.setBlock(x, y + 1, z, doorId(0, d.axis, 1)); }
+      if (d?.open) { w.setBlock(x, y, z, doorId(0, d.axis, 0, d.base)); w.setBlock(x, y + 1, z, doorId(0, d.axis, 1, d.base)); }
       this.autoDoors.delete(dk);
     }
   }

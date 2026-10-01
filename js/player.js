@@ -577,7 +577,7 @@ export class Player {
         if (hand.id === 61 && t.face[1] !== 0) return;
         if (t.face[1] === 0) placeId = hand.id === 26 ? wallTorchFor(t.face[0], t.face[2]) : ladderFor(t.face[0], t.face[2]);
       }
-      if (hand.id === 65) return this.placeDoor(px, py, pz, hand);
+      if (BLOCKS[hand.id]?.door) return this.placeDoor(px, py, pz, hand);
       // bloques orientados: escaleras, sillas y cintas miran hacia donde mira el jugador
       if (ORIENTED[hand.id]) {
         let fi = facingIndex(this.yaw);
@@ -609,9 +609,10 @@ export class Player {
     if (this.overlapsMe(x, y, z) || this.overlapsMe(x, y + 1, z)) return;
     // el panel queda perpendicular a la dirección en que mira el jugador
     const axis = Math.abs(Math.sin(this.yaw)) > Math.abs(Math.cos(this.yaw)) ? 'z' : 'x';
-    w.setBlock(x, y, z, doorId(0, axis, 0));
-    w.setBlock(x, y + 1, z, doorId(0, axis, 1));
-    this.swing = 1; this.sfx?.place(27); this.onEvent('place', 65);
+    const base = BLOCKS[hand.id].door.base ?? 65;
+    w.setBlock(x, y, z, doorId(0, axis, 0, base));
+    w.setBlock(x, y + 1, z, doorId(0, axis, 1, base));
+    this.swing = 1; this.sfx?.place(base === 65 ? 27 : 23); this.onEvent('place', base);
     if (!this.creative) this.inv.consumeHand();
   }
   toggleDoor(x, y, z) {
@@ -619,8 +620,8 @@ export class Player {
     const by = d.top ? y - 1 : y;
     const open = d.open ? 0 : 1;
     if (!open && (this.overlapsMe(x, by, z) || this.overlapsMe(x, by + 1, z))) return;
-    w.setBlock(x, by, z, doorId(open, d.axis, 0));
-    if (BLOCKS[w.getBlock(x, by + 1, z)]?.door) w.setBlock(x, by + 1, z, doorId(open, d.axis, 1));
+    w.setBlock(x, by, z, doorId(open, d.axis, 0, d.base));
+    if (BLOCKS[w.getBlock(x, by + 1, z)]?.door) w.setBlock(x, by + 1, z, doorId(open, d.axis, 1, d.base));
     this.sfx?.door(open);
   }
 
@@ -756,7 +757,7 @@ export class Player {
     const up = w.getBlock(br.x, br.y + 1, br.z);
     if (up === 26) pop(br.x, br.y + 1, br.z, 26);
     if (BLOCKS[up]?.crop) this.harvest(br.x, br.y + 1, br.z, up, pop);
-    if (BLOCKS[up]?.door && !BLOCKS[id]?.door) { pop(br.x, br.y + 1, br.z, 65); if (BLOCKS[w.getBlock(br.x, br.y + 2, br.z)]?.door) pop(br.x, br.y + 2, br.z, 0); }
+    if (BLOCKS[up]?.door && !BLOCKS[id]?.door) { pop(br.x, br.y + 1, br.z, BLOCKS[up].door.base); if (BLOCKS[w.getBlock(br.x, br.y + 2, br.z)]?.door) pop(br.x, br.y + 2, br.z, 0); }
     for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
       const n = w.getBlock(br.x + dx, br.y, br.z + dz);
       if (n === wallTorchFor(dx, dz)) pop(br.x + dx, br.y, br.z + dz, 26);

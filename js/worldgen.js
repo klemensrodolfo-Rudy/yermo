@@ -171,7 +171,7 @@ export class WorldGen {
         if (hx >= x0 && hx < x0 + 16) {
           for (let dx = -1; dx <= 1; dx++) for (let k = 1; k <= 3; k++) if (fz >= z0 && fz < z0 + 16) S(hx + dx, y + k, fz, 213);
           for (let k = 1; k <= 3; k++) if (fz + 1 >= z0 && fz + 1 < z0 + 16) S(hx, y + k, fz + 1, 0);
-          if (fz >= z0 && fz < z0 + 16) { S(hx, y + 1, fz, doorId(0, 'x', 0)); S(hx, y + 2, fz, doorId(0, 'x', 1)); }
+          if (fz >= z0 && fz < z0 + 16) { S(hx, y + 1, fz, doorId(0, 'x', 0, 1072)); S(hx, y + 2, fz, doorId(0, 'x', 1, 1072)); }
         }
         for (const ox of [-3, 3]) { const wx = hx + ox, wz = hz + 3; if (wx >= x0 && wx < x0 + 16 && wz >= z0 && wz < z0 + 16) S(wx, y + 2, wz, 14); }
         // muebles
