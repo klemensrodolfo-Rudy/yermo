@@ -79,6 +79,7 @@ export const ACHIEVEMENTS = [
   { id: 'perfecto', name: '¡Diez felicitado!', desc: 'Acertá las 5 preguntas de un desafío a la primera.' },
   { id: 'acertijo', name: 'Cerrajero sabio', desc: 'Abrí un cofre con acertijo.' },
   { id: 'constructor', name: 'Maestro mayor de obras', desc: 'Terminá una construcción guiada.' },
+  { id: 'marcador', name: 'Cartógrafo', desc: 'Poné tu primer marcador.' },
 ];
 
 export class Achievements {
@@ -131,7 +132,7 @@ export class Achievements {
     if (name === 'refuel') u('nafta');
     if (name === 'spell') u('hechicero');
     if (name === 'fish') u('pescador');
-    if (name === 'v9') u(id);
+    if (name === 'v9' || name === 'v10') u(id);
     if (name === 'kill' && id === 'dragon') u('dragon');
     if (name === 'kill' && id === 'ent') u('ent');
     if (name === 'v6') u(id === 'guardian' ? 'guardian' : id);

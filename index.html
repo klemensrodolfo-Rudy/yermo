@@ -289,6 +289,126 @@
   .miss { color: #ff7a5a; }
   #podiumChamp h3 { margin: 10px 0 4px; } #podiumChamp div { font-size: 20px; }
   @media (max-width: 700px), (pointer: coarse) and (max-height: 520px) { #objective { top: 56px; left: 8px; font-size: 12px; max-width: 40vw; padding: 3px 6px; } #objective small { display: none; } }
+  /* ================= v10: tema visual y UX ================= */
+  :root {
+    --panel: linear-gradient(180deg, rgba(38,32,26,0.96), rgba(22,19,16,0.96));
+    --raise: inset 0 2px 0 rgba(255,236,200,0.07), inset 0 -3px 0 rgba(0,0,0,0.35);
+    --glow: 0 0 0 2px rgba(217,130,59,0.35), 0 8px 26px rgba(0,0,0,0.55);
+  }
+  button { border-radius: 3px; box-shadow: var(--raise); transition: background .12s, border-color .12s, transform .06s, color .12s; }
+  button:hover:not(:disabled) { background: #3a3026; }
+  button:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent2); outline-offset: 1px; }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: linear-gradient(180deg, #8a4a1c, #5e3212); border-color: #e0914a; color: #fff6e8; text-shadow: 1px 1px 0 #2a1406; }
+  button.primary:hover:not(:disabled) { background: linear-gradient(180deg, #a05a24, #6b3a16); }
+  input, select { border-radius: 3px; }
+  .card { background: var(--panel); border-radius: 4px; box-shadow: var(--raise), 0 14px 44px rgba(0,0,0,0.55); }
+  .overlay { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); animation: ovIn .18s ease-out; }
+  .overlay > .card { animation: cardIn .22s cubic-bezier(.2,1.2,.4,1); }
+  @keyframes ovIn { from { opacity: 0; } } @keyframes cardIn { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+  .chead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .chead h2, .chead h3 { margin: 0 !important; font-family: 'Silkscreen', monospace; color: var(--accent); }
+  .chead h3 { font-size: 16px; letter-spacing: 1px; } .chead .ver { font-size: 14px; }
+  .ftitle { font-family: 'Silkscreen', monospace; font-size: 15px; color: var(--accent); margin: 0 0 4px; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-thumb { background: #4a3f33; border: 2px solid #1c1814; } ::-webkit-scrollbar-track { background: #1c1814; }
+
+  /* menú principal */
+  #menu { background: radial-gradient(ellipse at 50% 30%, rgba(217,130,59,0.10), rgba(0,0,0,0) 55%), radial-gradient(ellipse at center, rgba(0,0,0,0.05), rgba(0,0,0,0.7)); }
+  .mhead { text-align: center; }
+  #menu h1 { animation: titleIn .8s cubic-bezier(.2,1.3,.4,1); }
+  @keyframes titleIn { from { opacity: 0; transform: translateY(-14px) scale(.96); letter-spacing: 20px; } }
+  .mgrid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px; width: min(1000px, 100%); align-items: start; }
+  .mgrid .card { width: auto; }
+  #worldList { max-height: min(46vh, 420px); margin-bottom: 0; }
+  #worldsCard:has(#newForm:not([hidden])) #worldList, #worldsCard:has(#joinForm:not([hidden])) #worldList,
+  #worldsCard:has(#newForm:not([hidden])) .chead, #worldsCard:has(#joinForm:not([hidden])) .chead { display: none; }
+  .world { border-radius: 3px; transition: border-color .12s, background .12s; padding: 6px 8px; }
+  .world:hover { border-color: #5a4a38; background: #221d18; }
+  .world .thumb { width: 88px; height: 50px; flex: none; border: 2px solid #000; border-radius: 2px; background: linear-gradient(135deg, #3a3026, #1c1814); object-fit: cover; image-rendering: auto; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+  .world .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .badge { font-size: 14px; line-height: 1; padding: 3px 6px; border-radius: 3px; background: #2a241d; border: 1px solid #4a3f33; color: #d8c8a8; white-space: nowrap; }
+  .badge.m-creative { border-color: #4a7ad8; color: #bcd4ff; } .badge.m-hardcore { border-color: #c84a3a; color: #ffb8a8; } .badge.m-adventure { border-color: #4ab0a0; color: #b8fff0; }
+  .world .play { padding: 8px 16px; }
+  .mnav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tile { display: flex; align-items: center; gap: 10px; text-align: left; padding: 10px 12px; min-height: 56px; }
+  .tile i { font-style: normal; font-size: 24px; width: 30px; text-align: center; flex: none; }
+  .tile span { display: flex; flex-direction: column; line-height: 1.05; } .tile small { color: var(--muted); font-size: 15px; }
+  .tile.wide { grid-column: 1 / -1; }
+  .mnav .note { grid-column: 1 / -1; font-size: 15px; margin: 0; } .note.warn { color: #ffd84a; }
+  details.rules { margin-top: 8px; border: 2px solid #3a3229; border-radius: 3px; padding: 4px 10px 8px; background: #1a1612; }
+  details.rules summary { cursor: pointer; color: var(--accent); font-family: 'Silkscreen', monospace; font-size: 13px; padding: 4px 0; }
+  @media (max-width: 760px) { .mgrid { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 480px) { .world .thumb { width: 54px; height: 32px; font-size: 18px; } .world .play { padding: 6px 10px; } .world .del { padding: 6px 8px; } .chead button { padding: 6px 10px; } .mnav { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .tile { padding: 8px; gap: 6px; } }
+  @media (max-height: 520px) and (min-width: 600px) {
+    .mgrid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+    #worldList { max-height: calc(100vh - 170px); }
+    .tile { min-height: 44px; padding: 6px 8px; } .tile i { font-size: 20px; } .tile small { display: none; }
+    .world .thumb { width: 64px; height: 36px; } .world b { font-size: 20px; }
+    #menu { gap: 6px; padding: 6px 10px; } #menu h1 { font-size: 40px; letter-spacing: 6px; } #menu .sub { display: none; }
+    .mgrid .card { padding: 10px; } .chead { margin-bottom: 6px; } .chead button { padding: 4px 12px; }
+    .world .badges { flex-wrap: nowrap; overflow: hidden; } .world .play { padding: 6px 12px; } .world .del { padding: 6px 10px; }
+    .credits { display: none; }
+  }
+
+  /* pausa con pestañas */
+  .pcard { width: min(560px, 100%); }
+  .ptabs { display: flex; gap: 4px; margin: 0 0 12px; border-bottom: 2px solid #3a3229; }
+  .ptabs button { flex: 1; padding: 6px 4px; border-bottom: none; border-radius: 3px 3px 0 0; font-size: 18px; background: #1c1814; margin-bottom: -2px; }
+  .ptabs button.on { background: #2e261e; border-color: var(--accent); color: #fff; box-shadow: none; }
+  .ptab { animation: ovIn .15s; }
+  .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; } .pgrid:empty { display: none; }
+  .pgrid button { margin: 0; }
+  .ptab > button { width: 100%; margin-top: 10px; } button.big { font-size: 24px; padding: 12px; }
+  .keyhint { font-size: 15px; margin: 10px 0 0; }
+  .sliders { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; } .sliders label { margin: 6px 0; }
+  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; } .checks .check { margin-top: 8px; }
+  @media (max-width: 520px) { .sliders { grid-template-columns: 1fr; } .checks { grid-template-columns: 1fr; } .ptabs button { font-size: 15px; } }
+
+  /* notificaciones apiladas */
+  #toasts { position: fixed; top: 24%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(560px, 92vw); pointer-events: none; z-index: 35; }
+  .tst { background: rgba(18,15,12,0.86); border: 2px solid rgba(217,130,59,0.55); border-radius: 4px; padding: 5px 14px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.45); animation: tstIn .25s cubic-bezier(.2,1.3,.4,1); transition: opacity .4s, transform .4s; text-shadow: 1px 1px 0 #000; }
+  .tst.out { opacity: 0; transform: translateY(-8px); }
+  .tst .n { color: var(--accent2); margin-left: 6px; }
+  @keyframes tstIn { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+  @media (pointer: coarse) and (max-height: 520px) { #toasts { top: 12%; } .tst { font-size: 15px; padding: 3px 10px; } }
+
+  /* carga */
+  #loading { background: radial-gradient(ellipse at center, #241d16, #0c0a08); }
+  #loading .lbox { text-align: center; width: min(460px, 88vw); }
+  #loading .ltitle { font-family: 'Silkscreen', monospace; color: var(--accent); font-size: 34px; letter-spacing: 4px; margin-bottom: 8px; }
+  #loading .bar { width: 100%; height: 10px; border: 2px solid #3a3229; background: #14110d; border-radius: 3px; }
+  #loading .bar i { animation: none; width: 0; transition: width .3s; background: linear-gradient(90deg, #d9823b, #ffd84a); }
+  #loadTip { margin-top: 16px; color: #c8b898; font-size: 19px; min-height: 2.4em; transition: opacity .4s; }
+  #loadTip b { color: var(--accent2); font-weight: normal; }
+
+  /* HUD más prolijo */
+  #hotbar { border-radius: 4px; background: rgba(10,8,6,0.45); }
+  .slot { border-radius: 3px; } .slot.sel { border-color: #ffe8b8; box-shadow: 0 0 0 2px #000, 0 0 12px rgba(255,220,150,0.45), inset 0 0 12px rgba(240,226,200,0.25); transform: translateY(-2px); transition: transform .1s; }
+  #objective, #tut { border-radius: 3px; }
+  #craftSearch { flex: 1; min-width: 80px; padding: 2px 8px; font-size: 18px; }
+  #craftTabs.creative button { display: none; }
+  #invSort { padding: 2px 10px; font-size: 16px; }
+  #inv .chead { margin-bottom: 6px; }
+  /* marcadores en pantalla */
+  #wps { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .wp { position: absolute; transform: translate(-50%, -100%); text-align: center; font-size: 16px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000; white-space: nowrap; transition: opacity .2s; }
+  .wp i { display: block; width: 12px; height: 12px; margin: 2px auto 0; transform: rotate(45deg); border: 2px solid #000; }
+  .wp.edge { opacity: .9; background: rgba(0,0,0,0.45); padding: 1px 6px; border-radius: 3px; } .wp.edge i { display: none; }
+  /* mapa grande */
+  #bigmapWrap { cursor: default; } #bigmap { cursor: grab; touch-action: none; } #bigmap.drag { cursor: grabbing; }
+  #mapBar { position: absolute; top: 3vh; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  #mapBar button { padding: 4px 12px; }
+  /* modo foto */
+  #photoBar { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; align-items: center; background: rgba(14,12,10,0.8); border: 2px solid #4a3f33; border-radius: 4px; padding: 6px; z-index: 22; max-width: 96vw; }
+  #photoBar button { padding: 4px 10px; font-size: 17px; } #photoBar button.on { border-color: var(--accent2); color: #fff; }
+  #photoBar input[type=range] { width: 110px; }
+  #photoCount { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Silkscreen', monospace; font-size: 120px; color: #fff; text-shadow: 6px 6px 0 #000; pointer-events: none; z-index: 23; }
+  /* consejos */
+  #tip { position: absolute; left: 14px; bottom: 132px; width: min(360px, 60vw); background: rgba(20,17,13,0.9); border: 2px solid var(--accent2); border-radius: 4px; padding: 6px 10px 6px 44px; font-size: 17px; line-height: 1.15; box-shadow: 0 6px 20px rgba(0,0,0,0.45); animation: tstIn .3s; pointer-events: none; }
+  #tip::before { content: '💡'; position: absolute; left: 10px; top: 6px; font-size: 22px; }
+  #tip .tt { color: var(--accent2); display: block; font-family: "Silkscreen", monospace; font-size: 12px; } #tip b { color: #ffe08a; font-weight: normal; }
+  @media (pointer: coarse) and (max-height: 520px) { #tip { bottom: 70px; font-size: 13px; padding-left: 34px; } #tip::before { font-size: 16px; left: 8px; } }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
@@ -298,57 +418,71 @@
 <canvas id="game"></canvas>
 
 <div id="menu">
-  <h1>YERMO</h1>
-  <div class="sub">Sobreviví. Excavá. Reconstruí lo que quedó.</div>
-  <div class="card">
-    <div id="serverBox" class="serverbox" hidden>🖧 <b id="serverName">Servidor</b><button id="joinServer" class="primary">Entrar al servidor</button></div>
-    <div id="worldList"></div>
-    <button id="newWorld" class="primary" style="width:100%">+ Nuevo mundo</button>
-    <button id="openCloud" style="width:100%;margin-top:6px">☁ Mundo del grupo (en la nube, sin códigos)</button>
-    <div class="menuRow"><button id="joinWorld">Unirse a partida online</button><button id="openLobby">Partidas públicas</button></div>
-    <div class="menuRow"><button id="openSkin">Personaje</button><button id="openGuide">Guía</button></div>
-    <div class="menuRow"><button id="openAccess">🎮 Controles y accesibilidad</button><button id="openRanking">🏆 Ranking</button></div>
-    <button id="openAdventures" style="width:100%;margin-top:6px">🗺 Aventuras de la comunidad</button>
-    <button id="installApp" style="width:100%;margin-top:6px" hidden>📲 Instalar YERMO (pantalla completa, sin la barra)</button>
-    <p id="installHint" class="muted" style="font-size:15px;margin:6px 0 0" hidden></p>
-    <p id="offlineNote" class="muted" style="font-size:15px;margin:6px 0 0;color:#ffd84a" hidden>✈ Sin conexión: tus mundos de este dispositivo andan igual. Lo online, la nube y las aventuras vuelven cuando haya internet.</p>
-    <div id="joinForm" hidden>
-      <div class="row">
-        <div><label for="jName">Tu nombre</label><input id="jName" maxlength="20" placeholder="Superviviente"></div>
-        <div><label for="jCode">Código de sala o servidor</label><input id="jCode" maxlength="80" placeholder="ABCDE o 192.168.0.10:5173" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go"></div>
+  <header class="mhead">
+    <h1>YERMO</h1>
+    <div class="sub">Sobreviví. Excavá. Reconstruí lo que quedó.</div>
+  </header>
+  <div class="mgrid">
+    <section class="card" id="worldsCard">
+      <div class="chead"><h3>Tus mundos</h3><button id="newWorld" class="primary">＋ Nuevo mundo</button></div>
+      <div id="serverBox" class="serverbox" hidden>🖧 <b id="serverName">Servidor</b><button id="joinServer" class="primary">Entrar al servidor</button></div>
+      <div id="worldList"></div>
+      <div id="joinForm" hidden>
+        <h3 class="ftitle">Unirse a una partida</h3>
+        <div class="row">
+          <div><label for="jName">Tu nombre</label><input id="jName" maxlength="20" placeholder="Superviviente"></div>
+          <div><label for="jCode">Código de sala o servidor</label><input id="jCode" maxlength="80" placeholder="ABCDE o 192.168.0.10:5173" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go"></div>
+        </div>
+        <p id="joinMsg"></p>
+        <div class="row"><button id="cancelJoin">Cancelar</button><button id="doJoin" class="primary">Unirse</button></div>
       </div>
-      <p id="joinMsg"></p>
-      <div class="row"><button id="cancelJoin">Cancelar</button><button id="doJoin" class="primary">Unirse</button></div>
-    </div>
-    <div id="newForm" hidden>
-      <label for="wName">Nombre</label>
-      <input id="wName" maxlength="40" placeholder="Mi refugio">
-      <label for="wSeedSel">Mundo (semilla)</label>
-      <select id="wSeedSel"></select>
-      <input id="wSeed" placeholder="Escribí un número o una palabra" hidden style="margin-top:6px">
-      <p id="seedDesc" class="muted" style="margin:4px 0 0"></p>
-      <div class="row">
-        <div><label for="wType">Tipo de mundo</label>
-          <select id="wType"><option value="normal">Normal</option><option value="brew">🍺 Cervecero</option><option value="base">🧰 Base equipada</option><option value="magic">🧙 Reinos de Eldra</option><option value="islands">🏝 Archipiélago</option></select></div>
-        <div><label for="wMode">Modo</label>
-          <select id="wMode"><option value="survival">Supervivencia</option><option value="creative">Creativo</option><option value="hardcore">☠ Una sola vida</option></select></div>
-        <div><label for="optDist">Distancia</label>
-          <select id="optDist"><option>4</option><option>5</option><option selected>6</option><option>8</option><option>10</option></select></div>
+      <div id="newForm" hidden>
+        <h3 class="ftitle">Nuevo mundo</h3>
+        <label for="wName">Nombre</label>
+        <input id="wName" maxlength="40" placeholder="Mi refugio">
+        <label for="wSeedSel">Mundo (semilla)</label>
+        <select id="wSeedSel"></select>
+        <input id="wSeed" placeholder="Escribí un número o una palabra" hidden style="margin-top:6px">
+        <p id="seedDesc" class="muted" style="margin:4px 0 0"></p>
+        <div class="row">
+          <div><label for="wType">Tipo de mundo</label>
+            <select id="wType"><option value="normal">Normal</option><option value="brew">🍺 Cervecero</option><option value="base">🧰 Base equipada</option><option value="magic">🧙 Reinos de Eldra</option><option value="islands">🏝 Archipiélago</option></select></div>
+          <div><label for="wMode">Modo</label>
+            <select id="wMode"><option value="survival">Supervivencia</option><option value="creative">Creativo</option><option value="hardcore">☠ Una sola vida</option></select></div>
+          <div><label for="optDist">Distancia</label>
+            <select id="optDist"><option>4</option><option>5</option><option selected>6</option><option>8</option><option>10</option></select></div>
+        </div>
+        <details class="rules"><summary>Reglas del mundo</summary>
+          <label class="check"><input type="checkbox" id="wTut" checked> 🎓 Tutorial guiado (recomendado la primera vez)</label>
+          <label class="check"><input type="checkbox" id="wRad" checked> ☢ Radiación (cráteres, uranio, lluvia ácida, agua tóxica)</label>
+          <label class="check"><input type="checkbox" id="wDay" checked> 🦂 Animales mutantes que atacan de día</label>
+          <label class="check"><input type="checkbox" id="wArmed"> 🔫 Humanos armados (bandidos, piratas y soldados)</label>
+          <label class="check"><input type="checkbox" id="wKids"> 🧸 Modo chicos (sin monstruos, hambre, sed ni radiación)</label>
+          <label class="check"><input type="checkbox" id="wReal"> 🕐 Hora real (día, noche y estación según tu reloj)</label>
+          <label class="check"><input type="checkbox" id="wLearn"> 📚 Modo aprender (robot profe con desafíos)</label>
+        </details>
+        <div class="row"><button id="cancelNew">Cancelar</button><button id="createWorld" class="primary">Crear mundo</button></div>
       </div>
-      <label class="check"><input type="checkbox" id="wTut" checked> Tutorial guiado (recomendado la primera vez)</label>
-      <label class="check"><input type="checkbox" id="wRad" checked> ☢ Radiación (cráteres, uranio, lluvia ácida, agua tóxica)</label>
-      <label class="check"><input type="checkbox" id="wDay" checked> 🦂 Animales mutantes que atacan de día (escorpiones, cuervos, lobos, ratas, hongos)</label>
-      <label class="check"><input type="checkbox" id="wArmed"> 🔫 Humanos armados (bandidos, piratas y soldados que disparan y asaltan tu base)</label>
-      <label class="check"><input type="checkbox" id="wKids"> 🧸 Modo chicos (sin monstruos ni animales que ataquen, sin hambre, sed ni radiación)</label>
-      <label class="check"><input type="checkbox" id="wReal"> 🕐 Hora real (día, noche y estación según tu reloj)</label>
-      <label class="check"><input type="checkbox" id="wLearn"> 📚 Modo aprender (un robot profe con desafíos de cuentas y palabras)</label>
-      <div class="row"><button id="cancelNew">Cancelar</button><button id="createWorld" class="primary">Crear mundo</button></div>
-    </div>
+    </section>
+    <nav class="card mnav">
+      <button id="openCloud" class="tile wide"><i>☁</i><span>Mundo del grupo<small>en la nube, sin códigos</small></span></button>
+      <button id="joinWorld" class="tile"><i>🌐</i><span>Unirse online</span></button>
+      <button id="openLobby" class="tile"><i>📡</i><span>Partidas públicas</span></button>
+      <button id="openAdventures" class="tile"><i>🗺</i><span>Aventuras</span></button>
+      <button id="openRanking" class="tile"><i>🏆</i><span>Ranking</span></button>
+      <button id="openSkin" class="tile"><i>🧍</i><span>Personaje</span></button>
+      <button id="openGuide" class="tile"><i>📖</i><span>Guía</span></button>
+      <button id="openAccess" class="tile wide"><i>🎮</i><span>Controles y accesibilidad</span></button>
+      <button id="installApp" class="tile wide" hidden><i>📲</i><span>Instalar YERMO<small>pantalla completa, sin la barra</small></span></button>
+      <p id="installHint" class="muted note" hidden></p>
+      <p id="offlineNote" class="note warn" hidden>✈ Sin conexión: tus mundos de este dispositivo andan igual. Lo online, la nube y las aventuras vuelven cuando haya internet.</p>
+    </nav>
   </div>
-  <div class="credits"><span class="ver"></span> · hecho con Three.js · arte, sonido y música procedurales</div>
+  <div class="credits"><span class="ver"></span> · arte, sonido y música procedurales</div>
 </div>
 
-<div id="loading" hidden><div style="text-align:center"><div id="loadText">Generando…</div><div class="bar"><i></i></div></div></div>
+<div id="loading" hidden><div class="lbox"><div class="ltitle">YERMO</div><div id="loadText">Generando…</div><div class="bar"><i id="loadBar"></i></div><div id="loadTip"></div></div></div>
+<div id="toasts"></div>
 
 <div id="hud" hidden>
   <div id="vignette"></div>
@@ -378,13 +512,15 @@
   <div id="itemName"></div>
   <div id="hotbar"></div>
   <div id="toast"></div>
+  <div id="wps"></div>
+  <div id="tip" hidden></div>
 </div>
 
 <div id="inv" hidden>
   <div class="card">
     <button id="invClose" title="Cerrar (E)">✕</button>
     <div>
-      <h2>Mochila</h2>
+      <div class="chead"><h2>Mochila</h2><button id="invSort" title="Junta las pilas y ordena">↕ Ordenar</button></div>
       <div id="invMain" class="grid"></div>
       <div id="invBar" class="grid"></div>
       <div id="invEquip"></div>
@@ -393,7 +529,7 @@
     </div>
     <div id="craftSide">
       <h2 id="craftTitle">Fabricación</h2>
-      <div id="craftTabs"><button data-f="all" class="on">Todo</button><button data-f="ok">Disponibles</button></div>
+      <div id="craftTabs"><button data-f="all" class="on">Todo</button><button data-f="ok">Disponibles</button><input id="craftSearch" placeholder="🔍 Buscar…" autocomplete="off"></div>
       <div id="craftList"></div>
     </div>
   </div>
@@ -402,53 +538,68 @@
 <div id="tooltip" hidden></div>
 
 <div id="pause" class="overlay" hidden>
-  <div class="card" style="width:min(420px,100%)">
-    <h2 id="pauseTitle">Pausa</h2>
-    <p class="muted ver" style="margin:-8px 0 8px;font-size:14px"></p>
-    <label for="optName">Tu nombre</label>
-    <div class="row2"><input id="optName" maxlength="20" autocomplete="off" enterkeyhint="done"><button id="optNameOk">Cambiar</button></div>
-    <label>Distancia de visión: <span id="optDistV">6</span> sectores</label>
-    <input id="optDistP" type="range" min="3" max="12" value="6">
-    <label>Sensibilidad del mouse</label>
-    <input id="optSens" type="range" min="6" max="60" value="22">
-    <label>Volumen de efectos</label>
-    <input id="optVol" type="range" min="0" max="100" value="60">
-    <label>Volumen de música</label>
-    <input id="optMusic" type="range" min="0" max="100" value="50">
-    <label>Reglas del mundo <small id="rulesInfo" class="muted"></small></label>
-    <label class="check"><input type="checkbox" id="optRad"> ☢ Radiación</label>
-    <label class="check"><input type="checkbox" id="optDay"> 🦂 Animales mutantes atacan de día</label>
-    <label class="check"><input type="checkbox" id="optArmed"> 🔫 Humanos armados (bandidos, piratas, soldados)</label>
-    <label class="check"><input type="checkbox" id="optKids"> 🧸 Modo chicos</label>
-    <label class="check"><input type="checkbox" id="optReal"> 🕐 Hora real</label>
-    <label class="check"><input type="checkbox" id="optLearn"> 📚 Modo aprender</label>
-    <label for="optQuality">Calidad gráfica</label>
-    <select id="optQuality"><option value="bajo">Baja (PC lenta)</option><option value="medio">Media</option><option value="alto">Alta</option></select>
-    <label class="check"><input type="checkbox" id="optBattery"> 🔋 Ahorro de batería (30 cuadros por segundo, menos efectos)</label>
-    <label class="check"><input type="checkbox" id="optAutoDist"> ⚡ Distancia automática (dibuja menos lejos si se traba)</label>
-    <label>Texturas <small id="packInfo" class="muted"></small></label>
-    <div class="row2"><button id="packExport" title="Descarga un PNG con todas las texturas para editarlo">Exportar plantilla</button><button id="packLoad" title="PNG de 16 columnas; los tiles vacíos quedan como están">Cargar paquete…</button></div>
-    <button id="packClear" style="width:100%;margin-top:4px" hidden>Quitar paquete de texturas</button>
-    <input id="packFile" type="file" accept="image/png,image/*" hidden>
-    <div id="onlineOpts" hidden>
-      <div class="row2" style="align-items:end">
-        <div><label for="optTeam">Equipo / clan</label><select id="optTeam"></select></div>
-        <label class="check"><input type="checkbox" id="optPvp"> PvP (lo decide el anfitrión)</label>
-      </div>
-      <div class="row2" style="align-items:end">
-        <label class="check"><input type="checkbox" id="optPublic"> Partida pública</label>
-        <label class="check"><input type="checkbox" id="optVoice"> Chat de voz</label>
-      </div>
+  <div class="card pcard">
+    <div class="chead"><h2 id="pauseTitle">Pausa</h2><span class="muted ver"></span></div>
+    <div class="ptabs" role="tablist">
+      <button data-t="juego" class="on">▶ Juego</button><button data-t="opciones">⚙ Opciones</button><button data-t="mundo">🌍 Mundo</button><button data-t="comunidad">👥 Comunidad</button>
     </div>
-    <p class="muted" style="font-size:16px;margin:8px 0 0">V: cámara · F2: modo foto · H: bocina · L: faros</p>
-    <button id="resume" class="primary">Volver al juego</button>
-    <div class="row2"><button id="pauseGuide">Guía</button><button id="tutBtn">Saltar tutorial</button></div>
-    <button id="achBtn">Logros</button>
-    <button id="accBtn">🎮 Controles y accesibilidad</button>
-    <div id="socialBtns" style="display:grid;gap:4px"></div>
-    <button id="pauseHost">Abrir a amigos (online)</button>
-    <div id="hostCode" hidden>Código de la sala<span id="hostCodeVal">-----</span><button id="copyCode">Copiar código</button><div class="muted" style="margin-top:6px">Tus amigos lo ingresan en «Unirse a partida online».</div></div>
-    <button id="saveQuit">Guardar y salir al menú</button>
+    <section class="ptab" data-t="juego">
+      <button id="resume" class="primary big">Volver al juego</button>
+      <div class="pgrid">
+        <button id="pauseGuide">📖 Guía</button>
+        <button id="achBtn">🏅 Logros</button>
+        <button id="tutBtn">🎓 Saltar tutorial</button>
+        <button id="accBtn">🎮 Controles</button>
+      </div>
+      <p class="muted keyhint">V: cámara · F2: modo foto · M: mapa · J: diario · B: gestos · H: bocina · L: faros</p>
+      <button id="saveQuit">💾 Guardar y salir al menú</button>
+    </section>
+    <section class="ptab" data-t="opciones" hidden>
+      <label for="optName">Tu nombre</label>
+      <div class="row2"><input id="optName" maxlength="20" autocomplete="off" enterkeyhint="done"><button id="optNameOk">Cambiar</button></div>
+      <div class="sliders">
+        <label>Distancia de visión: <b id="optDistV">6</b> sectores</label><input id="optDistP" type="range" min="3" max="12" value="6">
+        <label>Sensibilidad</label><input id="optSens" type="range" min="6" max="60" value="22">
+        <label>Volumen de efectos</label><input id="optVol" type="range" min="0" max="100" value="60">
+        <label>Volumen de música</label><input id="optMusic" type="range" min="0" max="100" value="50">
+      </div>
+      <label for="optQuality">Calidad gráfica</label>
+      <select id="optQuality"><option value="bajo">Baja (PC lenta)</option><option value="medio">Media</option><option value="alto">Alta</option></select>
+      <label class="check"><input type="checkbox" id="optBattery"> 🔋 Ahorro de batería (30 cuadros por segundo, menos efectos)</label>
+      <label class="check"><input type="checkbox" id="optAutoDist"> ⚡ Distancia automática (dibuja menos lejos si se traba)</label>
+      <div id="camOpts"></div>
+      <label>Texturas <small id="packInfo" class="muted"></small></label>
+      <div class="row2"><button id="packExport" title="Descarga un PNG con todas las texturas para editarlo">Exportar plantilla</button><button id="packLoad" title="PNG de 16 columnas; los tiles vacíos quedan como están">Cargar paquete…</button></div>
+      <button id="packClear" style="width:100%;margin-top:4px" hidden>Quitar paquete de texturas</button>
+      <input id="packFile" type="file" accept="image/png,image/*" hidden>
+    </section>
+    <section class="ptab" data-t="mundo" hidden>
+      <label>Reglas del mundo <small id="rulesInfo" class="muted"></small></label>
+      <div class="checks">
+        <label class="check"><input type="checkbox" id="optRad"> ☢ Radiación</label>
+        <label class="check"><input type="checkbox" id="optDay"> 🦂 Mutantes de día</label>
+        <label class="check"><input type="checkbox" id="optArmed"> 🔫 Humanos armados</label>
+        <label class="check"><input type="checkbox" id="optKids"> 🧸 Modo chicos</label>
+        <label class="check"><input type="checkbox" id="optReal"> 🕐 Hora real</label>
+        <label class="check"><input type="checkbox" id="optLearn"> 📚 Modo aprender</label>
+      </div>
+      <div id="worldBtns" class="pgrid"></div>
+    </section>
+    <section class="ptab" data-t="comunidad" hidden>
+      <button id="pauseHost" class="primary">🌐 Abrir a amigos (online)</button>
+      <div id="hostCode" hidden>Código de la sala<span id="hostCodeVal">-----</span><button id="copyCode">Copiar código</button><div class="muted" style="margin-top:6px">Tus amigos lo ingresan en «Unirse online».</div></div>
+      <div id="onlineOpts" hidden>
+        <div class="row2" style="align-items:end">
+          <div><label for="optTeam">Equipo / clan</label><select id="optTeam"></select></div>
+          <label class="check"><input type="checkbox" id="optPvp"> PvP (lo decide el anfitrión)</label>
+        </div>
+        <div class="row2" style="align-items:end">
+          <label class="check"><input type="checkbox" id="optPublic"> Partida pública</label>
+          <label class="check"><input type="checkbox" id="optVoice"> Chat de voz</label>
+        </div>
+      </div>
+      <div id="socialBtns" class="pgrid"></div>
+    </section>
   </div>
 </div>
 
@@ -550,7 +701,7 @@
   </div>
 </div>
 
-<div id="bigmapWrap" hidden><canvas id="bigmap" width="640" height="640"></canvas><p>M o clic para cerrar</p></div>
+<div id="bigmapWrap" hidden><div id="mapBar"><button id="mapZoomIn">＋</button><button id="mapZoomOut">－</button><button id="mapCenter">◎ Centrar</button><button id="mapWps">📍 Marcadores</button><button id="mapClose">✕ Cerrar</button></div><canvas id="bigmap" width="720" height="720"></canvas><p>Arrastrá para moverte · rueda o pellizco: zoom · tocá un lugar para poner un marcador</p></div>
 
 <div id="touch" hidden>
   <div class="look"></div>

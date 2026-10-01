@@ -84,6 +84,7 @@ export class Player {
     if (this.invuln > 0) return;
     const real = cause === 'hambre' || cause === 'radiación' || cause === 'ahogo' ? amount : Math.max(1, Math.round(amount * (1 - this.armorDef)));
     this.health = Math.max(0, this.health - real);
+    this.shake = Math.min(1.2, (this.shake || 0) + 0.35 + real * 0.08);
     this.invuln = 0.45;
     // desgaste de armadura
     if (real !== amount) for (const slot of ['head', 'body']) { const s = this.inv.equip[slot]; if (s) { s.dur--; if (s.dur <= 0) { this.inv.equip[slot] = null; this.sfx?.toolBreak(); } } }
@@ -163,7 +164,7 @@ export class Player {
 
   look(dx, dy) {
     this.yaw -= dx * this.sens;
-    this.pitch -= dy * this.sens;
+    this.pitch -= dy * this.sens * (this.invertY ? -1 : 1);
     this.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, this.pitch));
   }
 
@@ -423,11 +424,15 @@ export class Player {
   }
 
   updateCamera(dt, sprint, hsp) {
-    const bob = this.onGround && !this.riding ? Math.sin(performance.now() / 1000 * hsp * 2.2) * 0.04 * Math.min(1, hsp / 4) : 0;
-    this.cam.position.set(this.pos.x, this.pos.y + EYE + bob + (this.riding ? VEHICLE_TYPES[this.riding.type].eye : 0) - (this.sitting ? 0.5 : 0), this.pos.z);
+    const bob = this.onGround && !this.riding ? Math.sin(performance.now() / 1000 * hsp * 2.2) * 0.04 * Math.min(1, hsp / 4) * (this.bobMul ?? 1) : 0;
+    // sacudón al recibir daño o con explosiones
+    this.shake = Math.max(0, (this.shake || 0) - dt * 2.5);
+    const sh = this.shake * this.shake * (this.shakeMul ?? 1), sx = (Math.random() - 0.5) * sh * 0.25, sy = (Math.random() - 0.5) * sh * 0.25;
+    this.cam.position.set(this.pos.x + sx, this.pos.y + EYE + bob + sy + (this.riding ? VEHICLE_TYPES[this.riding.type].eye : 0) - (this.sitting ? 0.5 : 0), this.pos.z);
     const roll = (this.drunk >= 2 ? Math.sin(performance.now() / 900) * 0.04 * Math.min(3, this.drunk - 1) : 0) + (this.disease.intoxicacion > 0 ? Math.sin(performance.now() / 600) * 0.03 : 0);
     this.cam.rotation.set(this.pitch, this.yaw, roll, 'YXZ');
-    const targetFov = (sprint && hsp > 5) || (this.riding && hsp > 8) ? 84 : 75;
+    const base = this.baseFov || 75;
+    const targetFov = (sprint && hsp > 5) || (this.riding && hsp > 8) ? base + 9 : base;
     this.cam.fov += (targetFov - this.cam.fov) * Math.min(1, dt * 8);
     this.cam.updateProjectionMatrix();
   }

@@ -107,6 +107,11 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v9.9 — Celular y sin conexión**: ahorro de batería (30 FPS), distancia de visión automática, relieve y sombras sólo de cerca, y la app instalada guarda todo para jugar sin internet (aviso en el menú). Al agregar un archivo nuevo en `js/`, sumarlo a la lista de `sw.js`.
 
+**v10 — Vuelta de rosca visual y de interfaz**
+- Interfaz: menú en dos columnas con miniaturas de los mundos, pausa con pestañas, avisos apilados, pantalla de carga con progreso y consejos, tema visual más pulido.
+- Visual: nubes, estrellas fugaces, auroras, luz dinámica de la antorcha en la mano, partículas del ambiente (luciérnagas, hojas, polvo, chispas, burbujas), color de cine por bioma, sacudón de cámara.
+- Comodidad: buscador y orden en la mochila, marcadores en pantalla y en el mapa, mapa grande con zoom y arrastre, modo foto con filtros, consejos la primera vez, opciones de cámara.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

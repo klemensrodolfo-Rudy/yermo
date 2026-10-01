@@ -242,7 +242,7 @@ export function createLearn(ctx) {
   if (meta.guided && BUILDS[meta.guided.key]) { B = meta.guided; drawGhosts(); }
 
   // ---------- botones y eventos ----------
-  const btns = document.querySelector('#socialBtns');
+  const btns = document.querySelector('#worldBtns');
   const bb = document.createElement('button'); bb.textContent = '🏗 Construcción guiada';
   bb.onclick = () => { document.querySelector('#pause').hidden = true; ctx.setPause?.(false); openBuilder(); };
   btns?.appendChild(bb);

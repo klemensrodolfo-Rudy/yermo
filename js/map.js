@@ -22,6 +22,7 @@ export class MapView {
     this.big = document.getElementById('bigmap');
     this.acc = 0;
     this.zoom = 2;
+    this.bigRadius = 110; this.panX = 0; this.panZ = 0;
   }
 
   chunkImage(c) {
@@ -64,9 +65,10 @@ export class MapView {
     }
   }
 
-  draw(canvas, px, pz, yaw, radius, markers) {
+  draw(canvas, px, pz, yaw, radius, markers, ox = 0, oz = 0) {
     const ctx = canvas.getContext('2d');
     const W = canvas.width, scale = W / (radius * 2);
+    const ppx = px, ppz = pz; px += ox; pz += oz; // centro del mapa (puede estar corrido) y posición real del jugador
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = '#14120f'; ctx.fillRect(0, 0, W, W);
     const c0x = Math.floor((px - radius) / CHUNK), c1x = Math.floor((px + radius) / CHUNK);
@@ -77,6 +79,16 @@ export class MapView {
       ctx.drawImage(e.canvas, (cx * CHUNK - px + radius) * scale, (cz * CHUNK - pz + radius) * scale, CHUNK * scale + 0.5, CHUNK * scale + 0.5);
     }
     const toXY = (x, z) => [(x - px + radius) * scale, (z - pz + radius) * scale];
+    // etiquetas sin encimarse: si choca con otra ya escrita, se omite
+    const used = [];
+    const label = (txt, lx, ly, font) => {
+      ctx.font = font; const w = ctx.measureText(txt).width;
+      const r = [lx, ly - 13, lx + w, ly + 3];
+      if (used.some((u) => r[0] < u[2] && r[2] > u[0] && r[1] < u[3] && r[3] > u[1])) return;
+      used.push(r);
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(r[0] - 2, r[1], w + 4, 17);
+      ctx.fillStyle = '#fff'; ctx.fillText(txt, lx, ly);
+    };
     for (const m of markers) {
       let [x, y] = toXY(m.x, m.z);
       if (x < -8 || y < -8 || x > W + 8 || y > W + 8) {
@@ -87,7 +99,7 @@ export class MapView {
         x = cx + dx * k; y = cy + dy * k;
         ctx.fillStyle = m.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        if (canvas === this.big) { ctx.fillStyle = '#fff'; ctx.font = '15px VT323, monospace'; ctx.fillText(`${m.label} ${dist} m`, Math.min(W - 110, Math.max(4, x + 7)), Math.min(W - 6, Math.max(14, y + 4))); }
+        if (canvas === this.big) label(`${m.label} ${dist} m`, Math.min(W - 130, Math.max(4, x + 7)), Math.min(W - 6, Math.max(16, y + 4)), '15px VT323, monospace');
         continue;
       }
       ctx.fillStyle = m.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
@@ -97,10 +109,10 @@ export class MapView {
       else if (m.kind === 'npc') { ctx.moveTo(x, y - 6); ctx.lineTo(x + 5, y + 5); ctx.lineTo(x - 5, y + 5); ctx.closePath(); }
       else ctx.arc(x, y, m.kind === 'boss' ? 6 : 4, 0, Math.PI * 2);
       ctx.fill(); ctx.stroke();
-      if (m.label && (canvas === this.big || m.kind === 'npc')) { ctx.fillStyle = '#fff'; ctx.font = canvas === this.big ? '16px VT323, monospace' : '12px VT323, monospace'; ctx.fillText(m.label, x + 7, y + 4); }
+      if (m.label && (canvas === this.big || m.kind === 'npc')) label(m.label, x + 7, y + 4, canvas === this.big ? '16px VT323, monospace' : '12px VT323, monospace');
     }
     // flecha del jugador
-    ctx.save(); ctx.translate(W / 2, W / 2); ctx.rotate(-yaw);
+    ctx.save(); ctx.translate((ppx - px + radius) * scale, (ppz - pz + radius) * scale); ctx.rotate(-yaw);
     ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(5, 6); ctx.lineTo(0, 3); ctx.lineTo(-5, 6); ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.restore();
@@ -110,10 +122,15 @@ export class MapView {
 
   update(dt, world, player, markers, bigOpen) {
     this.acc += dt;
-    if (this.acc < 0.3) return;
+    if (this.acc < (bigOpen ? 0.08 : 0.3)) return;
     this.acc = 0;
     this.refresh(world);
     this.draw(this.mini, player.pos.x, player.pos.z, player.yaw, 64, markers);
-    if (bigOpen) this.draw(this.big, player.pos.x, player.pos.z, player.yaw, 64 * this.zoom * 1.5, markers);
+    if (bigOpen) this.draw(this.big, player.pos.x, player.pos.z, player.yaw, this.bigRadius, markers, this.panX, this.panZ);
+  }
+  // de un punto del mapa grande (en píxeles de pantalla) a coordenadas del mundo
+  bigToWorld(clientX, clientY, player) {
+    const r = this.big.getBoundingClientRect(), radius = this.bigRadius;
+    return { x: player.pos.x + this.panX + ((clientX - r.left) / r.width * 2 - 1) * radius, z: player.pos.z + this.panZ + ((clientY - r.top) / r.height * 2 - 1) * radius };
   }
 }

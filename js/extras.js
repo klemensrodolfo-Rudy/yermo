@@ -9,7 +9,7 @@ export const ACTIONS = [
   ['jump', 'Saltar / subir', 'Space'], ['sprint', 'Correr', 'ShiftLeft'], ['down', 'Bajar (vuelo, ascensor)', 'KeyC'],
   ['inventory', 'Mochila', 'KeyE'], ['drop', 'Tirar ítem', 'KeyQ'], ['mount', 'Subir / bajar de vehículo', 'KeyF'],
   ['map', 'Mapa', 'KeyM'], ['chat', 'Chat', 'KeyT'], ['journal', 'Diario', 'KeyJ'], ['emotes', 'Gestos', 'KeyB'],
-  ['camera', 'Cámara', 'KeyV'], ['horn', 'Bocina', 'KeyH'], ['lights', 'Faros', 'KeyL'], ['save', 'Guardar', 'KeyG'],
+  ['camera', 'Cámara', 'KeyV'], ['waypoint', 'Poner marcador', 'KeyN'], ['horn', 'Bocina', 'KeyH'], ['lights', 'Faros', 'KeyL'], ['save', 'Guardar', 'KeyG'],
 ];
 const keyName = (c) => (!c ? '—' : c.startsWith('Key') ? c.slice(3) : c.startsWith('Digit') ? c.slice(5) : { Space: 'Espacio', ShiftLeft: 'Shift', ShiftRight: 'Shift der.', ControlLeft: 'Ctrl', ControlRight: 'Ctrl der.', AltLeft: 'Alt', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Tab: 'Tab', Enter: 'Enter', CapsLock: 'Bloq Mayús' }[c] || c);
 

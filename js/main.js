@@ -28,6 +28,8 @@ import { createCreative } from './creative.js';
 import { createNature } from './nature.js';
 import { createSocial, openAdventures } from './social.js';
 import { createLearn } from './learn.js';
+import { createVisuals } from './visuals.js';
+import { createUX } from './ux.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -83,6 +85,8 @@ const uniforms = {
   fogHeight: { value: 1 }, moonLight: { value: 1 },
   // faros de vehículos
   hlPos: { value: new THREE.Vector3() }, hlDir: { value: new THREE.Vector3(0, 0, -1) }, hlOn: { value: 0 },
+  // luz que lleva el jugador en la mano
+  plPos: { value: new THREE.Vector3() }, plOn: { value: 0 }, plCol: { value: new THREE.Color(1, 0.72, 0.42) }, plR: { value: 10 },
 };
 const vert = /* glsl */`
   attribute vec4 lit; attribute vec4 tinf; attribute vec4 tint;
@@ -112,6 +116,7 @@ const frag = (water) => /* glsl */`
   uniform sampler2D shadowMap; uniform mat4 shadowMatrix; uniform float shadowOn;
   uniform float fogHeight; uniform float moonLight;
   uniform vec3 hlPos; uniform vec3 hlDir; uniform float hlOn;
+  uniform vec3 plPos; uniform float plOn; uniform vec3 plCol; uniform float plR;
   varying vec2 vUv; varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
   flat varying vec4 vInf;
   const float SZ = 768.0;
@@ -199,6 +204,11 @@ const frag = (water) => /* glsl */`
       float cone = dot(Lh / max(dh, 0.001), hlDir);
       light += vec3(1.0, 0.95, 0.8) * smoothstep(0.82, 0.95, cone) * (1.0 - smoothstep(5.0, 24.0, dh)) * 1.3 * reliefV;
     }
+    if (plOn > 0.01) {
+      vec3 Lp = plPos - vWorld; float dp = length(Lp);
+      float fall = 1.0 - smoothstep(1.0, plR, dp);
+      light += plCol * fall * fall * plOn * (0.55 + 0.45 * max(dot(Np, Lp / max(dp, 0.001)), 0.0)) * 1.25;
+    }
     light = max(light, vec3(0.035, 0.035, 0.05));
     vec3 col = tex.rgb * light * vLit.z * vLit.w;
     // brillo especular: sol (o luna) y antorchas
@@ -242,14 +252,20 @@ const materials = {
 const skyUniforms = {
   top: { value: new THREE.Color() }, horizon: { value: new THREE.Color() },
   sunDir: { value: new THREE.Vector3() }, sunCol: { value: new THREE.Color() }, night: { value: 0 }, moonPhase: { value: 1 },
+  time: { value: 0 }, clouds: { value: 0.45 }, aurora: { value: 0 }, cloudDark: { value: 0 },
 };
 const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), new THREE.ShaderMaterial({
   uniforms: skyUniforms, side: THREE.BackSide, depthWrite: false,
   vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
   fragmentShader: `
     uniform vec3 top; uniform vec3 horizon; uniform vec3 sunDir; uniform vec3 sunCol; uniform float night; uniform float moonPhase;
+    uniform float time; uniform float clouds; uniform float aurora; uniform float cloudDark;
     varying vec3 vDir;
     float h(vec3 p){ return fract(sin(dot(p, vec3(12.9898,78.233,45.164)))*43758.5453); }
+    float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y); }
+    float fbm(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { v += a * n2(p); p = p * 2.03 + 17.1; a *= 0.5; } return v; }
     void main(){
       vec3 d = normalize(vDir);
       float t = pow(clamp(d.y, 0.0, 1.0), 0.55);
@@ -265,7 +281,36 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), new THREE.Shad
       col += vec3(0.75, 0.8, 0.7) * max(disc - shadow * 1.2, disc * 0.08) * 2.0 * night;
       vec3 g = floor(d * 220.0);
       float st = step(0.9975, h(g)) * night * smoothstep(0.0, 0.3, d.y);
-      col += vec3(st);
+      col += vec3(st) * (0.7 + 0.3 * sin(time * 3.0 + h(g) * 40.0));
+      // estrellas fugaces: de vez en cuando una raya cruza el cielo de noche
+      if (night > 0.5) {
+        float slot = floor(time / 7.0), ph = fract(time / 7.0) / 0.13;
+        if (ph < 1.0 && h(vec3(slot, 1.0, 2.0)) < 0.55) {
+          vec3 a = normalize(vec3(h(vec3(slot, 3.0, 1.0)) - 0.5, 0.55 + h(vec3(slot, 4.0, 1.0)) * 0.35, h(vec3(slot, 5.0, 1.0)) - 0.5));
+          vec3 b = normalize(a + normalize(vec3(h(vec3(slot, 6.0, 1.0)) - 0.5, -0.35, h(vec3(slot, 7.0, 1.0)) - 0.5)) * 0.35);
+          float best = 0.0;
+          for (int i = 0; i < 6; i++) { float k = ph - float(i) * 0.05; if (k < 0.0) break; best = max(best, pow(max(dot(d, normalize(mix(a, b, k))), 0.0), 60000.0) * (1.0 - float(i) / 6.0)); }
+          col += vec3(1.0, 0.95, 0.85) * best * 2.5 * (night - 0.5) * 2.0;
+        }
+      }
+      // aurora austral en los lugares fríos
+      if (aurora > 0.01 && d.y > 0.05) {
+        vec2 q = d.xz / (d.y + 0.25);
+        float band = sin(q.x * 2.2 + fbm(q * 0.8 + time * 0.05) * 6.0 + time * 0.15) * 0.5 + 0.5;
+        float curtain = smoothstep(0.55, 1.0, band) * smoothstep(0.05, 0.35, d.y) * (1.0 - smoothstep(0.55, 0.95, d.y));
+        vec3 ac = mix(vec3(0.1, 1.0, 0.45), vec3(0.55, 0.25, 1.0), smoothstep(0.2, 0.7, d.y + fbm(q * 2.0) * 0.2));
+        col += ac * curtain * aurora * night * (0.55 + 0.45 * sin(time * 0.7 + q.y));
+      }
+      // nubes: una capa que se mueve con el viento, iluminada por el sol (o la luna)
+      if (d.y > 0.0 && clouds > 0.01) {
+        vec2 uv = d.xz / (d.y + 0.12) * 1.6 + vec2(time * 0.012, time * 0.004);
+        float c = fbm(uv);
+        float cov = smoothstep(1.0 - clouds * 0.85, 1.05 - clouds * 0.5, c) * smoothstep(0.0, 0.18, d.y);
+        float lit = clamp(0.55 + dot(normalize(vec3(sunDir.x, 0.0, sunDir.z) + 0.001), normalize(vec3(d.x, 0.0, d.z))) * 0.25, 0.0, 1.0);
+        vec3 cc = mix(horizon * 1.25 + sunCol * 0.25 * lit, top * 0.6, 0.25) * (1.0 - cloudDark * 0.55);
+        cc = mix(cc, vec3(0.045, 0.05, 0.07), night * 0.92);
+        col = mix(col, cc, cov * 0.88);
+      }
       gl_FragColor = vec4(col, 1.0);
       #include <colorspace_fragment>
     }`,
@@ -413,6 +458,8 @@ function updateSky(t) {
   uniforms.sunDir.value.copy(skyUniforms.sunDir.value);
   skyUniforms.sunCol.value.setRGB(1, 0.75 + day * 0.15, 0.5 + day * 0.3).multiplyScalar(sunH > -0.1 ? 1 - w.k * 0.7 : 0);
   skyUniforms.night.value = (1 - day) * (1 - w.k * 0.8);
+  skyUniforms.time.value = performance.now() / 1000;
+  skyUniforms.clouds.value = 0.42 + w.k * 0.5; skyUniforms.cloudDark.value = w.k;
   uniforms.daylight.value = (0.1 + day * 0.9) * (1 - w.k * 0.25);
   uniforms.skyTint.value.setRGB(1, 0.93 - dusk * 0.12, 0.85 - dusk * 0.25).lerp(new THREE.Color(0.55, 0.62, 0.9), 1 - day);
   uniforms.fogColor.value.copy(hor);
@@ -667,10 +714,23 @@ $('#cwCreate').onclick = async () => {
   catch (e) { cloudMsg(e.message); }
 };
 
+// notificaciones: se apilan (hasta 4), las repetidas se juntan con un contador
 function flash(msg) {
-  const el = $('#toast'); el.textContent = msg; el.classList.add('show');
-  clearTimeout(flash.t); flash.t = setTimeout(() => el.classList.remove('show'), 2200);
+  const box = $('#toasts'); if (!box || !msg) return;
+  msg = String(msg);
+  for (const el of box.children) if (el.dataset.msg === msg && !el.classList.contains('out')) {
+    const n = (+el.dataset.n || 1) + 1; el.dataset.n = n;
+    el.querySelector('.n').textContent = `×${n}`;
+    clearTimeout(el._t); el._t = setTimeout(() => dropToast(el), 2600);
+    return;
+  }
+  const el = document.createElement('div'); el.className = 'tst'; el.dataset.msg = msg;
+  el.innerHTML = '<span class="m"></span><span class="n"></span>'; el.querySelector('.m').textContent = msg;
+  box.appendChild(el);
+  while (box.children.length > 4) box.firstChild.remove();
+  el._t = setTimeout(() => dropToast(el), 2600 + Math.min(2400, msg.length * 25));
 }
+function dropToast(el) { el.classList.add('out'); setTimeout(() => el.remove(), 400); }
 function achievementToast(a) {
   const el = $('#ach');
   el.innerHTML = `<small>Logro desbloqueado</small><b>${a.name}</b><span>${a.desc}</span>`;
@@ -875,6 +935,22 @@ function goFullscreen() {
     r?.then(() => screen.orientation?.lock?.('landscape').catch(() => {})).catch(() => {});
   } catch { /* el navegador no lo permite */ }
 }
+const TIPS = [
+  'Con <b>F2</b> entrás al modo foto y con <b>P</b> sacás la captura.',
+  'El <b>catre</b> guarda tu punto de reaparición y hace pasar la noche.',
+  'Apretá <b>M</b> para ver el mapa grande; <b>J</b> abre el diario.',
+  'Las <b>antorchas</b> evitan que aparezcan criaturas cerca.',
+  'En la pausa → <b>🌍 Mundo</b> podés cambiar las reglas cuando quieras.',
+  'Los <b>plantines</b> que sueltan las hojas crecen solos y se vuelven árboles.',
+  'Con la <b>mesa de minijuegos</b> jugás al piso es lava, spleef, parkour y más.',
+  'La <b>caja musical</b> toca melodías escritas con do re mi… cuando le llega electricidad.',
+  'Tu <b>perro</b> sube de nivel acompañándote: después trae cosas y te avisa del peligro.',
+  'En el archipiélago, cuando el corcho dice <b>¡Pica!</b>, clic derecho rápido.',
+  'Con <b>V</b> cambiás entre primera y tercera persona.',
+  'El <b>dron</b> te marca minerales y cofres cercanos con un rayo azul.',
+];
+function showTip() { const el = $('#loadTip'); if (!el) return; el.style.opacity = 0; setTimeout(() => { el.innerHTML = '💡 ' + TIPS[Math.floor(Math.random() * TIPS.length)]; el.style.opacity = 1; }, 300); }
+
 async function startGame(meta, hello, cloudInfo) {
   goFullscreen();
   $('#menu').hidden = true;
@@ -1003,7 +1079,9 @@ async function startGame(meta, hello, cloudInfo) {
   const fctx = {
     game, ui, net, sfx, flash, scene, camera, renderer, uniforms, skyUniforms, settings, particles, voice, ext,
     skin: skinOf, isAuthority, openInventory, closeInventory, lockPointer, toggleMount, addChat,
-    saveGame, Storage, setPause,
+    saveGame, Storage, setPause, mapView, toggleBigMap,
+    isPhoto: () => !!game?.features?.photo, photoKey: () => game.features.key({ code: 'F2', preventDefault() {} }),
+    saveSettings: () => { try { localStorage.setItem('yermo-settings', JSON.stringify(settings)); } catch { /* sin almacenamiento */ } },
     endRun: async () => { const id = game.meta.id, local = !game.meta.remote && !game.meta.cloud; $('#death').hidden = true; await quitToMenu(); if (local) { await Storage.deleteWorld(id); showMenu(); } },
     openPanel: (title, render) => { ui.player = player; ui.openPanel(nearbyStations(player.pos), title, render); document.exitPointerLock(); $('#hud').classList.add('dim'); },
   };
@@ -1020,6 +1098,8 @@ async function startGame(meta, hello, cloudInfo) {
   const NA = game.nature = createNature(fctx);
   game.social = createSocial(fctx);
   const LE = game.learn = createLearn(fctx);
+  game.visuals = createVisuals(fctx);
+  game.ux = createUX(fctx);
   // clic derecho en bloques y criaturas: cada módulo mira primero lo suyo
   const blockF2 = player.onUseBlock;
   player.onUseBlock = (...a) => LE.onUseBlock(...a) || CR.onUseBlock(...a) || MG.onUseBlock(...a) || MD.onUseBlock(...a) || blockF2(...a);
@@ -1034,16 +1114,20 @@ async function startGame(meta, hello, cloudInfo) {
   player.onRace = (x, y, z) => game.race.openMenu(x, z, y);
   if (!meta.lastPlayed && !meta.remote) { meta.lastPlayed = Date.now(); await Storage.saveWorld(meta); }
   const t0 = performance.now();
+  showTip();
+  const tipTimer = setInterval(showTip, 4500);
   await new Promise((res) => {
     const tick = () => {
       world.update(player.pos.x, player.pos.z);
       const n = [...world.chunks.values()].filter((c) => c.hasMesh).length;
-      $('#loadText').textContent = `${hello ? 'Recibiendo el mundo' : 'Generando el yermo'}… ${n} sectores`;
+      $('#loadText').textContent = `${hello ? 'Recibiendo el mundo' : 'Generando el mundo'}…`;
+      $('#loadBar').style.width = Math.min(100, n / 25 * 100) + '%';
       if (world.loadedAround(player.pos.x, player.pos.z, 2) || performance.now() - t0 > 25000) res();
       else setTimeout(tick, 50);
     };
     tick();
   });
+  clearInterval(tipTimer);
   let tries = 0;
   while (player.collides(player.pos.x, player.pos.y, player.pos.z) && tries++ < 60) player.pos.y += 1;
   for (const k in statCache) delete statCache[k];
@@ -1071,7 +1155,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1086,6 +1170,13 @@ async function doQuit() {
 }
 
 // ---------- Menú ----------
+function ago(t) {
+  if (!t) return 'nuevo';
+  const s = (Date.now() - t) / 1000;
+  if (s < 90) return 'recién'; if (s < 3600) return `hace ${Math.round(s / 60)} min`;
+  if (s < 86400) return `hace ${Math.round(s / 3600)} h`; if (s < 86400 * 30) return `hace ${Math.round(s / 86400)} días`;
+  return new Date(t).toLocaleDateString();
+}
 async function showMenu() {
   $('#menu').hidden = false;
   const worlds = await Storage.listWorlds();
@@ -1094,9 +1185,10 @@ async function showMenu() {
   if (!worlds.length) list.innerHTML = '<p class="empty">Todavía no hay mundos. Creá uno para empezar.</p>';
   for (const w of worlds) {
     const row = document.createElement('div'); row.className = 'world';
-    const d = new Date(w.lastPlayed);
-    row.innerHTML = `<div><b></b><small>${w.worldType === 'brew' ? '🍺 Cervecero · ' : w.worldType === 'magic' ? '🧙 Eldra · ' : w.worldType === 'islands' ? '🏝 Archipiélago · ' : w.worldType === 'base' ? '🧰 Base · ' : ''}${w.mode === 'creative' ? 'Creativo' : w.mode === 'hardcore' ? '☠ Una sola vida' : w.mode === 'adventure' ? '🗺 Aventura' : 'Supervivencia'} · semilla ${w.seed} · ${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0, 5)}</small></div>
-      <button class="play">Jugar</button><button class="del" title="Borrar mundo">✕</button>`;
+    const TYPE = { brew: ['🍺', 'Cervecero'], magic: ['🧙', 'Eldra'], islands: ['🏝', 'Archipiélago'], base: ['🧰', 'Base equipada'] }[w.worldType] || ['🌲', 'Yermo'];
+    const MODE = { creative: 'Creativo', hardcore: '☠ Una sola vida', adventure: '🗺 Aventura' }[w.mode] || 'Supervivencia';
+    row.innerHTML = `${w.thumb ? `<img class="thumb" src="${w.thumb}" alt="">` : `<div class="thumb">${TYPE[0]}</div>`}<div><b></b><div class="badges"><span class="badge">${TYPE[0]} ${TYPE[1]}</span><span class="badge m-${w.mode}">${MODE}</span>${w.nights ? `<span class="badge">🌙 ${w.nights} noches</span>` : ''}<span class="badge">${ago(w.lastPlayed)}</span></div></div>
+      <button class="play primary">Jugar</button><button class="del" title="Borrar mundo">✕</button>`;
     row.querySelector('b').textContent = w.name;
     row.querySelector('.play').onclick = () => startGame(w);
     row.querySelector('.del').onclick = async () => {
@@ -1206,12 +1298,13 @@ $('#guideClose').onclick = () => guide.close();
 
 // ---------- Pausa / opciones ----------
 function setPause(p) {
+  if (p && !paused && typeof pauseTab === 'function') pauseTab('juego');
   paused = p;
   $('#pause').hidden = !p;
   if (p && game) {
     $('#optDistP').value = game.world.renderDist; $('#optDistV').textContent = game.world.renderDist;
     const t = game.tutorial;
-    $('#tutBtn').textContent = t.active ? 'Saltar tutorial' : 'Reiniciar tutorial';
+    $('#tutBtn').textContent = t.active ? '🎓 Saltar tutorial' : '🎓 Reiniciar tutorial';
     $('#pauseHost').hidden = !!game.meta.remote || net.isHost;
     $('#pauseTitle').textContent = net.active ? 'Menú (la partida sigue)' : 'Pausa';
     $('#onlineOpts').hidden = !net.active;
@@ -1220,7 +1313,7 @@ function setPause(p) {
     $('#optTeam').value = net.team;
     $('#optPublic').checked = net.public; $('#optPublic').disabled = !net.isHost;
     $('#optVoice').checked = voice.on; $('#optVoice').disabled = net.transport !== 'peer';
-    $('#achBtn').textContent = `Logros (${game.ach.count()}/${ACHIEVEMENTS.length})`;
+    $('#achBtn').textContent = `🏅 Logros ${game.ach.count()}/${ACHIEVEMENTS.length}`;
     $('#optName').value = game.player.name;
     const rules = game.meta.rules || {}, canRules = !net.isClient;
     $('#optRad').checked = rules.rad !== false; $('#optDay').checked = rules.dayMobs !== false; $('#optArmed').checked = !!rules.armed;
@@ -1230,6 +1323,13 @@ function setPause(p) {
   }
 }
 $('#resume').onclick = () => { setPause(false); lockPointer(); };
+function pauseTab(t) {
+  for (const b of document.querySelectorAll('.ptabs button')) b.classList.toggle('on', b.dataset.t === t);
+  for (const s of document.querySelectorAll('.ptab')) s.hidden = s.dataset.t !== t;
+  settings.pauseTab = t;
+}
+for (const b of document.querySelectorAll('.ptabs button')) b.onclick = () => { pauseTab(b.dataset.t); sfx.click(); };
+pauseTab('juego');
 $('#saveQuit').onclick = () => quitToMenu();
 $('#pauseGuide').onclick = () => guide.open();
 $('#achBtn').onclick = () => guide.open('Logros');
@@ -1318,7 +1418,7 @@ try { const saved = localStorage.getItem('yermo-pack'); if (saved) usePack(saved
 $('#optQuality').value = settings.quality; $('#optVol').value = settings.sfx; $('#optMusic').value = settings.music;
 for (const [k, t] of Object.entries(TEAMS)) { const o = document.createElement('option'); o.value = k; o.textContent = t.name; $('#optTeam').appendChild(o); }
 $('#helpClose').onclick = () => { $('#help').hidden = true; lockPointer(); };
-$('#bigmapWrap').onclick = () => { bigMap = false; $('#bigmapWrap').hidden = true; };
+$('#bigmapWrap').onclick = (e) => { if (e.target !== $('#bigmapWrap')) return; bigMap = false; $('#bigmapWrap').hidden = true; };
 $('#invClose').onclick = () => closeInventory();
 
 // ---------- v5: notas, carreras, personaje, lista pública, voz ----------
@@ -1422,7 +1522,7 @@ function dropHand(all) {
   h.count -= n; if (h.count <= 0) game.inv.slots[game.inv.selected] = null;
   game.inv.onChange();
 }
-function toggleBigMap() { bigMap = !bigMap; $('#bigmapWrap').hidden = !bigMap; }
+function toggleBigMap() { bigMap = !bigMap; $('#bigmapWrap').hidden = !bigMap; if (bigMap) { mapView.panX = mapView.panZ = 0; game?.ux?.mapOpened?.(); document.exitPointerLock(); } else lockPointer(); }
 let showDebug = false;
 document.addEventListener('keydown', (e) => {
   if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'TEXTAREA' || e.target?.tagName === 'SELECT') return;
@@ -1437,6 +1537,7 @@ document.addEventListener('keydown', (e) => {
   if (e.code === 'F3') { e.preventDefault(); showDebug = !showDebug; $('#debug').hidden = !showDebug; return; }
   if ((locked || game.features.photo) && game.features.key(e)) return;
   if (locked && game.features2.key(e)) return;
+  if (locked && game.ux?.key(e)) return;
   if (e.code === 'KeyM' && inputActive()) { toggleBigMap(); return; }
   if (!locked) return;
   if (e.code === 'KeyT' && net.active) { e.preventDefault(); game.player.keys = {}; openChat(); return; }
@@ -1472,7 +1573,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '9.9 · 2026-10-02';
+const VERSION = '10.0 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1551,6 +1652,8 @@ function loop(now) {
   game.nature?.update(dt);
   game.social?.update(dt);
   game.learn?.update(dt);
+  game.visuals?.update(dt);
+  game.ux?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
@@ -1632,6 +1735,10 @@ function loop(now) {
   game.features.preRender();
   renderer.render(scene, camera);
   if (game.features.wantPhoto) game.features.capture();
+  if (!paused && !ui.open && !game.player.dead && !game.meta.remote && now - (game.thumbT || 0) > (game.meta.thumb ? 90000 : 8000)) {
+    game.thumbT = now;
+    try { const c = document.createElement('canvas'); c.width = 176; c.height = 100; c.getContext('2d').drawImage(renderer.domElement, 0, 0, 176, 100); game.meta.thumb = c.toDataURL('image/jpeg', 0.6); } catch { /* sin miniatura */ }
+  }
 
   // mano
   const hand = game.inv.hand;
@@ -1667,6 +1774,7 @@ function loop(now) {
   for (const poi of game.features2.pois()) markers.push(poi);
   for (const mk of game.features2.markers()) markers.push(mk);
   for (const mk of game.social?.markers() || []) markers.push(mk);
+  for (const mk of game.ux?.markers() || []) markers.push(mk);
   mapView.update(dt, world, player, markers, bigMap);
 
   // HUD
@@ -1707,4 +1815,4 @@ $('#installApp').onclick = async () => { if (!installEvt) return; installEvt.pro
 if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !installed()) { $('#installHint').hidden = false; $('#installHint').textContent = '📲 Para instalarlo: tocá Compartir ⬆ y «Agregar a inicio».'; }
 
 // Ganchos para pruebas automatizadas
-window.__yermoDebug = { voice, get game() { return game; }, startGame, saveGame, openInventory, closeInventory, openContainer, ITEMS, BLOCKS, HEIGHT, setPause, renderer, scene, camera, net, guide, quitToMenu, toggleMount, dropHand, particles, mapView, settings, applySettings };
+window.__yermoDebug = { voice, get game() { return game; }, startGame, saveGame, openInventory, closeInventory, openContainer, ITEMS, BLOCKS, HEIGHT, setPause, renderer, scene, camera, net, guide, quitToMenu, toggleMount, dropHand, particles, mapView, settings, applySettings, toggleBigMap };

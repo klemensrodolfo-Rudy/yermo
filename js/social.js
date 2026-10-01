@@ -112,7 +112,8 @@ export function createSocial(ctx) {
   const $ = (s) => document.querySelector(s);
   const cloudWorld = meta.cloud && hasSession();
   const btns = $('#socialBtns');
-  const addBtn = (txt, fn) => { const b = document.createElement('button'); b.textContent = txt; b.onclick = fn; btns.appendChild(b); return b; };
+  const extra = [];
+  const addBtn = (txt, fn, where = btns) => { const b = document.createElement('button'); b.textContent = txt; b.onclick = fn; where.appendChild(b); if (where !== btns) extra.push(b); return b; };
   btns.innerHTML = '';
   const backToPause = () => { $('#pause').hidden = false; };
 
@@ -204,7 +205,7 @@ export function createSocial(ctx) {
   }
 
   // ---------- publicar una aventura ----------
-  if (!meta.remote && !meta.cloud && meta.mode !== 'adventure') addBtn('🗺 Publicar como aventura', () => publish());
+  if (!meta.remote && !meta.cloud && meta.mode !== 'adventure') addBtn('🗺 Publicar como aventura', () => publish(), $('#worldBtns'));
   async function publish() {
     $('#pause').hidden = true;
     const ov = overlay('advPublish', '🗺 Publicar como aventura'); ov.onclose = backToPause;
@@ -302,6 +303,6 @@ export function createSocial(ctx) {
   let refAcc = 0;
   const upd = api.update;
   api.update = (dt) => { upd(dt); if (cloudWorld) { refAcc += dt; if (refAcc > 90) { refAcc = 0; refresh(); } } };
-  api.dispose = () => { btns.innerHTML = ''; hud?.remove(); g.features.capture = cap; };
+  api.dispose = () => { btns.innerHTML = ''; for (const b of extra) b.remove(); hud?.remove(); g.features.capture = cap; };
   return api;
 }

@@ -31,6 +31,10 @@ export class UI {
     document.addEventListener('mousemove', follow);
     document.addEventListener('mousedown', follow, true);
     this.nameTimer = 0;
+    const search = $('#craftSearch');
+    search.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') { search.value = ''; search.blur(); this.renderCraft(); } });
+    search.addEventListener('input', () => this.renderCraft());
+    $('#invSort').addEventListener('click', () => { this.sortInv(); this.sfx.click(); });
     document.querySelectorAll('#craftTabs button').forEach((b) => b.addEventListener('click', () => {
       this.filter = b.dataset.f;
       document.querySelectorAll('#craftTabs button').forEach((x) => x.classList.toggle('on', x === b));
@@ -130,7 +134,8 @@ export class UI {
     $('#inv').hidden = false;
     const st = [...stations].map((s) => STATION_NAMES[s]);
     $('#stationInfo').textContent = this.creative ? 'Modo creativo' : st.length ? 'Cerca: ' + st.join(' · ') : 'Sin estaciones cerca: fabricá una Mesa de trabajo';
-    $('#craftTabs').style.display = this.creative || this.cont || this.panel ? 'none' : '';
+    $('#craftTabs').style.display = this.cont || this.panel ? 'none' : '';
+    $('#craftTabs').classList.toggle('creative', !!this.creative);
     $('#craftTitle').textContent = this.panel ? this.panel.title : this.cont ? (this.cont.title ?? MACHINE_INFO[this.cont.c.type].title) : this.creative ? 'Todos los bloques' : 'Fabricación';
     this.renderGrid();
     this.renderSide();
@@ -340,15 +345,33 @@ export class UI {
     this.updateContainer();
   }
 
+  // ordenar la mochila (no toca la barra de abajo): junta pilas y agrupa bloques, herramientas y el resto
+  sortInv() {
+    const s = this.inv.slots, items = [];
+    for (let i = 9; i < 36; i++) if (s[i]) { items.push(s[i]); s[i] = null; }
+    const merged = [];
+    for (const it of items) {
+      const same = merged.find((m) => m.id === it.id && m.dur == null && it.dur == null && (m.q ?? 0) === (it.q ?? 0) && m.count < maxStack(it.id));
+      if (same) { const k = Math.min(it.count, maxStack(it.id) - same.count); same.count += k; it.count -= k; }
+      if (it.count > 0) merged.push(it);
+    }
+    const group = (id) => (id < 256 ? 0 : ITEMS[id]?.tool || ITEMS[id]?.weapon || ITEMS[id]?.ranged ? 1 : ITEMS[id]?.armor ? 2 : ITEMS[id]?.food || ITEMS[id]?.heal ? 3 : 4);
+    merged.sort((a, b) => group(a.id) - group(b.id) || a.id - b.id || b.count - a.count);
+    merged.forEach((it, i) => { s[9 + i] = it; });
+    this.inv.onChange(); this.renderGrid();
+  }
+
   renderCraft() {
     const list = $('#craftList');
     list.innerHTML = '';
+    const q = ($('#craftSearch')?.value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const match = (id) => !q || itemName(id).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
     if (this.creative) {
       list.className = 'palette';
       const ids = [];
       for (const b of BLOCKS) if (b && b.id > 1 && !b.hidden && !b.liquid) ids.push(b.id);
       for (const k of Object.keys(ITEMS)) ids.push(+k);
-      for (const id of ids) {
+      for (const id of ids.filter(match)) {
         const el = this.slotEl({ id, count: 1 }, -1);
         el.addEventListener('mousedown', (e) => {
           e.preventDefault();
@@ -366,7 +389,7 @@ export class UI {
     list.className = '';
     const inv = this.inv;
     const rows = RECIPES.map((r) => ({ r, ok: inv.canCraft(r, this.stations, this.known), locked: r.bp && !this.known.has(r.bp) }))
-      .filter(({ ok }) => this.filter === 'all' || ok);
+      .filter(({ ok, r }) => (this.filter === 'all' || ok) && (match(r.out[0]) || r.in.some(([id]) => match(id))));
     rows.sort((a, b) => (b.ok - a.ok) || (a.locked - b.locked));
     for (const { r, ok, locked } of rows) {
       const row = document.createElement('div');
