@@ -154,6 +154,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v13.1 — Caravanas, faros y estaciones**: caravanas de comerciantes que se pueden escoltar, faros con haz giratorio, templos hundidos en el mar, nieve en las mesetas en invierno, salar inundado tras la lluvia y géiseres más activos de noche.
 
+**v13.2 — Pincel, portones y planos**: pincel para teñir hormigón, vidrio y camas, portón automático que se abre al acercarte y planos compartibles como código de texto.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

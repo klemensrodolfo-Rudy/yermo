@@ -58,6 +58,8 @@ export const TILES = [
   'bed_red', 'bed_blue', 'bed_green', 'pillow', 'stove_top', 'stove_front', 'sink_top', 'counter_side', 'bookshelf_oak', 'frame_wood', 'cactus_side', 'fern', 'sofa', 'drawer_front', 'vase',
   // v12.8: exploración
   'x_mark',
+  // v13.2
+  'garage_door',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -469,6 +471,7 @@ const WALLS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 WALLS.forEach((wall, i) => def(1135 + i, { name: 'Cuadro con tu dibujo', tex: tx(T.frame_wood), solid: false, opaque: false, render: 'box', box: [WALL_BOX[wall.join(',')]], hardness: 0.3, drop: 0, wall2: wall, container: 'canvas', frame: true, hidden: true }));
 WALLS.forEach((wall, i) => def(1139 + i, { name: 'Cartel de pared', tex: tx(T.sign), solid: false, opaque: false, render: 'box', box: [SIGN_BOX[wall.join(',')]], hardness: 0.5, tool: 'axe', drop: 1139, wall2: wall, container: 'sign', wallSet: [1139, 1140, 1141, 1142], hidden: i > 0 }));
 // ---------- v12.8: exploración ----------
+def(1147, { name: 'Portón automático', tex: { top: T.metal_plate, side: T.garage_door, bottom: T.metal_plate }, hardness: 2.5, tool: 'pick' });
 def(1146, { name: 'Lámpara del faro', tex: tx(T.quartz_lamp), hardness: 1, tool: 'pick', light: 15 });
 def(1143, { name: 'Marca del tesoro', tex: { top: T.x_mark, side: T.sand, bottom: T.sand }, hardness: 0.5, tool: 'shovel', drop: 229 });
 export const V121 = { sandstone: 1036, tuff: 1037, stone_pol: 1038, stone_carv: 1039, deepstone_pol: 1040, deepstone_brk: 1041, deepstone_carv: 1042, sandstone_pol: 1043, sandstone_brk: 1044, sandstone_carv: 1045, basalt_pol: 1046, basalt_brk: 1047, basalt_carv: 1048, tuff_pol: 1049, tuff_brk: 1050, tuff_carv: 1051, glass_cyan: 1052, glass_sky: 1053, glass_pink: 1054, glass_white: 1055, glass_smoke: 1056, glass_lime: 1057, planks_oak: 1058, planks_palm: 1059, fence_wood: 1060, fence_oak: 1061, fence_palm: 1062, fence_elf: 1063, door_wood: 1064, door_oak: 1072, door_palm: 1080, door_elf: 1088, ruin_wall: 1096, old_tiles: 1097, rusty_sign: 1098, pipes: 1099, hanging_cables: 1100, broken_glass: 1101 };
@@ -758,6 +761,7 @@ export const ITEMS = {
   // v12.8
   442: { name: 'Mapa del tesoro', icon: 'tmap', stack: 1, tmap: true },
   443: { name: 'Globo aerostático', icon: 'balloon', vehicle: 'balloon' },
+  444: { name: 'Pincel', icon: 'brush', brush: true, durability: 200 },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -855,6 +859,9 @@ export const RECIPES = [
   { out: [59, 6], in: [[9, 3]], station: 'mesa' },
   { out: [60, 6], in: [[23, 3]], station: 'mesa' },
   { out: [9, 4], in: [[8, 2], [6, 2]], station: 'mesa' },
+  // v13.2
+  { out: [444, 1], in: [[256, 1], [176, 1], [353, 1]], station: 'mesa' },
+  { out: [1147, 2], in: [[260, 3], [27, 2]], station: 'mesa' },
   // v12.9
   { out: [443, 1], in: [[176, 12], [23, 6], [260, 2]], station: 'mesa' },
   // v12.7: de las cabras

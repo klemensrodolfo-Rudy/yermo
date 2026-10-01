@@ -154,6 +154,10 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Pincel, portones y planos': () => `
+      <p>${icon(444)} <b>Pincel</b> (palo, tela y una ficha): clic derecho al aire para elegir entre 12 colores; clic derecho sobre <b>hormigón, vidrio o una cama</b> para teñirlos. Se gasta de a poco.</p>
+      <p>${icon(1147)} <b>Portón automático</b>: se abre solo cuando te acercás (o un amigo) y se cierra cuando te vas. Apilalos para armar un portón de garaje.</p>
+      <p><b>📤 Planos compartibles</b>: en el ${icon(362)} plano de obra tocá «Compartir o pegar planos». Generás un código de texto con tu diseño para mandarlo por chat; quien lo pegue lo guarda y lo puede construir.</p>`,
     'Caravanas, faros y estaciones': () => `
       <p><b>🐐 Caravanas</b>: de día, cada tanto pasa una caravana de comerciantes con sus cabras. Hablá con el que va adelante: si la escoltás hasta su destino (sin alejarte mucho) te pagan <b>25 fichas</b> y un regalo. A mitad de camino suele haber una emboscada.</p>
       <p><b>🗼 Faros</b>: en el archipiélago, de noche el faro gira un haz de luz que se ve de lejos. <b>🏛 Ruinas hundidas</b>: en el mar abierto hay templos sumergidos con columnas rotas, luces y cofres del tesoro (llevá tanque de buceo).</p>

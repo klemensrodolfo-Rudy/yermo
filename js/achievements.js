@@ -94,6 +94,8 @@ export const ACHIEVEMENTS = [
   { id: 'obsidiana', name: 'Filo volcánico', desc: 'Fabricá una herramienta de obsidiana.' },
   { id: 'espeleo', name: 'Espeleólogo', desc: 'Encontrá un cristal de cueva.' },
   { id: 'galeria', name: 'Galería propia', desc: 'Colgá un cuadro con tu dibujo.' },
+  { id: 'pintor13', name: 'Mano de pintor', desc: 'Teñí un bloque con el pincel.' },
+  { id: 'planos', name: 'Arquitecto compartido', desc: 'Guardá un diseño que te pasaron como código.' },
   { id: 'escolta', name: 'Escolta de confianza', desc: 'Llevá una caravana sana y salva a destino.' },
   { id: 'cielo', name: 'Mirá para arriba', desc: 'Viví un eclipse o una lluvia de estrellas.' },
   { id: 'globo', name: 'Viento en la cara', desc: 'Volá en globo aerostático.' },
