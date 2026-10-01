@@ -256,6 +256,10 @@ export function setupGuide(ui, getGame) {
       <p>${icon(253)} <b>Cofre con acertijo</b>: para abrirlo hay que responder una pregunta. El que lo pone puede escribir su propia pregunta y respuesta con <b>Shift + clic derecho</b> (por ejemplo, para que los chicos encuentren un premio). Si no tiene pregunta, inventa una cuenta.</p>
       <h3>🏗 Construcción guiada</h3>
       <p>En la pausa, <b>🏗 Construcción guiada</b>: elegí casita, torre, puente, fuente o cohete y aparece una silueta transparente delante tuyo. Poné los bloques donde marca, capa por capa; abajo a la izquierda te dice cuántos faltan de cada uno. Al terminar ganás 5 fichas.</p>`,
+    'Celular y sin conexión': () => `
+      <p><b>🔋 Ahorro de batería</b> (en la pausa): limita a 30 cuadros por segundo, baja un poco la resolución y saca las partículas. Ideal para jugar mucho rato en el celu.</p>
+      <p><b>⚡ Distancia automática</b> (activada de entrada): si el juego se traba, dibuja un poco menos lejos; cuando vuelve a andar fluido, recupera la distancia que elegiste. Además, lo que está lejos se dibuja sin relieve ni sombras, que no se notan y cuestan mucho.</p>
+      <p><b>✈ Sin conexión</b>: la app instalada guarda todo lo necesario la primera vez que la abrís con internet. Después podés jugar tus mundos del dispositivo en el avión o donde no haya señal; lo online (salas, mundo del grupo, aventuras, galería) vuelve cuando haya internet.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

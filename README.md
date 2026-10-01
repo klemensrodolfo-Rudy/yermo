@@ -105,6 +105,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v9.8 — Aprender y construir**: modo aprender con el robot Profe Robi (cuentas y palabras por niveles), cofres con acertijo (con preguntas propias) y construcción guiada capa por capa con silueta fantasma.
 
+**v9.9 — Celular y sin conexión**: ahorro de batería (30 FPS), distancia de visión automática, relieve y sombras sólo de cerca, y la app instalada guarda todo para jugar sin internet (aviso en el menú). Al agregar un archivo nuevo en `js/`, sumarlo a la lista de `sw.js`.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

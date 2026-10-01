@@ -311,6 +311,7 @@
     <button id="openAdventures" style="width:100%;margin-top:6px">🗺 Aventuras de la comunidad</button>
     <button id="installApp" style="width:100%;margin-top:6px" hidden>📲 Instalar YERMO (pantalla completa, sin la barra)</button>
     <p id="installHint" class="muted" style="font-size:15px;margin:6px 0 0" hidden></p>
+    <p id="offlineNote" class="muted" style="font-size:15px;margin:6px 0 0;color:#ffd84a" hidden>✈ Sin conexión: tus mundos de este dispositivo andan igual. Lo online, la nube y las aventuras vuelven cuando haya internet.</p>
     <div id="joinForm" hidden>
       <div class="row">
         <div><label for="jName">Tu nombre</label><input id="jName" maxlength="20" placeholder="Superviviente"></div>
@@ -423,6 +424,8 @@
     <label class="check"><input type="checkbox" id="optLearn"> 📚 Modo aprender</label>
     <label for="optQuality">Calidad gráfica</label>
     <select id="optQuality"><option value="bajo">Baja (PC lenta)</option><option value="medio">Media</option><option value="alto">Alta</option></select>
+    <label class="check"><input type="checkbox" id="optBattery"> 🔋 Ahorro de batería (30 cuadros por segundo, menos efectos)</label>
+    <label class="check"><input type="checkbox" id="optAutoDist"> ⚡ Distancia automática (dibuja menos lejos si se traba)</label>
     <label>Texturas <small id="packInfo" class="muted"></small></label>
     <div class="row2"><button id="packExport" title="Descarga un PNG con todas las texturas para editarlo">Exportar plantilla</button><button id="packLoad" title="PNG de 16 columnas; los tiles vacíos quedan como están">Cargar paquete…</button></div>
     <button id="packClear" style="width:100%;margin-top:4px" hidden>Quitar paquete de texturas</button>

@@ -172,7 +172,7 @@ const frag = (water) => /* glsl */`
     if (texFx < 0.5) spec = 0.0;
     // normal con relieve (marco tangente a partir de las derivadas)
     vec3 Np = N;
-    if (face < 6 && texFx > 0.5) {
+    if (face < 6 && texFx > 0.5 && vDepth < 48.0) {
       vec3 dp1 = dFdx(vWorld), dp2 = dFdy(vWorld);
       vec2 du1 = dFdx(lt), du2 = dFdy(lt);
       vec3 dp2p = cross(dp2, N), dp1p = cross(N, dp1);
@@ -185,7 +185,7 @@ const frag = (water) => /* glsl */`
     }
     float sky = pow(vLit.x, 1.4) * daylight;
     float shadowF = 1.0;
-    if (shadowOn > 0.5 && vLit.x > 0.6) { shadowF = shadowAt(vWorld + vec3(0.0, 0.02, 0.0)); sky *= mix(0.5, 1.0, shadowF); }
+    if (shadowOn > 0.5 && vLit.x > 0.6 && vDepth < 80.0) { shadowF = shadowAt(vWorld + vec3(0.0, 0.02, 0.0)); sky *= mix(0.5, 1.0, shadowF); }
     float blk = pow(vLit.y, 1.25);
     vec3 Ls = sunDir.y > -0.05 ? sunDir : -sunDir;
     vec3 V = normalize(cameraPosition - vWorld);
@@ -375,9 +375,10 @@ let settings = { quality: 'medio', music: 50, sfx: 60 };
 try { Object.assign(settings, JSON.parse(localStorage.getItem('yermo-settings') || '{}')); } catch { /* por defecto */ }
 function applySettings() {
   const q = QUALITY[settings.quality] || QUALITY.medio;
-  renderer.setPixelRatio(q.ratio);
+  // ahorro de batería: menos resolución, sin partículas y 30 cuadros por segundo
+  renderer.setPixelRatio(settings.battery ? Math.min(q.ratio, 0.75) : q.ratio);
   renderer.setSize(innerWidth, innerHeight);
-  particles.enabled = q.particles;
+  particles.enabled = q.particles && !settings.battery;
   uniforms.waterFx.value = q.water;
   uniforms.texFx.value = settings.quality === 'bajo' ? 0 : 1;
   sfx.vol = settings.sfx / 100; if (sfx.master) sfx.master.gain.value = sfx.vol;
@@ -1258,6 +1259,12 @@ $('#optSens').oninput = (e) => { const v = +e.target.value; game.player.sens = v
 $('#optVol').oninput = (e) => { settings.sfx = +e.target.value; applySettings(); };
 $('#optMusic').oninput = (e) => { settings.music = +e.target.value; applySettings(); };
 $('#optQuality').onchange = (e) => { settings.quality = e.target.value; applySettings(); };
+$('#optBattery').onchange = (e) => { settings.battery = e.target.checked; applySettings(); flash(settings.battery ? '🔋 Ahorro de batería: 30 cuadros por segundo y menos efectos' : 'Ahorro de batería desactivado'); };
+$('#optAutoDist').onchange = (e) => { settings.autoDist = e.target.checked; applySettings(); if (!settings.autoDist && game) game.world.renderDist = game.meta.renderDist || game.world.renderDist; };
+$('#optBattery').checked = !!settings.battery; $('#optAutoDist').checked = settings.autoDist !== false;
+// sin conexión: se puede jugar igual (lo online y la nube quedan para cuando vuelva internet)
+function onlineState() { const off = !navigator.onLine; $('#offlineNote').hidden = !off; }
+addEventListener('online', onlineState); addEventListener('offline', onlineState); onlineState();
 // cambiar el nombre en plena partida: mascotas, terrenos, empleados y online siguen siendo tuyos
 function renamePlayer() {
   if (!game) return;
@@ -1465,17 +1472,30 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '9.8 · 2026-10-02';
+const VERSION = '9.9 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
+let skipT = 0, distAcc = 0, distLow = 0, distHigh = 0;
 function loop(now) {
   requestAnimationFrame(loop);
+  if (settings.battery && now - skipT < 30) return;
+  skipT = now;
   // controles táctiles visibles sólo jugando (sin menús, mochila ni ventanas encima)
   const playing = !!game && !ui.open && $('#menu').hidden && $('#loading').hidden && !document.querySelector('.overlay:not([hidden]), .v6modal');
   if (playing !== wasPlaying) { wasPlaying = playing; document.body.classList.toggle('playing', playing); }
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   fpsAcc += dt; fpsN++; if (fpsAcc > 0.5) { fps = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
+  // distancia automática: si se traba, dibuja menos lejos; si anda sobrado, vuelve a lo elegido
+  if (game && settings.autoDist !== false && !paused && document.visibilityState === 'visible') {
+    distAcc += dt;
+    if (distAcc > 1) {
+      distAcc = 0;
+      const target = settings.battery ? 26 : 50, W = game.world, want = game.meta.renderDist || 6;
+      if (fps && fps < target * 0.55 && W.renderDist > 3) { if (++distLow >= 4) { distLow = 0; W.renderDist--; if (!game.distNote) { game.distNote = true; flash('⚡ Bajé un poco la distancia de visión para que ande fluido'); } } } else distLow = 0;
+      if (fps >= target * 0.95 && W.renderDist < want) { if (++distHigh >= 10) { distHigh = 0; W.renderDist++; } } else distHigh = 0;
+    }
+  }
   renderer.clear();
   input.updatePad(dt);
   if (!game) {
