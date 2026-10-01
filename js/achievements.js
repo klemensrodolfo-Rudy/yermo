@@ -94,6 +94,7 @@ export const ACHIEVEMENTS = [
   { id: 'obsidiana', name: 'Filo volcánico', desc: 'Fabricá una herramienta de obsidiana.' },
   { id: 'espeleo', name: 'Espeleólogo', desc: 'Encontrá un cristal de cueva.' },
   { id: 'galeria', name: 'Galería propia', desc: 'Colgá un cuadro con tu dibujo.' },
+  { id: 'tesoro', name: 'Cazatesoros', desc: 'Encontrá el tesoro de un mapa.' },
   { id: 'pastor', name: 'Pastor del yermo', desc: 'Ordeñá una cabra domesticada.' },
   { id: 'cañones', name: 'Tierra roja', desc: 'Visitá los cañones rojos, el salar y el campo de géiseres.' },
 ];

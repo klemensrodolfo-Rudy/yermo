@@ -943,6 +943,7 @@ export class WorldGen {
     this.wrecks(cx, cz, set);
     this.military(cx, cz, set);
     this.undercity(cx, cz, set);
+    this.ghostTowns(cx, cz, set, colAt);
 
     return data;
   }
@@ -1397,6 +1398,65 @@ export class WorldGen {
     const c = this.column(x, z);
     if (c.biome !== BIOME.BREW || c.h <= SEA + 1) return null;
     return { x, z, y: c.h };
+  }
+
+  // v12.8: pueblo fantasma en el fondo de los cañones: casillas de madera vacías alrededor de una calle de tierra
+  // busca (una sola vez por celda) un lugar plano dentro de un cañón
+  ghostSite(cxg, czg, CELL) {
+    this.ghostCache = this.ghostCache || new Map();
+    const key = cxg + ',' + czg;
+    if (this.ghostCache.has(key)) return this.ghostCache.get(key);
+    let site = null;
+    const s = this.seed;
+    if (hash2(s + 801, cxg, czg) < 0.7) {
+      for (let k = 0; k < 14 && !site; k++) {
+        const tx = Math.floor((cxg + 0.15 + hash2(s + 802 + k, cxg, czg) * 0.7) * CELL), tz = Math.floor((czg + 0.15 + hash2(s + 803 + k * 7, cxg, czg) * 0.7) * CELL);
+        const c = this.column(tx, tz);
+        if (c.biome !== BIOME.CANYON || c.h <= SEA + 1) continue;
+        let flat = true;
+        for (const [ox, oz] of [[16, 0], [-16, 0], [0, 10], [0, -10], [10, 6], [-10, -6]]) { const o = this.column(tx + ox, tz + oz); if (o.biome !== BIOME.CANYON || Math.abs(o.h - c.h) > 2) { flat = false; break; } }
+        if (flat) site = [tx, tz, c.h];
+      }
+    }
+    if (this.ghostCache.size > 400) this.ghostCache.clear();
+    this.ghostCache.set(key, site);
+    return site;
+  }
+  ghostTowns(cx, cz, set, colAt) {
+    const CELL = 240, x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    const gx = Math.floor((x0 + 8) / CELL), gz = Math.floor((z0 + 8) / CELL);
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
+      const cxg = gx + dx, czg = gz + dz;
+      const site = this.ghostSite(cxg, czg, CELL);
+      if (!site) continue;
+      const [tx, tz, base] = site;
+      if (tx + 30 < x0 || tx - 30 > x0 + 15 || tz + 30 < z0 || tz - 30 > z0 + 15) continue;
+      const L = (wx, y, wz, id) => set(wx - x0, y, wz - z0, id);
+      // calle
+      for (let i = -18; i <= 18; i++) for (let w = -2; w <= 2; w++) { L(tx + i, base, tz + w, 1102); for (let y = base + 1; y < base + 5; y++) L(tx + i, y, tz + w, 0); }
+      const houses = [[-14, -9], [-4, -9], [6, -9], [-10, 4], [2, 4], [12, 4]];
+      houses.forEach(([hx, hz], n) => {
+        if (hash2(s + 810 + n, cxg, czg) < 0.25) return;
+        const ax = tx + hx, az = tz + hz, wood = n % 2 ? 1059 : 23, front = hz < 0 ? az + 4 : az;
+        for (let x = 0; x < 6; x++) for (let z = 0; z < 5; z++) {
+          const X = ax + x, Z = az + z, edge = x === 0 || x === 5 || z === 0 || z === 4;
+          L(X, base, Z, 23); for (let y = base - 3; y < base; y++) L(X, y, Z, 1103);
+          for (let y = base + 1; y <= base + 4; y++) {
+            let id = 0;
+            if (edge && y <= base + 3) {
+              id = wood;
+              const win = y === base + 2 && (x === 2 || x === 3) && (z === 0 || z === 4) && Z !== front;
+              if (win) id = hash3(s + 820, X, y, Z) < 0.6 ? 1101 : 0;
+              if (Z === front && x === 2 && y <= base + 2) id = 0; // puerta abierta
+              if (hash3(s + 821, X, y, Z) < 0.12) id = 0; // tablas que faltan
+            } else if (y === base + 4) id = hash3(s + 822, X, y, Z) < 0.85 ? 212 : 0; // techo de paja medio caído
+            L(X, y, Z, id);
+          }
+        }
+        L(ax + 4, base + 1, az + 2, hash2(s + 830 + n, cxg, czg) < 0.12 ? 228 : 1144);
+        if (n === 1) { L(ax + 1, base + 1, az + 1, 1100); L(ax + 2, base + 1, front + (hz < 0 ? 1 : -1), 1098); }
+      });
+    }
   }
 
   giantMushroom(set, setAir, lx, y, lz, wx, wz) {

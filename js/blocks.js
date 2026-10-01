@@ -56,6 +56,8 @@ export const TILES = [
   'floodgate', 'bigbattery_side', 'bigbattery_top', 'turbine', 'streetlamp_off', 'streetlamp_on', 'hanglamp_off', 'hanglamp_on', 'waterer', 'clay_oven_front', 'clay_oven_side', 'clay_oven_top',
   // v12.4: hogar
   'bed_red', 'bed_blue', 'bed_green', 'pillow', 'stove_top', 'stove_front', 'sink_top', 'counter_side', 'bookshelf_oak', 'frame_wood', 'cactus_side', 'fern', 'sofa', 'drawer_front', 'vase',
+  // v12.8: exploración
+  'x_mark',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -142,6 +144,7 @@ def(27, { name: 'Placa de metal', tex: tx(T.metal_plate), hardness: 4, tool: 'pi
 def(28, { name: 'Lámpara de uranio', tex: tx(T.lamp), hardness: 1, light: 15 });
 def(29, { name: 'Barril tóxico', tex: { top: T.barrel_top, side: T.barrel_side, bottom: T.barrel_top }, hardness: 2, tool: 'pick', light: 8 });
 def(30, { name: 'Escombros', tex: tx(T.rubble), hardness: 0.8, tool: 'shovel' });
+def(1144, { name: 'Baúl del pueblo fantasma', tex: { top: T.crate_top, side: T.planks_palm, bottom: T.crate_top }, hardness: 1.2, tool: 'axe', drop: 0, loot: 'ghost' });
 def(31, { name: 'Caja de suministros', tex: { top: T.crate_top, side: T.crate_side, bottom: T.crate_top }, hardness: 1.2, tool: 'axe', drop: 0, loot: 'normal' });
 def(32, { name: 'Bolsas de arena', tex: tx(T.sandbag), hardness: 1, tool: 'shovel' });
 def(33, { name: 'Catre', tex: { top: T.cot_top, side: T.cot_side, bottom: T.planks }, hardness: 1, tool: 'axe', bed: true });
@@ -465,6 +468,8 @@ const SIGN_BOX = { '1,0': [0, 4, 1, 1, 12, 15], '-1,0': [15, 4, 1, 16, 12, 15], 
 const WALLS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 WALLS.forEach((wall, i) => def(1135 + i, { name: 'Cuadro con tu dibujo', tex: tx(T.frame_wood), solid: false, opaque: false, render: 'box', box: [WALL_BOX[wall.join(',')]], hardness: 0.3, drop: 0, wall2: wall, container: 'canvas', frame: true, hidden: true }));
 WALLS.forEach((wall, i) => def(1139 + i, { name: 'Cartel de pared', tex: tx(T.sign), solid: false, opaque: false, render: 'box', box: [SIGN_BOX[wall.join(',')]], hardness: 0.5, tool: 'axe', drop: 1139, wall2: wall, container: 'sign', wallSet: [1139, 1140, 1141, 1142], hidden: i > 0 }));
+// ---------- v12.8: exploración ----------
+def(1143, { name: 'Marca del tesoro', tex: { top: T.x_mark, side: T.sand, bottom: T.sand }, hardness: 0.5, tool: 'shovel', drop: 229 });
 export const V121 = { sandstone: 1036, tuff: 1037, stone_pol: 1038, stone_carv: 1039, deepstone_pol: 1040, deepstone_brk: 1041, deepstone_carv: 1042, sandstone_pol: 1043, sandstone_brk: 1044, sandstone_carv: 1045, basalt_pol: 1046, basalt_brk: 1047, basalt_carv: 1048, tuff_pol: 1049, tuff_brk: 1050, tuff_carv: 1051, glass_cyan: 1052, glass_sky: 1053, glass_pink: 1054, glass_white: 1055, glass_smoke: 1056, glass_lime: 1057, planks_oak: 1058, planks_palm: 1059, fence_wood: 1060, fence_oak: 1061, fence_palm: 1062, fence_elf: 1063, door_wood: 1064, door_oak: 1072, door_palm: 1080, door_elf: 1088, ruin_wall: 1096, old_tiles: 1097, rusty_sign: 1098, pipes: 1099, hanging_cables: 1100, broken_glass: 1101 };
 export const CONC_COLORS = [1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035];
 
@@ -749,6 +754,8 @@ export const ITEMS = {
   439: { name: 'Leche de cabra', icon: 'potion', color: 0xf4f0e6, thirst: 6, food: 2 },
   440: { name: 'Queso de cabra', icon: 'cheese', food: 7 },
   441: { name: 'Dulce de leche', icon: 'jar', food: 5, buff: 'frescura' },
+  // v12.8
+  442: { name: 'Mapa del tesoro', icon: 'tmap', stack: 1, tmap: true },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -788,6 +795,8 @@ LOOT_TABLES.treasure = [[353, 10, 30, 1], [218, 1, 3, 0.6], [397, 1, 1, 0.3], [4
 LOOT_TABLES.military = [[332, 6, 14, 0.7], [358, 1, 3, 0.5], [333, 1, 1, 0.15], [334, 1, 1, 0.1], [302, 1, 1, 0.1], [367, 1, 1, 0.3], [366, 1, 1, 0.12], [339, 1, 2, 0.4], [306, 1, 1, 0.3]];
 LOOT_TABLES.abyss = [[353, 3, 10, 0.8], [261, 1, 4, 0.6], [313, 1, 1, 0.15], [306, 1, 2, 0.5], [332, 5, 12, 0.5], [358, 1, 3, 0.4], [348, 1, 1, 0.05], [366, 1, 1, 0.08], [302, 1, 1, 0.1], [303, 1, 1, 0.1]];
 LOOT_TABLES.brew.push([350, 1, 1, 0.3], [327, 1, 3, 0.2]);
+LOOT_TABLES.ghost = [[442, 1, 1, 0.35], [353, 3, 10, 0.7], [258, 2, 6, 0.6], [260, 1, 2, 0.3], [416, 1, 3, 0.3], [336, 1, 2, 0.3], [273, 1, 2, 0.4], [1098, 1, 1, 0.2]];
+LOOT_TABLES.normal.push([442, 1, 1, 0.025]); LOOT_TABLES.military.push([442, 1, 1, 0.05]); LOOT_TABLES.treasure.push([442, 1, 1, 0.12], [1111, 1, 2, 0.2], [441, 1, 2, 0.2]);
 export const LOOT = LOOT_TABLES.normal;
 
 export const isBlock = (id) => id > 0 && (id < 256 || (id >= NEW_BLOCKS && id < MAXB));

@@ -1379,6 +1379,8 @@ HD.fern = (t) => { t.clear(); for (let i = 0; i < 9; i++) { const a = -1.2 + i *
 HD.sofa = (t) => t.fill((x, y) => { const seam = x % 16 === 0 || y % 16 === 0, btn = x % 16 === 8 && y % 16 === 8; t.H(x, y, seam || btn ? 0.2 : 0.65); return scl([150, 54, 50], seam || btn ? 0.7 : 0.92 + t.fbm(x, y, 4, 2) * 0.1); });
 HD.drawer_front = (t) => t.fill((x, y) => { const gap = y % 8 === 0 || x === 0 || x === 31, knob = (y % 8 === 4) && (x === 15 || x === 16); if (knob) { t.H(x, y, 1); t.S(x, y, 0.7); return [200, 180, 110]; } t.H(x, y, gap ? 0.1 : 0.6); return scl([150, 110, 70], gap ? 0.55 : 0.9 + t.anoise(x, y, 2, 16, y >> 3) * 0.15); });
 HD.vase = (t) => t.fill((x, y) => { const band = y > 12 && y < 18; t.S(x, y, 0.7); t.H(x, y, 0.6); return band ? [230, 200, 90] : scl([60, 120, 190], 0.9 + Math.sin(x * 0.4) * 0.05); });
+// v12.8: la X del tesoro
+HD.x_mark = (t) => { HD.sand(t); for (let i = 3; i < 29; i++) for (const d of [-1, 0, 1]) { t.P(i + d, i, scl([190, 40, 30], 0.9 + t.rnd() * 0.15)); t.P(31 - i + d, i, scl([190, 40, 30], 0.9 + t.rnd() * 0.15)); } };
 // v12: hormigón de colores
 const concColor = (c) => (t) => {
   t.fill((x, y) => {
@@ -1592,6 +1594,7 @@ export function drawIcon(canvas, id, atlas) {
     case 'flower': for (let y = 8; y < 15; y++) put(8, y, '#4a7a2a'); put(7, 11, '#5a8a34'); put(6, 10, '#5a8a34'); lump(0xe8e0ff, 8, 6, [3, 3]); put(8, 6, '#ffe070'); break;
     case 'shield': for (let y = 2; y < 15; y++) for (let x = 3; x < 13; x++) { const w = y < 10 ? 5 : 5 - (y - 9); if (Math.abs(x - 7.5) < w) put(x, y, rgb(Math.abs(x - 7.5) > w - 1.2 || y === 2 ? 0x9aa0a8 : it.color, 1 + (7.5 - x) * 0.03)); } put(7, 7, '#d8b040'); put(8, 7, '#d8b040'); break;
     case 'mithril_ingot': ingot(0xd8e8f0); break;
+    case 'tmap': { for (let y = 3; y < 14; y++) for (let x = 2; x < 14; x++) put(x, y, rgb(0xd8c08a, 0.9 + ((x * 7 + y * 3) % 5) * 0.03 - (x === 2 || x === 13 ? 0.15 : 0))); for (const [x, y] of [[4, 11], [5, 10], [6, 10], [7, 9], [8, 8]]) put(x, y, '#7a5a3a'); put(10, 5, '#c83a2a'); put(11, 6, '#c83a2a'); put(11, 5, '#c83a2a'); put(10, 6, '#c83a2a'); break; }
     case 'cheese': { for (let y = 6; y < 13; y++) for (let x = 2; x < 14; x++) { if (y - 6 > (x - 2) * 0.6 + 1) continue; put(x, y, rgb(0xf0d060, y === 6 ? 1.15 : 1 - (y - 6) * 0.03)); } put(6, 10, '#c8a030'); put(9, 11, '#c8a030'); put(11, 9, '#c8a030'); break; }
     case 'jar': { for (let y = 5; y < 15; y++) for (let x = 4; x < 12; x++) put(x, y, rgb(y < 7 ? 0xd8d0c0 : 0xa86a2a, x < 6 ? 1.2 : 1)); for (let x = 3; x < 13; x++) { put(x, 3, '#c83a3a'); put(x, 4, '#e8e0d0'); } break; }
     case 'gem': { const c = it.color; for (let y = 4; y < 13; y++) for (let x = 4; x < 12; x++) { const d = Math.abs(x - 7.5) + Math.abs(y - 8.5) * 0.9; if (d < 4.5) put(x, y, rgb(c, 1.15 - d * 0.06 - (x > 8 ? 0.12 : 0))); } put(6, 6, '#ffffff'); put(7, 5, '#ffffff'); break; }

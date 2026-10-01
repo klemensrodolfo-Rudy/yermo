@@ -146,6 +146,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v12.7 — Fauna y aventuras**: cabras montés que se domestican y se ordeñan (queso y dulce de leche), lagartijas y murciélagos, 6 misiones nuevas en los pueblos, desafíos diarios y semanales de cocinar y ordeñar, página de Cocina en el libro, tormentas de arena en los cañones, sonido de los géiseres y carga de baterías compartida en línea.
 
+**v12.8 — Tesoros**: mapas del tesoro con una X en el piso y un cofre enterrado, pueblos fantasma en los cañones rojos, comerciante que compra y vende lo nuevo y logro Cazatesoros.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

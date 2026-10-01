@@ -154,6 +154,10 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Tesoros y pueblos fantasma': () => `
+      <p>${icon(442)} <b>Mapas del tesoro</b>: aparecen en cajas y cofres (más en los pueblos fantasma y en cofres del tesoro) y los vende el comerciante. Al usarlo queda marcado un lugar a 120-320 bloques, con distancia y dirección. Cuando te acercás aparece una ${icon(1143)} <b>X roja</b> en el piso: cavá dos bloques debajo y está el ${icon(228)} cofre del tesoro.</p>
+      <p><b>Pueblos fantasma</b>: en lugares planos de los cañones rojos hay casillas de madera abandonadas, con techos caídos, ventanas rotas y ${icon(1144)} baúles con fichas, cuarzo, cuero y a veces un mapa o un cofre del tesoro.</p>
+      <p>El <b>comerciante</b> ahora compra sal, leche, cuarzo y queso, y vende mapas del tesoro, obsidiana, cuarzo, hornos de barro y molinos.</p>`,
     'Fauna nueva': () => `
       <p><b>🐐 Cabras montés</b>: andan en grupo por los cañones rojos y los Montes de Hierroalto. Se domestican con ${icon(282)} cebada o ${icon(281)} semillas; una cabra domesticada se <b>ordeña con una ${icon(295)} botella vacía</b> (cada minuto y medio) y da ${icon(439)} leche. Con cebada tienen crías.</p>
       <p>En la cocina o el horno de barro: ${icon(440)} <b>queso de cabra</b> (2 leches y sal) y ${icon(441)} <b>dulce de leche</b> (3 leches, te deja liviano).</p>

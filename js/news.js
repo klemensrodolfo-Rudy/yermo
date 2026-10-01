@@ -2,6 +2,7 @@
 import { itemName } from './blocks.js';
 
 export const NEWS = [
+  ['12.8', 'Tesoros', [[442, 'Mapas del tesoro: una X en el piso y un cofre enterrado.'], [1144, 'Pueblos fantasma en los cañones rojos.'], [258, 'El comerciante compra y vende lo nuevo.'], [251, 'Logro Cazatesoros.']]],
   ['12.7', 'Fauna y aventuras', [[439, 'Cabras montés: se domestican y se ordeñan. Queso y dulce de leche.'], [271, 'Lagartijas en los cañones y murciélagos en las cuevas.'], [1121, '6 misiones nuevas en los pueblos y desafíos de cocinar, ordeñar y explorar.'], [423, 'Página de Cocina en el libro de colección.'], [1103, 'Tormentas de arena en los cañones y sonido de los géiseres.'], [1120, 'En línea, la carga de las baterías se ve igual para todos.']]],
   ['12.6', 'Orden y logros', [[1035, 'Categorías en la fabricación y en el modo creativo: Construir, Decorar, Máquinas, Equipo, Comida y Otros.'], [251, '8 logros nuevos para lo que se sumó en la v12.'], [191, 'Este panel de novedades.']]],
   ['12.5', 'Terreno sin repetición', [[2, 'La piedra, el pasto, la tierra y la arena cambian de tono por zonas.']]],
