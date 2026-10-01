@@ -136,6 +136,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v12.2 — Mundo**: biomas nuevos (cañones rojos, salar y campo de géiseres con géiseres que te lanzan), hongos gigantes, cuevas con estalactitas, hongos que brillan, cristales, lagos subterráneos y obsidiana; cuarzo y herramientas de obsidiana.
 
+**v12.3 — Mecanismos y cocina**: molinos de viento con aspas que giran, baterías recargables, compuertas de agua, farolas y lámparas colgantes, regadores de huerta, cintas que llevan al jugador, horno de barro con 6 comidas que dan efectos (abrigo, visión nocturna, velocidad, recuperación, defensa y fuerza) y ruinas más variadas en las ciudades.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

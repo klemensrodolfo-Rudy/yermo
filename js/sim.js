@@ -31,6 +31,7 @@ const k3 = (x, y, z) => x + ',' + y + ',' + z;
 const p3 = (k) => k.split(',').map(Number);
 const CROP_IDS = new Set();
 for (const c of Object.values(CROPS)) for (let s = 0; s < 4; s++) CROP_IDS.add(c.base + s);
+export const BATTERY_MAX = 900; // segundos de energía
 const CONDUCT = new Set([75, 78, 136, 138, 241, 243]); // cables, cercos, palanca, sensor, pulsador y placa encendidos
 const SEATS = new Set([111, 112, 113, 114]);
 
@@ -115,7 +116,7 @@ export class Sim {
       else if (B.elec) this.elec.add(k3(x, y, z));
       if (B.marker) this.markers.push({ type: B.marker, x, y, z });
       if (b === 181) this.fires.set(k3(x, y, z), 0);
-      if (b === 189) this.sprinklers.add(k3(x, y, z));
+      if (b === 189 || b === 1127) this.sprinklers.add(k3(x, y, z));
     }
   }
 
@@ -123,7 +124,7 @@ export class Sim {
     const k = k3(x, y, z);
     if (CROP_IDS.has(id) && BLOCKS[id].crop.stage < 3) this.crops.add(k); else this.crops.delete(k);
     if (id === 181) { if (!this.fires.has(k)) this.fires.set(k, 0); } else this.fires.delete(k);
-    if (id === 189) this.sprinklers.add(k); else this.sprinklers.delete(k);
+    if (id === 189 || id === 1127) this.sprinklers.add(k); else this.sprinklers.delete(k);
     if (BLOCKS[id]?.elec) this.elec.add(k); else if (BLOCKS[old]?.elec) { this.elec.delete(k); this.powered.delete(k); }
     if (BLOCKS[old]?.elec || BLOCKS[id]?.elec) this.acc.power = 10;
     if ((BLOCKS[old]?.container || BLOCKS[old]?.claim) && !BLOCKS[id]?.container && !BLOCKS[id]?.claim) this.containers.delete(k);
@@ -264,6 +265,11 @@ export class Sim {
           if (nb === 189) wet.add(nk); else q.push(nk);
         }
       }
+    }
+    // regadores de huerta: alcanza con que toquen agua (sin bomba ni cañerías)
+    for (const k of this.sprinklers) {
+      const [x, y, z] = p3(k);
+      if (w.getBlock(x, y, z) === 1127 && this.touches(x, y, z, (n) => LIQ[n] === 2)) wet.add(k);
     }
     this.wet = wet;
     // los aspersores apagan fuego cercano
@@ -503,27 +509,44 @@ export class Sim {
       const near = ents.some((p) => Math.abs(p.x - x - 0.5) < 5 && Math.abs(p.y - y) < 4 && Math.abs(p.z - z - 0.5) < 5);
       if (near && b === 137) w.setBlock(x, y, z, 138); else if (!near && b === 138) w.setBlock(x, y, z, 137);
     }
-    const sources = [];
+    const sources = [], batteries = [];
     for (const k of this.elec) {
       const [x, y, z] = p3(k);
       const b = w.getBlock(x, y, z);
       if (b === 76) { const c = this.containers.get(k); if (c && c.burn > 0) sources.push(k); }
       else if (b === 77 && this.daylight > 0.45 && this.skyOpen(x, y, z)) sources.push(k);
       else if (b === 244) sources.push(k);
+      else if (b === 1121 && (this.windK || 0) > 0.12 && this.skyOpen(x, y + 1, z)) sources.push(k);
+      else if (b === 1120) batteries.push(k);
     }
-    const powered = new Set(sources);
-    const queue = [...sources];
-    while (queue.length && powered.size < 2048) {
-      const k = queue.shift();
-      const [x, y, z] = p3(k);
-      for (const [dx, dy, dz] of N6) {
-        const nk = k3(x + dx, y + dy, z + dz);
-        if (powered.has(nk) || !this.elec.has(nk)) continue;
-        const nb = w.getBlock(x + dx, y + dy, z + dz);
-        if (nb === 135 || nb === 137 || nb === 240 || nb === 242) continue; // palanca, sensor, pulsador o placa apagados: cortan el circuito
-        powered.add(nk);
-        if (CONDUCT.has(nb)) queue.push(nk);
+    const spread = (srcs) => {
+      const pw = new Set(srcs);
+      const queue = [...srcs];
+      while (queue.length && pw.size < 2048) {
+        const k = queue.shift();
+        const [x, y, z] = p3(k);
+        for (const [dx, dy, dz] of N6) {
+          const nk = k3(x + dx, y + dy, z + dz);
+          if (pw.has(nk) || !this.elec.has(nk)) continue;
+          const nb = w.getBlock(x + dx, y + dy, z + dz);
+          if (nb === 135 || nb === 137 || nb === 240 || nb === 242) continue; // palanca, sensor, pulsador o placa apagados: cortan el circuito
+          pw.add(nk);
+          if (CONDUCT.has(nb)) queue.push(nk);
+        }
       }
+      return pw;
+    };
+    let powered = spread(sources);
+    // baterías: se cargan si les llega energía; si no, la entregan mientras les quede
+    if (batteries.length) {
+      const extra = [];
+      for (const k of batteries) {
+        let c = this.containers.get(k);
+        if (!c) { c = { type: 'battery', charge: 0 }; this.containers.set(k, c); }
+        if (powered.has(k)) c.charge = Math.min(BATTERY_MAX, (c.charge || 0) + 2);
+        else if (c.charge > 0) { c.charge = Math.max(0, c.charge - 1); extra.push(k); }
+      }
+      if (extra.length) powered = spread([...sources, ...extra]);
     }
     // bloques musicales: suenan cuando les llega energía
     for (const k of powered) if (!this.powered.has(k)) { const [x, y, z] = p3(k), b = w.getBlock(x, y, z); if (b === 245 || b === 246) this.onNote?.(x, y, z, b); }
@@ -535,6 +558,8 @@ export class Sim {
       else if (b === 74 && !powered.has(k)) w.setBlock(x, y, z, 73);
       else if (b === 139 && powered.has(k)) w.setBlock(x, y, z, 140);
       else if (b === 140 && !powered.has(k)) w.setBlock(x, y, z, 139);
+      else if (BLOCKS[b]?.powerOn && powered.has(k)) w.setBlock(x, y, z, BLOCKS[b].powerOn);
+      else if (BLOCKS[b]?.powerOff && !powered.has(k)) w.setBlock(x, y, z, BLOCKS[b].powerOff);
       if (b === 140 && powered.has(k)) this.onAlarm?.(x, y, z);
     }
     // puertas automáticas: se abren si hay un cable con energía pegado

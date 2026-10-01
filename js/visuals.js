@@ -57,6 +57,7 @@ export function createVisuals(ctx) {
       if (b?.light >= 8) { L = b.light; if (h.id === 28 || h.id === 221) col = h.id === 28 ? 0xc8ff8a : 0xfff4d8; else if (h.id === 217) col = 0xb8a0ff; }
       else if (it?.spell === 'light') { L = 12; col = 0xfff4d8; }
     }
+    if (!L && g.player.buffs?.vision > 0) { L = 15; col = 0xa8ffd0; }
     const t = performance.now() / 1000;
     const flick = col === 0xffb86a ? 0.9 + Math.sin(t * 13) * 0.05 + Math.sin(t * 7.3) * 0.05 : 1;
     const target = L ? Math.min(1, L / 14) * flick : 0;

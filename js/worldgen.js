@@ -1106,6 +1106,14 @@ export class WorldGen {
       }
     }
 
+    // carteles oxidados en las veredas
+    for (let wz = z0; wz < z0 + CHUNK; wz++) for (let wx = x0; wx < x0 + CHUNK; wx++) {
+      const u = mod(wx, LOT), v = mod(wz, LOT);
+      if (!((u === ROAD && v > ROAD + 2) || (v === ROAD && u > ROAD + 2)) || hash2(s + 50, wx, wz) > 0.03) continue;
+      const c = colAt(wx, wz);
+      if (c.biome === BIOME.CITY) setAir(wx - x0, c.h + 1, wz - z0, 1098);
+    }
+
     const lx0 = Math.floor(x0 / LOT), lx1 = Math.floor((x0 + CHUNK - 1) / LOT);
     const lz0 = Math.floor(z0 / LOT), lz1 = Math.floor((z0 + CHUNK - 1) / LOT);
     for (let lx = lx0; lx <= lx1; lx++) for (let lz = lz0; lz <= lz1; lz++) {
@@ -1136,7 +1144,7 @@ export class WorldGen {
                 const along = edgeX ? wz : wx;
                 const winRow = dy % 4 === 2 || dy % 4 === 3;
                 const winCol = mod(along, 3) !== 0 && !corner;
-                if (winRow && winCol) id = hash3(s + 43, wx, y, wz) < 0.25 ? 14 : 0;
+                if (winRow && winCol) { const rw = hash3(s + 43, wx, y, wz); id = rw < 0.16 ? 14 : rw < 0.27 ? 1101 : 0; }
                 else id = mat;
                 // puerta en planta baja
                 if (dy <= 2 && !corner && mod(along - (edgeX ? bz0 : bx0), 9) === 4) id = 0;
@@ -1150,7 +1158,7 @@ export class WorldGen {
               if (id) set(lx_, y, lz_, id);
             }
             // varillas oxidadas asomando en el borde roto
-            if (wall && top < height && top > 2 && hash2(s + 45, wx, wz) < 0.25) set(lx_, base + top + 1, lz_, 12);
+            if (wall && top < height && top > 2) { const rb = hash2(s + 45, wx, wz); if (rb < 0.25) set(lx_, base + top + 1, lz_, 12); else if (rb < 0.45) set(lx_, base + top + 1, lz_, 1096); }
             // suelo interior
             if (!wall) {
               set(lx_, base, lz_, 9);
@@ -1161,6 +1169,10 @@ export class WorldGen {
                 if (r < (L.hospital ? 0.03 : 0.012)) set(lx_, y, lz_, L.hospital ? 82 : 31);
                 else if (r < 0.018) set(lx_, y, lz_, 29);
                 else if (r < 0.05) set(lx_, y, lz_, 30);
+                else if (r < 0.058) set(lx_, y, lz_, 1099);
+                // v12.1: pisos de azulejos viejos y cables colgando del techo
+                if (L.hospital || L.mat === 13) { if (hash3(s + 48, wx, y, wz) < 0.7 && f > 0) set(lx_, y - 1, lz_, 1097); }
+                if ((f + 1) * 4 < top && hash3(s + 49, wx, y, wz) < 0.05) set(lx_, y + 2, lz_, 1100);
               }
             }
           }

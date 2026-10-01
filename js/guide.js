@@ -154,6 +154,19 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Mecanismos y cocina': () => `
+      <h3>Energía</h3>
+      <p>${icon(1121)} <b>Molino de viento</b>: da energía mientras haya viento (más viento, más rápido giran las aspas). ${icon(1120)} <b>Batería</b>: se carga cuando le llega energía de un panel solar, molino o generador, y la devuelve cuando no hay otra fuente (de noche, sin viento). Clic derecho muestra la carga (hasta 15 minutos).</p>
+      <h3>Aparatos</h3>
+      <p>${icon(1118)} <b>Compuerta</b>: con energía se abre y deja pasar el agua; sin energía se cierra. Ideal con una ${icon(135)} palanca. ${icon(1123)} <b>Farola</b> y ${icon(1125)} <b>lámpara colgante</b>: se prenden con energía. ${icon(1127)} <b>Regador de huerta</b>: pegado a agua limpia, riega los cultivos cercanos sin bomba ni cañerías (crecen el doble de rápido). Las ${icon(130)} <b>cintas transportadoras</b> ahora también te llevan a vos.</p>
+      <h3>${icon(1128)} Horno de barro</h3>
+      <p>Se hace con arcilla ocre y roca. Cocina comidas que dan efectos:</p>
+      <ul><li>${icon(423)} <b>Guiso caliente</b> (carne asada y papas): no te lastima el frío.</li>
+      <li>${icon(424)} <b>Sopa de hongos brillantes</b>: visión nocturna.</li>
+      <li>${icon(425)} <b>Pan de cebada</b>: corrés más liviano y sin cansarte.</li>
+      <li>${icon(426)} <b>Brochette de pescado</b>: recuperás vida.</li>
+      <li>${icon(427)} <b>Té de hierbas</b> (flores y una botella): más defensa.</li>
+      <li>${icon(428)} <b>Pizza del yermo</b>: pegás más fuerte.</li></ul>`,
     'Peligros y clima': () => `
       <p><b>Estaciones</b>: primavera, verano, otoño e invierno (3 días cada una). Cambian la temperatura y la velocidad de los cultivos; en invierno nieva.</p>
       <p><b>Tormenta eléctrica</b>: caen rayos donde hay cielo abierto (prefieren lo alto y lo metálico) y prenden fuego. <b>Tornado</b>: un embudo que arrastra, levanta y rompe cosas livianas; bajo techo estás a salvo.</p>

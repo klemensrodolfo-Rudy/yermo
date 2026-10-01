@@ -39,7 +39,7 @@ export class Player {
     this.radExposure = 0;
     this.extraRad = 0; // clima (lluvia ácida)
     this.attackCd = 0; this.useCd = 0; this.shootCd = 0;
-    this.buffs = Object.assign({ coraje: 0, coraza: 0, plomo: 0, humo: 0, acido: 0, frescura: 0, furia: 0 }, st.buffs);
+    this.buffs = Object.assign({ coraje: 0, coraza: 0, plomo: 0, humo: 0, acido: 0, frescura: 0, furia: 0, abrigo: 0, vision: 0 }, st.buffs);
     this.drunk = st.drunk ?? 0;
     this.thirst = st.thirst ?? 20;
     this.temp = st.temp ?? 20; this.targetTemp = 20;
@@ -121,7 +121,7 @@ export class Player {
     if (this.thirst <= 0) { a.thirst = (a.thirst || 0) + dt; if (a.thirst > 5) { a.thirst = 0; this.damage(1, 'sed'); } }
     // temperatura: se acerca de a poco a la del entorno
     this.temp += (this.targetTemp - this.temp) * Math.min(1, dt / 25);
-    if (this.temp < 4) { a.cold = (a.cold || 0) + dt; if (a.cold > 6 * (this.perkCold || 1)) { a.cold = 0; this.damage(1, 'frío'); } }
+    if (this.temp < 4 && !(this.buffs.abrigo > 0)) { a.cold = (a.cold || 0) + dt; if (a.cold > 6 * (this.perkCold || 1)) { a.cold = 0; this.damage(1, 'frío'); } }
     if (this.temp > 40) { a.heat = (a.heat || 0) + dt; if (a.heat > 8 * (this.perkCold || 1)) { a.heat = 0; this.damage(1, 'calor'); } }
     // enfermedades
     if (this.disease.infeccion > 0) { this.disease.infeccion += dt; a.inf = (a.inf || 0) + dt; if (a.inf > 20) { a.inf = 0; if (this.health > 2) this.damage(1, 'infección'); } }

@@ -52,6 +52,8 @@ export const TILES = [
   'sandstone', 'tuff', 'stone_pol', 'stone_carv', 'deepstone_pol', 'deepstone_carv', 'deepstone_brk', 'sandstone_pol', 'sandstone_carv', 'sandstone_brk', 'basalt_pol', 'basalt_carv', 'basalt_brk', 'tuff_pol', 'tuff_carv', 'tuff_brk', 'glass_cyan', 'glass_sky', 'glass_pink', 'glass_white', 'glass_smoke', 'glass_lime', 'planks_oak', 'planks_palm', 'door_wood', 'door_oak', 'door_palm', 'door_elf', 'old_tiles', 'rusty_sign', 'hanging_cables', 'broken_glass',
   // v12.2: mundo
   'red_sand', 'red_sandstone', 'clay_ochre', 'clay_white', 'salt_top', 'salt_side', 'salt_crystal', 'geyser_top', 'thermal_top', 'quartz_ore', 'obsidian', 'stalactite', 'stalagmite', 'glow_mushroom', 'cave_crystal', 'quartz_block', 'quartz_lamp',
+  // v12.3: mecanismos y cocina
+  'floodgate', 'bigbattery_side', 'bigbattery_top', 'turbine', 'streetlamp_off', 'streetlamp_on', 'hanglamp_off', 'hanglamp_on', 'waterer', 'clay_oven_front', 'clay_oven_side', 'clay_oven_top',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -434,10 +436,20 @@ def(1110, { name: 'Mineral de cuarzo', tex: tx(T.quartz_ore), hardness: 3, tool:
 def(1111, { name: 'Obsidiana', tex: tx(T.obsidian), hardness: 9, tool: 'pick', tier: 3 });
 def(1112, { name: 'Estalactita', tex: tx(T.stalactite), solid: false, opaque: false, render: 'cross', hardness: 0.6, tool: 'pick', drop: 0 });
 def(1113, { name: 'Estalagmita', tex: tx(T.stalagmite), solid: false, opaque: false, render: 'cross', hardness: 0.6, tool: 'pick', drop: 0 });
-def(1114, { name: 'Hongo brillante', tex: tx(T.glow_mushroom), solid: false, opaque: false, render: 'cross', hardness: 0, light: 9 });
+def(1114, { name: 'Hongo de cueva', tex: tx(T.glow_mushroom), solid: false, opaque: false, render: 'cross', hardness: 0, light: 9, drop: 327 });
 def(1115, { name: 'Cristal de cueva', tex: tx(T.cave_crystal), solid: false, opaque: false, render: 'cross', hardness: 0.8, tool: 'pick', light: 8, drop: 416 });
 def(1116, { name: 'Bloque de cuarzo', tex: tx(T.quartz_block), hardness: 2, tool: 'pick', tier: 1 });
 def(1117, { name: 'Lámpara de cuarzo', tex: tx(T.quartz_lamp), hardness: 1, tool: 'pick', light: 15 });
+// ---------- v12.3: mecanismos, energía y cocina ----------
+def(1118, { name: 'Compuerta', tex: tx(T.floodgate), hardness: 3, tool: 'pick', tier: 1, elec: 'device' });
+def(1120, { name: 'Batería', tex: { top: T.bigbattery_top, side: T.bigbattery_side, bottom: T.metal_plate }, hardness: 2, tool: 'pick', elec: 'source', container: 'battery' });
+def(1121, { name: 'Molino de viento', tex: tx(T.turbine), opaque: false, render: 'box', box: [[6, 0, 6, 10, 16, 10]], hardness: 2, tool: 'pick', elec: 'source' });
+def(1123, { name: 'Farola', tex: tx(T.streetlamp_off), opaque: false, render: 'box', box: [[7, 0, 7, 9, 12, 9, T.metal_plate], [5, 12, 5, 11, 16, 11]], hardness: 1.5, tool: 'pick', elec: 'device', powerOn: 1124 });
+def(1124, { name: 'Farola', tex: tx(T.streetlamp_on), opaque: false, render: 'box', box: [[7, 0, 7, 9, 12, 9, T.metal_plate], [5, 12, 5, 11, 16, 11]], hardness: 1.5, tool: 'pick', elec: 'device', powerOff: 1123, drop: 1123, light: 15, hidden: true });
+def(1125, { name: 'Lámpara colgante', tex: tx(T.hanglamp_off), solid: false, opaque: false, render: 'box', box: [[7.5, 8, 7.5, 8.5, 16, 8.5, T.cable], [4, 2, 4, 12, 8, 12]], hardness: 0.6, elec: 'device', powerOn: 1126 });
+def(1126, { name: 'Lámpara colgante', tex: tx(T.hanglamp_on), solid: false, opaque: false, render: 'box', box: [[7.5, 8, 7.5, 8.5, 16, 8.5, T.cable], [4, 2, 4, 12, 8, 12]], hardness: 0.6, elec: 'device', powerOff: 1125, drop: 1125, light: 14, hidden: true });
+def(1127, { name: 'Regador de huerta', tex: tx(T.waterer), solid: false, opaque: false, render: 'box', box: [[6, 0, 6, 10, 5, 10], [2, 5, 7, 14, 6, 9], [7, 5, 2, 9, 6, 14]], hardness: 0.5 });
+def(1128, { name: 'Horno de barro', tex: { top: T.clay_oven_top, side: T.clay_oven_side, bottom: T.clay_oven_side, front: T.clay_oven_front }, hardness: 2, tool: 'pick', station: 'cocina', light: 8 });
 export const V121 = { sandstone: 1036, tuff: 1037, stone_pol: 1038, stone_carv: 1039, deepstone_pol: 1040, deepstone_brk: 1041, deepstone_carv: 1042, sandstone_pol: 1043, sandstone_brk: 1044, sandstone_carv: 1045, basalt_pol: 1046, basalt_brk: 1047, basalt_carv: 1048, tuff_pol: 1049, tuff_brk: 1050, tuff_carv: 1051, glass_cyan: 1052, glass_sky: 1053, glass_pink: 1054, glass_white: 1055, glass_smoke: 1056, glass_lime: 1057, planks_oak: 1058, planks_palm: 1059, fence_wood: 1060, fence_oak: 1061, fence_palm: 1062, fence_elf: 1063, door_wood: 1064, door_oak: 1072, door_palm: 1080, door_elf: 1088, ruin_wall: 1096, old_tiles: 1097, rusty_sign: 1098, pipes: 1099, hanging_cables: 1100, broken_glass: 1101 };
 export const CONC_COLORS = [1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035];
 
@@ -692,6 +704,13 @@ export const ITEMS = {
   419: { name: 'Pala de obsidiana', icon: 'shovel', color: 'obsidian', tool: 'shovel', tier: 3, speed: 9, durability: 2400 },
   420: { name: 'Espada de obsidiana', icon: 'sword', color: 'obsidian', weapon: 13, durability: 2000 },
   422: { name: 'Sal', icon: 'gem', color: 0xf8f8f0 },
+  // v12.3: cocina (dan efectos)
+  423: { name: 'Guiso caliente', icon: 'cooked', food: 10, buff: 'abrigo' },
+  424: { name: 'Sopa de hongos brillantes', icon: 'potion', color: 0x3ad0e0, food: 6, buff: 'vision' },
+  425: { name: 'Pan de cebada', icon: 'potato_baked', food: 7, buff: 'frescura' },
+  426: { name: 'Brochette de pescado', icon: 'fish', color: 0xd8904a, food: 8, buff: 'acido' },
+  427: { name: 'Té de hierbas', icon: 'potion', color: 0x8ab84a, thirst: 8, buff: 'coraza' },
+  428: { name: 'Pizza del yermo', icon: 'cooked', food: 12, buff: 'coraje' },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -756,7 +775,7 @@ export const maxStack = (id) => (ITEMS[id]?.durability || ITEMS[id]?.stack === 1
 export const FLAMMABLE = new Uint8Array(MAXB);
 for (let i = 1; i < B.length; i++) { const b = B[i]; if (b && !b.container && !b.station && !b.marker && !b.loot && !LIQ[i] && (b.tool === 'axe' || /hoja|tela|cortina|paja|cebada|lúpulo|pasto|hongo|papa/i.test(b.name))) FLAMMABLE[i] = 1; }
 {
-  const C = { 1115: 2, 1117: 7, 1108: 3, 28: 1, 21: 1, 217: 2, 208: 3, 219: 3, 55: 5, 221: 7, 74: 7, 140: 4, 241: 4, 138: 4, 238: 0, 159: 1 };
+  const C = { 1115: 2, 1117: 7, 1108: 3, 1124: 0, 1126: 7, 1128: 0, 28: 1, 21: 1, 217: 2, 208: 3, 219: 3, 55: 5, 221: 7, 74: 7, 140: 4, 241: 4, 138: 4, 238: 0, 159: 1 };
   for (const [id, c] of Object.entries(C)) LCOL[+id] = c;
   for (let i = 1; i < B.length; i++) { const bl = B[i]; if (!bl?.light || LCOL[i]) continue; if (/hongo|seta/i.test(bl.name || '')) LCOL[i] = 6; else if (/portal/i.test(bl.name || '')) LCOL[i] = 2; }
 }
@@ -787,6 +806,20 @@ export const RECIPES = [
   { out: [59, 6], in: [[9, 3]], station: 'mesa' },
   { out: [60, 6], in: [[23, 3]], station: 'mesa' },
   { out: [9, 4], in: [[8, 2], [6, 2]], station: 'mesa' },
+  // v12.3: mecanismos y cocina
+  { out: [1118, 2], in: [[260, 3], [12, 2]], station: 'mesa' },
+  { out: [1120, 1], in: [[244, 2], [259, 3], [416, 2]], station: 'mesa' },
+  { out: [1121, 1], in: [[260, 4], [259, 2], [416, 1]], station: 'mesa' },
+  { out: [1123, 1], in: [[260, 2], [14, 1], [416, 1]], station: 'mesa' },
+  { out: [1125, 2], in: [[75, 1], [14, 1], [416, 1]], station: 'mesa' },
+  { out: [1127, 1], in: [[260, 1], [187, 2]], station: 'mesa' },
+  { out: [1128, 1], in: [[1104, 4], [2, 4]], station: 'mesa' },
+  { out: [423, 1], in: [[272, 1], [285, 2]], station: 'cocina' },
+  { out: [424, 1], in: [[327, 3], [285, 1]], station: 'cocina' },
+  { out: [425, 2], in: [[282, 3]], station: 'cocina' },
+  { out: [426, 1], in: [[399, 2], [256, 1]], station: 'cocina' },
+  { out: [427, 1], in: [[214, 2], [295, 1]], station: 'cocina' },
+  { out: [428, 1], in: [[282, 2], [272, 1], [327, 1]], station: 'cocina' },
   // v12.2: mundo
   { out: [1103, 4], in: [[1102, 4]], station: 'horno' },
   { out: [1116, 1], in: [[416, 4]], station: 'mesa' },

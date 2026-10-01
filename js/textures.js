@@ -1320,6 +1320,50 @@ HD.quartz_lamp = (t) => t.fill((x, y) => {
   t.H(x, y, 0.5); t.E(x, y, 1);
   return scl([255, 250, 236], 0.95 + t.rnd() * 0.05);
 });
+// v12.3: mecanismos y cocina
+HD.floodgate = (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), bar = x % 8 === 3 || x % 8 === 4, stripe = (y < 4 || y > 27) && ((x + y) % 8 < 4);
+  if (e < 2) { t.H(x, y, 0.9); t.S(x, y, 0.5); return [110, 114, 120]; }
+  if (stripe) { t.H(x, y, 0.7); return (x + y) % 8 < 4 ? [220, 180, 40] : [30, 30, 30]; }
+  t.H(x, y, bar ? 0.9 : 0.4); t.S(x, y, 0.45);
+  return scl([128, 134, 140], bar ? 1.1 : 0.75 + t.fbm(x, y, 4, 2) * 0.2);
+});
+HD.bigbattery_side = (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), gauge = x > 11 && x < 20 && y > 5 && y < 27, cell = (y - 6) % 5 === 4;
+  if (e < 2) { t.H(x, y, 0.9); return [70, 74, 80]; }
+  if (gauge) { t.H(x, y, cell ? 0.3 : 0.6); if (!cell) t.E(x, y, 0.6); return cell ? [30, 40, 30] : y > 14 ? [90, 230, 110] : [50, 80, 60]; }
+  t.H(x, y, 0.6); t.S(x, y, 0.4); return scl([60, 90, 140], 0.85 + t.fbm(x, y, 4, 2) * 0.2);
+});
+HD.bigbattery_top = (t) => t.fill((x, y) => {
+  const pos = Math.hypot(x - 9, y - 16) < 3.5, neg = Math.hypot(x - 23, y - 16) < 3.5;
+  if (pos) { t.H(x, y, 1); t.S(x, y, 0.6); return [210, 70, 60]; }
+  if (neg) { t.H(x, y, 1); t.S(x, y, 0.6); return [60, 60, 66]; }
+  t.H(x, y, 0.5); return scl([70, 74, 80], 0.9 + t.rnd() * 0.08);
+});
+HD.turbine = (t) => t.fill((x, y) => { const n = t.fbm(x, y, 4, 2); t.H(x, y, 0.6 + (x % 16 === 0 ? -0.3 : 0)); t.S(x, y, 0.4); return scl([226, 228, 230], 0.85 + n * 0.15 - (y % 16 === 0 ? 0.15 : 0)); });
+const lampHead = (on) => (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y);
+  if (e < 3) { t.H(x, y, 0.8); t.S(x, y, 0.5); return [60, 64, 70]; }
+  if (on) { t.E(x, y, 1); t.H(x, y, 0.5); return scl([255, 236, 190], 0.95 + t.rnd() * 0.05); }
+  t.H(x, y, 0.5); t.S(x, y, 0.7); return scl([170, 176, 168], 0.8 + t.fbm(x, y, 4, 2) * 0.2);
+});
+HD.streetlamp_off = lampHead(false); HD.streetlamp_on = lampHead(true);
+const hang = (on) => (t) => t.fill((x, y) => {
+  const shade = y < 12, rim = y === 12 || y === 13;
+  if (rim) { t.H(x, y, 0.9); return [200, 170, 90]; }
+  if (shade) { t.H(x, y, 0.6); t.S(x, y, 0.3); return scl([60, 110, 90], 0.85 + t.fbm(x, y, 4, 2) * 0.2); }
+  if (on) { t.E(x, y, 1); return [255, 240, 210]; }
+  t.H(x, y, 0.4); return [190, 186, 170];
+});
+HD.hanglamp_off = hang(false); HD.hanglamp_on = hang(true);
+HD.waterer = (t) => t.fill((x, y) => { const n = t.fbm(x, y, 4, 2); t.H(x, y, 0.6); t.S(x, y, 0.5); return scl(y % 8 < 2 ? [60, 130, 70] : [74, 150, 84], 0.85 + n * 0.2); });
+HD.clay_oven_side = (t) => t.fill((x, y) => {
+  const row = y >> 2, off = row % 2 ? 4 : 0, brick = (x + off) % 8 === 7 || y % 4 === 3, n = t.fbm(x, y, 8, 3);
+  t.H(x, y, brick ? 0.15 : 0.6 + n * 0.2);
+  return brick ? [140, 112, 84] : scl([196, 126, 78], 0.85 + n * 0.2 + mulberry32(row * 7 + ((x + off) >> 3))() * 0.1);
+});
+HD.clay_oven_front = (t) => { HD.clay_oven_side(t); for (let y = 12; y < 30; y++) for (let x = 7; x < 25; x++) { const dy = (y - 30), r = Math.hypot((x - 15.5) / 9, dy / 18); if (r < 1) { const fire = y > 22; t.P(x, y, fire ? scl([255, 150, 50], 0.8 + t.rnd() * 0.4) : [30, 20, 16]); if (fire) t.E(x, y, 1); t.H(x, y, 0); } } };
+HD.clay_oven_top = (t) => t.fill((x, y) => { const n = t.fbm(x, y, 4, 3), hole = Math.hypot(x - 15.5, y - 15.5) < 4; t.H(x, y, hole ? 0 : 0.6 + n * 0.2); return hole ? [36, 28, 24] : scl([186, 120, 76], 0.85 + n * 0.2); });
 // v12: hormigón de colores
 const concColor = (c) => (t) => {
   t.fill((x, y) => {
