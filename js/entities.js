@@ -1373,6 +1373,7 @@ export const VEHICLE_TYPES = {
   racecar: { name: 'Auto de carrera', speed: 27, accel: 5, turn: 1.9, hw: 0.9, step: 0.55, eye: 0.05, tank: 70, use: 0.45, hp: 90, seats: 1, storage: 0, ram: 1, item: 344 },
   ship: { name: 'Velero', speed: 14, accel: 2.5, turn: 1.3, hw: 1.3, step: 0.55, eye: 1.2, tank: 0, use: 0, hp: 160, seats: 3, storage: 18, boat: true, item: 402 },
   boat: { name: 'Bote', speed: 10, accel: 3, turn: 1.8, hw: 0.8, step: 0.55, eye: 0.3, tank: 0, use: 0, hp: 80, seats: 2, storage: 0, boat: true, item: 345 },
+  balloon: { name: 'Globo aerostático', speed: 6.5, accel: 1.2, turn: 1.1, hw: 0.8, step: 1.05, eye: 0.6, tank: 400, use: 0.12, hp: 60, seats: 2, storage: 0, fly: true, climb: 0.45, item: 443 },
   heli: { name: 'Helicóptero', speed: 17, accel: 2.5, turn: 1.6, hw: 0.9, step: 1.05, eye: 0.5, tank: 120, use: 0.5, hp: 120, seats: 2, storage: 9, fly: true, item: 364 },
   cart: { name: 'Vagoneta', speed: 12, accel: 3, turn: 0, hw: 0.45, step: 1.05, eye: 0.2, tank: 0, use: 0, hp: 60, seats: 1, storage: 0, rail: true, item: 365 },
   train: { name: 'Tren del subte', speed: 19, accel: 2.5, turn: 0, hw: 0.45, step: 1.05, eye: 0.6, tank: 0, use: 0, hp: 300, seats: 4, storage: 0, rail: true, ram: 2 },
@@ -1415,6 +1416,22 @@ function vehicleModel(type) {
       B(0.3, 0.2, 0.06, glow, 0.8, 1.0, -2.37); B(0.3, 0.2, 0.06, glow, -0.8, 1.0, -2.37);
     }
     const sh = new THREE.Mesh(new THREE.PlaneGeometry(type === 'truck' ? 2.6 : 1.9, type === 'truck' ? 5 : 3.4), SHADOW_MAT); sh.rotation.x = -Math.PI / 2; sh.position.y = 0.03; g.add(sh);
+    return g;
+  }
+  if (type === 'balloon') {
+    const wicker = M(0x9a7444), rope = M(0x6a5a40), dark = M(0x2a2a2a);
+    B(1.4, 0.8, 1.4, wicker, 0, 0.4, 0); B(1.5, 0.12, 1.5, M(0x7a5a34), 0, 0.82, 0);
+    for (const [x, z] of [[0.65, 0.65], [-0.65, 0.65], [0.65, -0.65], [-0.65, -0.65]]) { const r = B(0.05, 2.8, 0.05, rope, x * 1.2, 2.2, z * 1.2); r.rotation.z = -x * 0.35; r.rotation.x = z * 0.35; }
+    B(0.5, 0.3, 0.5, dark, 0, 1.5, 0);
+    const flame = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.3), new THREE.MeshBasicMaterial({ color: 0xffa040 })); flame.position.set(0, 1.85, 0); g.add(flame); g.userData.flame = flame;
+    const cols = [0xd83a2a, 0xe8c040, 0xd83a2a, 0xe8c040, 0x3a7ad8, 0xe8c040, 0xd83a2a];
+    const env = new THREE.Group(); env.position.y = 5.2; g.add(env);
+    for (let i = 0; i < 7; i++) {
+      const y0 = -1 + i * 0.5, r0 = Math.sin(Math.acos(Math.max(-1, Math.min(1, (y0 + 0.25) / 2.4)))) * 2.3 + 0.2;
+      const ring = new THREE.Mesh(new THREE.CylinderGeometry(r0, i === 0 ? 0.7 : r0 * 0.96, 0.5, 14), M(cols[i])); ring.position.y = y0 + 0.25 + (i === 0 ? 0 : 0); env.add(ring);
+    }
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.6, 0.5, 14), M(0xd83a2a)); top.position.y = 2.75; env.add(top);
+    const sh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), SHADOW_MAT); sh.rotation.x = -Math.PI / 2; sh.position.y = 0.03; g.add(sh);
     return g;
   }
   if (type === 'heli') {
@@ -1537,6 +1554,7 @@ export class Vehicles {
       if (VEHICLE_TYPES[v.type].boat && !v.rider && this.authority && LIQ[this.world.getBlock(Math.floor(v.pos.x), Math.floor(v.pos.y + 0.2), Math.floor(v.pos.z))]) { v.pos.y += dt * 1.5; v.vy = 0; }
       v.mesh.rotation.z = v.rider ? Math.sin(performance.now() / 120) * 0.01 * Math.min(1, v.speed) : 0;
       const ud = v.mesh.userData;
+      if (ud.flame) { const on = v.rider && (v.fuel ?? 1) > 0; ud.flame.visible = !!on; if (on) ud.flame.scale.setScalar(0.8 + Math.random() * 0.5); }
       if (ud.rotor) { const on = v.rider && (v.fuel ?? 1) > 0; v.spin = (v.spin || 0) + ((on ? 1 : 0) - (v.spin || 0)) * Math.min(1, dt * 0.8); ud.rotor.rotation.y += dt * 30 * v.spin; ud.tailRotor.rotation.x += dt * 40 * v.spin; v.mesh.rotation.x = v.rider ? -Math.min(0.2, (v.speed || 0) / 80) : 0; }
       if (ud.legs) { v.phase = (v.phase || 0) + dt * Math.min(16, (v.speed || 0) * 1.4); const s = Math.sin(v.phase) * 0.7 * Math.min(1, (v.speed || 0) / 2); ud.legs.forEach((l, i) => (l.rotation.x = i % 2 ? s : -s)); }
     }

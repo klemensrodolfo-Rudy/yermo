@@ -997,7 +997,7 @@ function toggleMount() {
   p.mount(v);
   if (!isAuthority()) net.sendVehMove(v, true);
   const VT = VEHICLE_TYPES[v.type];
-  flash(VT.fly ? `${VT.name}: Espacio sube · C baja · W avanza · A/D giran · F bajarte` : VT.rail ? `${VT.name}: W avanza por las vías · S frena · F bajarte` : VT.mount ? `${VT.name}: W corre · A/D giran · Espacio salta · F bajarte` : `${VT.name}: W acelera · A/D doblan · H bocina · L faros · V cámara${v.tune?.nitro ? ' · Shift nitro' : ''} · F bajarte`);
+  flash(VT.fly ? `${VT.name}: Espacio sube · C baja${VT.climb ? ' (sin tocar nada baja solo)' : ''} · W avanza · A/D giran · F bajarte` : VT.rail ? `${VT.name}: W avanza por las vías · S frena · F bajarte` : VT.mount ? `${VT.name}: W corre · A/D giran · Espacio salta · F bajarte` : `${VT.name}: W acelera · A/D doblan · H bocina · L faros · V cámara${v.tune?.nitro ? ' · Shift nitro' : ''} · F bajarte`);
 }
 
 // ---------- Chat ----------
@@ -1737,7 +1737,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '12.8 · 2026-10-02';
+const VERSION = '12.9 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1830,6 +1830,7 @@ function loop(now) {
   game.geo?.update(dt);
   game.machines?.update(dt);
   game.treasure?.update(dt);
+  game.wildlife?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';

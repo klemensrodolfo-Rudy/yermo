@@ -157,6 +157,7 @@ export function setupGuide(ui, getGame) {
     'Tesoros y pueblos fantasma': () => `
       <p>${icon(442)} <b>Mapas del tesoro</b>: aparecen en cajas y cofres (más en los pueblos fantasma y en cofres del tesoro) y los vende el comerciante. Al usarlo queda marcado un lugar a 120-320 bloques, con distancia y dirección. Cuando te acercás aparece una ${icon(1143)} <b>X roja</b> en el piso: cavá dos bloques debajo y está el ${icon(228)} cofre del tesoro.</p>
       <p><b>Pueblos fantasma</b>: en lugares planos de los cañones rojos hay casillas de madera abandonadas, con techos caídos, ventanas rotas y ${icon(1144)} baúles con fichas, cuarzo, cuero y a veces un mapa o un cofre del tesoro.</p>
+      <p>${icon(443)} <b>Globo aerostático</b> (12 telas, 6 tablas y 2 lingotes de acero): se pone en el piso, F para subir. Espacio sube despacio, C baja, W avanza y A/D giran. Si no hacés nada baja solo, suave. Usa nafta, pero muy poca: ideal para recorrer cañones y buscar tesoros desde arriba.</p>
       <p>El <b>comerciante</b> ahora compra sal, leche, cuarzo y queso, y vende mapas del tesoro, obsidiana, cuarzo, hornos de barro y molinos.</p>`,
     'Fauna nueva': () => `
       <p><b>🐐 Cabras montés</b>: andan en grupo por los cañones rojos y los Montes de Hierroalto. Se domestican con ${icon(282)} cebada o ${icon(281)} semillas; una cabra domesticada se <b>ordeña con una ${icon(295)} botella vacía</b> (cada minuto y medio) y da ${icon(439)} leche. Con cebada tienen crías.</p>

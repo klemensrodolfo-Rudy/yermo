@@ -238,7 +238,7 @@ export function createUX(ctx) {
     mount.hidden = !(R || p.vehTarget);
     mount.querySelector('span').textContent = R ? 'Bajar' : 'Subir';
     mount.querySelector('i').textContent = R ? '🚶' : '🚗';
-    T.querySelector('.b-down').hidden = !(p.flying || p.onLadder || g.features2?.onElevator || (R && R.type === 'heli') || p.inWater);
+    T.querySelector('.b-down').hidden = !(p.flying || p.onLadder || g.features2?.onElevator || (R && (R.type === 'heli' || R.type === 'balloon')) || p.inWater);
     T.querySelector('.b-chat').hidden = !ctx.net?.active;
   }
 

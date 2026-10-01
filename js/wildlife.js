@@ -16,7 +16,8 @@ export function createWildlife(ctx) {
     p.onEvent('milk');
     return true;
   };
-  api.update = () => {};
+  let told = false;
+  api.update = () => { if (!told && p.riding?.type === 'balloon' && !p.onGround) { told = true; p.onEvent('v12', 'globo'); } };
   api.dispose = () => {};
   return api;
 }

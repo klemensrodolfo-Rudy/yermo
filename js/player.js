@@ -343,7 +343,8 @@ export class Player {
       const fuelOk = this.creative || (R.fuel ?? VT.tank) > 0;
       if (fuelOk) {
         let vy = 0;
-        if (active && k.Space) vy = 6; else if (active && (k.ControlLeft || k.KeyC)) vy = -6;
+        const climb = VT.climb ?? 1;
+        if (active && k.Space) vy = 6 * climb; else if (active && (k.ControlLeft || k.KeyC)) vy = -6 * climb; else if (VT.climb) vy = -0.25;
         this.vel.y += (vy - this.vel.y) * Math.min(1, 4 * dt);
       } else this.vel.y = Math.max(this.vel.y - GRAV * 0.3 * dt, -6);
     } else if (R && VT.boat && liquid) {

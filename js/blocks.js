@@ -756,6 +756,7 @@ export const ITEMS = {
   441: { name: 'Dulce de leche', icon: 'jar', food: 5, buff: 'frescura' },
   // v12.8
   442: { name: 'Mapa del tesoro', icon: 'tmap', stack: 1, tmap: true },
+  443: { name: 'Globo aerostático', icon: 'balloon', vehicle: 'balloon' },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
@@ -853,6 +854,8 @@ export const RECIPES = [
   { out: [59, 6], in: [[9, 3]], station: 'mesa' },
   { out: [60, 6], in: [[23, 3]], station: 'mesa' },
   { out: [9, 4], in: [[8, 2], [6, 2]], station: 'mesa' },
+  // v12.9
+  { out: [443, 1], in: [[176, 12], [23, 6], [260, 2]], station: 'mesa' },
   // v12.7: de las cabras
   { out: [440, 1], in: [[439, 2], [422, 1]], station: 'cocina' },
   { out: [441, 1], in: [[439, 3]], station: 'cocina' },
