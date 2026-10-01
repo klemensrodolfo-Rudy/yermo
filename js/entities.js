@@ -1431,7 +1431,6 @@ function vehicleModel(type) {
       const ring = new THREE.Mesh(new THREE.CylinderGeometry(r0, i === 0 ? 0.7 : r0 * 0.96, 0.5, 14), M(cols[i])); ring.position.y = y0 + 0.25 + (i === 0 ? 0 : 0); env.add(ring);
     }
     const top = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.6, 0.5, 14), M(0xd83a2a)); top.position.y = 2.75; env.add(top);
-    const sh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), SHADOW_MAT); sh.rotation.x = -Math.PI / 2; sh.position.y = 0.03; g.add(sh);
     return g;
   }
   if (type === 'heli') {
