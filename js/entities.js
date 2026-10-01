@@ -673,6 +673,7 @@ export class Mobs {
   }
 
   add(type, x, y, z, id, lvl) {
+    if (!lvl && this.hardLvl > 1 && MOB_TYPES[type]?.hostile && this.authority) lvl = this.hardLvl;
     const m = new Mob(type, x, y, z, id);
     if (lvl > 1) { m.lvl = lvl; m.hp = Math.round(m.hp * (1 + (lvl - 1) * 0.35)); }
     this.list.set(m.id, m);
@@ -835,6 +836,12 @@ export class Mobs {
       m.wanderT -= dt;
       if (m.wanderT <= 0) { m.wanderT = 2 + Math.random() * 4; m.walking = Math.random() < 0.6; m.targetYaw = Math.random() * Math.PI * 2; }
       if (m.walking) { mx = -Math.sin(m.targetYaw); mz = -Math.cos(m.targetYaw); speed = d.speed * 0.5; }
+    }
+    // defensa del refugio: van al núcleo salvo que tengan un jugador muy cerca
+    if (m.siege && (!target || nd > 8)) {
+      const sx = m.siege.x + 0.5 - m.pos.x, sz = m.siege.z + 0.5 - m.pos.z, sd = Math.hypot(sx, sz);
+      if (sd > 1.4 + d.hw) { mx = sx; mz = sz; speed = d.speed; }
+      else { speed = 0; m.targetYaw = Math.atan2(-sx, -sz); if (m.attackCd <= 0) { m.attackCd = 1.2; m.attackAnim = 0.3; this.onSiege?.(m); } }
     }
     if (m.burnT > 0) { m.burnT -= dt; m.burnAcc = (m.burnAcc || 0) + dt; if (m.burnAcc > 0.6) { m.burnAcc = 0; this.hit(m, 2, null, m.burnBy || null); } }
     // los trolls se convierten en piedra bajo el sol

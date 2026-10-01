@@ -63,6 +63,8 @@ export const ACHIEVEMENTS = [
   { id: 'ent', name: 'Leñador arrepentido', desc: 'Derrotá a un Ent enojado.' },
   { id: 'dron', name: 'Copiloto', desc: 'Desplegá un dron compañero.' },
   { id: 'cohete', name: '¡Que empiece la fiesta!', desc: 'Lanzá un cohete de fuegos artificiales.' },
+  { id: 'defensa', name: 'Muralla', desc: 'Resistí las 10 oleadas de la defensa del refugio.' },
+  { id: 'unavida', name: 'Sin segundas oportunidades', desc: 'Terminá una partida de una sola vida.' },
 ];
 
 export class Achievements {

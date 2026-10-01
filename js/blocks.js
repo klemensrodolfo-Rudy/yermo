@@ -305,6 +305,7 @@ def(222, { name: 'Roble', tex: { top: T.log_top, side: T.oak_bark, bottom: T.log
 def(223, { name: 'Guarida del dragón', tex: tx(T.basalt), hardness: 3, tool: 'pick', drop: 205, marker: 'dragon', hidden: true });
 def(224, { name: 'Torre del mago', tex: tx(T.stone_bricks), hardness: 3, tool: 'pick', drop: 210, marker: 'mage', hidden: true });
 def(225, { name: 'Plaza de la aldea', tex: tx(T.stone_bricks), hardness: 3, tool: 'pick', drop: 210, marker: 'village', hidden: true });
+def(227, { name: 'Núcleo del refugio', tex: { top: T.lamp, side: T.metal_plate, bottom: T.metal_plate }, hardness: 4, tool: 'pick', light: 10 });
 def(226, { name: 'Cofre antiguo', tex: { top: T.chest_top, side: T.chest_side, bottom: T.chest_top, front: T.chest_front }, hardness: 1.5, tool: 'axe', drop: 0, loot: 'eldra' });
 def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12, portal: true });
 
@@ -708,6 +709,7 @@ export const RECIPES = [
   { out: [389, 1], in: [[384, 8]], station: 'mesa' },
   { out: [392, 1], in: [[388, 5], [384, 1]], station: 'mesa' },
   { out: [393, 1], in: [[260, 4], [259, 4], [14, 1]], station: 'mesa', bp: 'electricidad' },
+  { out: [227, 1], in: [[260, 4], [28, 1], [27, 2]], station: 'mesa' },
   { out: [394, 4], in: [[257, 2], [259, 1]], station: 'mesa' },
   { out: [370, 1], in: [[209, 2], [387, 1], [327, 2]], station: 'runas', bp: 'magia' },
   { out: [371, 1], in: [[209, 2], [387, 2], [257, 3]], station: 'runas', bp: 'magia' },

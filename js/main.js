@@ -21,6 +21,7 @@ import { createFeatures } from './features.js';
 import { createFeatures2, TAME } from './features2.js';
 import { createEldra } from './eldra.js';
 import { setupAccess, createExtras } from './extras.js';
+import { createModes, openRanking } from './modes.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -747,6 +748,7 @@ function hurtFx(amount) {
 const DEATH_MSG = { 'caída': 'Te caíste desde muy alto.', 'ahogo': 'Te ahogaste.', 'hambre': 'Moriste de hambre.', 'radiación': 'La radiación te consumió.', 'lava': 'Te hundiste en la lava radiactiva.' };
 function onDeath(cause) {
   document.exitPointerLock();
+  $('#death h2').textContent = 'MORISTE'; $('#respawn').hidden = false; $('#death p.muted').hidden = false; if ($('#runEnd')) $('#runEnd').hidden = true;
   $('#deathCause').textContent = DEATH_MSG[cause] ?? `Te mató ${cause}.`;
   $('#death').hidden = false;
 }
@@ -993,14 +995,18 @@ async function startGame(meta, hello, cloudInfo) {
   const fctx = {
     game, ui, net, sfx, flash, scene, camera, renderer, uniforms, skyUniforms, settings, particles, voice, ext,
     skin: skinOf, isAuthority, openInventory, closeInventory, lockPointer, toggleMount, addChat,
+    endRun: async () => { const id = game.meta.id, local = !game.meta.remote && !game.meta.cloud; $('#death').hidden = true; await quitToMenu(); if (local) { await Storage.deleteWorld(id); showMenu(); } },
     openPanel: (title, render) => { ui.player = player; ui.openPanel(nearbyStations(player.pos), title, render); document.exitPointerLock(); $('#hud').classList.add('dim'); },
   };
   const F = game.features = createFeatures(fctx);
   const F2 = game.features2 = createFeatures2(fctx);
   const E = game.eldra = createEldra(fctx);
   const X = game.extras = createExtras(fctx);
+  const MD = game.modes = createModes(fctx);
   const useF2 = player.onUseItem;
   player.onUseItem = (...a) => X.onUseItem(...a) || E.onUseItem(...a) || useF2(...a);
+  const blockF2 = player.onUseBlock;
+  player.onUseBlock = (...a) => MD.onUseBlock(...a) || blockF2(...a);
   sim.onMarker = (...a) => E.onMarker(...a) || F2.onMarker(...a) || F.onMarker(...a);
   player.onInteractMob = (m, h) => E.onInteractMob(m, h) || F2.onInteractMob(m, h) || F.onInteractMob(m, h);
   player.onGun = F.onGun;
@@ -1049,7 +1055,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1073,7 +1079,7 @@ async function showMenu() {
   for (const w of worlds) {
     const row = document.createElement('div'); row.className = 'world';
     const d = new Date(w.lastPlayed);
-    row.innerHTML = `<div><b></b><small>${w.worldType === 'brew' ? '🍺 Cervecero · ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · semilla ${w.seed} · ${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0, 5)}</small></div>
+    row.innerHTML = `<div><b></b><small>${w.worldType === 'brew' ? '🍺 Cervecero · ' : w.worldType === 'magic' ? '🧙 Eldra · ' : w.worldType === 'base' ? '🧰 Base · ' : ''}${w.mode === 'creative' ? 'Creativo' : w.mode === 'hardcore' ? '☠ Una sola vida' : 'Supervivencia'} · semilla ${w.seed} · ${d.toLocaleDateString()} ${d.toLocaleTimeString().slice(0, 5)}</small></div>
       <button class="play">Jugar</button><button class="del" title="Borrar mundo">✕</button>`;
     row.querySelector('b').textContent = w.name;
     row.querySelector('.play').onclick = () => startGame(w);
@@ -1260,6 +1266,7 @@ $('#optKids').onchange = (e) => setRule('kids', e.target.checked);
 $('#optReal').onchange = (e) => setRule('realTime', e.target.checked);
 $('#accBtn').onclick = () => { $('#pause').hidden = true; access.open(() => { $('#pause').hidden = false; }); };
 $('#openAccess').onclick = () => access.open();
+$('#openRanking').onclick = () => openRanking();
 // paquetes de texturas: plantilla para editar y carga de un PNG propio (se guarda en el navegador)
 function usePack(url, save) {
   const img = new Image();
@@ -1440,7 +1447,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '9.1 · 2026-10-02';
+const VERSION = '9.2 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1499,6 +1506,7 @@ function loop(now) {
   game.features2.update(dt);
   game.eldra?.update(dt);
   game.extras?.update(dt);
+  game.modes?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';

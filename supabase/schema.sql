@@ -199,6 +199,28 @@ language sql security definer set search_path = public as $$
    order by w.updated_at desc;
 $$;
 
+-- ---------- ranking de «una sola vida» (v9.2) ----------
+create table if not exists public.yermo_scores (
+  id bigint generated always as identity primary key,
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 20),
+  score int not null check (score >= 0 and score < 10000000),
+  days int not null default 0,
+  kills int not null default 0,
+  world_type text not null default 'normal',
+  seed bigint,
+  cause text check (cause is null or char_length(cause) <= 40),
+  created_at timestamptz not null default now()
+);
+create index if not exists yermo_scores_score on public.yermo_scores (score desc);
+alter table public.yermo_scores enable row level security;
+revoke all on public.yermo_scores from anon;
+grant select, insert on public.yermo_scores to authenticated;
+drop policy if exists "yermo scores read" on public.yermo_scores;
+drop policy if exists "yermo scores insert" on public.yermo_scores;
+create policy "yermo scores read" on public.yermo_scores for select to authenticated using (true);
+create policy "yermo scores insert" on public.yermo_scores for insert to authenticated with check (user_id = auth.uid());
+
 do $$
 declare f text;
 begin

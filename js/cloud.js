@@ -136,6 +136,17 @@ export const Cloud = {
     if (error) console.warn('nube: no se guardó el jugador', error.message);
   },
 
+  // ---------- ranking de «una sola vida» ----------
+  async submitScore(r) {
+    const { error } = await this.sb.from('yermo_scores').insert({ name: (r.name || this.username).slice(0, 20), score: r.score | 0, days: r.days | 0, kills: r.kills | 0, world_type: r.world_type || 'normal', seed: r.seed ?? null, cause: r.cause || null });
+    if (error) throw new Error(error.message);
+  },
+  async topScores(n = 25) {
+    const { data, error } = await this.sb.from('yermo_scores').select('name, score, days, kills, world_type, cause, created_at').order('score', { ascending: false }).limit(n);
+    if (error) throw new Error(/does not exist|schema cache/i.test(error.message) ? 'falta correr el SQL nuevo en Supabase' : error.message);
+    return data || [];
+  },
+
   // ---------- anfitrión ----------
   async aliveHost(id) { const { data } = await this.sb.rpc('yermo_alive_host', { w: id }); return data?.[0] ?? null; },
   async claimHost(id, tok) { const { data, error } = await this.sb.rpc('yermo_claim_host', { w: id, tok, hname: this.username }); if (error) throw new Error(error.message); return !!data; },

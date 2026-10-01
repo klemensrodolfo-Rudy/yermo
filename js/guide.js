@@ -203,6 +203,12 @@ export function setupGuide(ui, getGame) {
       <p>${icon(394)} <b>Cohetes</b>: 2 carbones y un lingote de cobre dan 4. Clic derecho para lanzar uno cuando quieras.</p>
       <h3>Accesibilidad</h3>
       <p>En el menú y en la pausa: <b>🎮 Controles y accesibilidad</b> para cambiar las teclas, corregir los colores para daltonismo (deuteranopía, protanopía, tritanopía), agrandar la letra y los íconos o usar alto contraste. La regla <b>🧸 Modo chicos</b> saca los monstruos, el hambre, la sed y la radiación.</p>`,
+    'Defensa y una sola vida': () => `
+      <h3>${icon(227)} Defensa del refugio (cooperativa)</h3>
+      <p>Fabricá un <b>Núcleo del refugio</b> en la mesa de trabajo (4 lingotes de acero, una lámpara de uranio y 2 placas de metal), ponelo en tu base y hacé clic derecho para empezar: los mutantes vienen en <b>10 oleadas</b> cada vez más grandes a romperlo (en Eldra, orcos, huargos y trolls). Si tienen un jugador muy cerca lo atacan a él; si no, van derecho al núcleo.</p>
+      <p>Cada oleada rechazada da fichas a todos; resistir las 10 da 40 fichas y un regalo. Entre oleada y oleada hay 20 s para reparar. Online la maneja el anfitrión y todos ven la barra del núcleo. No está en modo chicos.</p>
+      <h3>☠ Una sola vida</h3>
+      <p>Modo de juego al crear el mundo. Si morís, se terminó: ves tus puntos (días × 100 + criaturas × 10 + logros × 25) y el mundo se borra. Las criaturas se hacen más fuertes cada 3 días. Tus partidas quedan en <b>🏆 Ranking</b> (menú); si entraste con tu cuenta en ☁ Mundo del grupo, también salen en el ranking de todos.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>
