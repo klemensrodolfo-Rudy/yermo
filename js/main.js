@@ -658,7 +658,16 @@ const skinOf = () => { try { return localStorage.getItem('yermo-skin') || 'c0662
 net.skin = skinOf();
 
 // ---------- Inicio de partida ----------
+// en el celular (desde el navegador) jugar en pantalla completa, acostado
+function goFullscreen() {
+  if (!input?.touch || matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || document.fullscreenElement) return;
+  try {
+    const r = document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+    r?.then(() => screen.orientation?.lock?.('landscape').catch(() => {})).catch(() => {});
+  } catch { /* el navegador no lo permite */ }
+}
 async function startGame(meta, hello) {
+  goFullscreen();
   $('#menu').hidden = true;
   $('#loading').hidden = false;
   $('#loadText').textContent = hello ? 'Conectando al yermo…' : 'Generando el yermo…';
@@ -1158,10 +1167,11 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 let wasPlaying = null;
+document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
 function loop(now) {
   requestAnimationFrame(loop);
   // controles táctiles visibles sólo jugando (sin menús, mochila ni ventanas encima)
-  const playing = !!game && !paused && !ui.open && !chatting && $('#menu').hidden && $('#loading').hidden && !document.querySelector('.overlay:not([hidden]), .v6modal');
+  const playing = !!game && !ui.open && $('#menu').hidden && $('#loading').hidden && !document.querySelector('.overlay:not([hidden]), .v6modal');
   if (playing !== wasPlaying) { wasPlaying = playing; document.body.classList.toggle('playing', playing); }
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   fpsAcc += dt; fpsN++; if (fpsAcc > 0.5) { fps = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
@@ -1352,6 +1362,16 @@ function loop(now) {
 }
 requestAnimationFrame(loop);
 showMenu();
+
+// ---------- App instalable (PWA) ----------
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+let installEvt = null;
+const installed = () => matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone;
+addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; if (!installed()) $('#installApp').hidden = false; });
+addEventListener('appinstalled', () => { $('#installApp').hidden = true; $('#installHint').hidden = true; flash('YERMO quedó instalado: abrilo desde el ícono'); });
+$('#installApp').onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; $('#installApp').hidden = true; };
+// iPhone/iPad: no hay botón automático, se instala desde Compartir
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !installed()) { $('#installHint').hidden = false; $('#installHint').textContent = '📲 Para instalarlo: tocá Compartir ⬆ y «Agregar a inicio».'; }
 
 // Ganchos para pruebas automatizadas
 window.__yermoDebug = { voice, get game() { return game; }, startGame, saveGame, openInventory, closeInventory, openContainer, ITEMS, BLOCKS, HEIGHT, setPause, renderer, scene, camera, net, guide, quitToMenu, toggleMount, dropHand, particles, mapView, settings, applySettings };

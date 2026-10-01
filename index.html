@@ -2,8 +2,16 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Yermo</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#14120f">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="YERMO">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
 <style>
@@ -180,7 +188,7 @@
   select { cursor: pointer; }
   /* táctil */
   #touch { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
-  body:not(.playing) #touch { display: none; } /* sólo mientras se juega: en menús tapaban los botones */
+  body.ctl:not(.playing) #touch { display: none; } /* sólo mientras se juega: en menús tapaban los botones */
   #inv .card { position: relative; } #invClose { position: absolute; top: 6px; right: 6px; width: 40px; height: 40px; padding: 0; font-size: 20px; z-index: 2; }
   #touch .look { position: absolute; right: 0; top: 0; width: 55%; height: 100%; pointer-events: auto; }
   #touch .stick { position: absolute; left: 24px; bottom: 110px; width: 130px; height: 130px; border-radius: 50%; background: rgba(0,0,0,0.25); border: 2px solid rgba(255,255,255,0.25); pointer-events: auto; }
@@ -239,6 +247,21 @@
     #inv { padding: 6px; } #inv .card > div { min-width: 0; } #inv .card { padding: 12px 10px; }
     #hotbar .slot { width: 9vw; height: 9vw; }
   }
+  /* celular acostado: todo más chico y sin pisarse */
+  @media (pointer: coarse) and (max-height: 520px) {
+    #minimap { width: 72px; height: 72px; top: 6px; right: 8px; }
+    body.touch #touch .top { top: 8px; right: 88px; flex-direction: row; }
+    body.touch #touch .top button { width: 40px; height: 40px; font-size: 13px; }
+    #tut { top: 6px !important; right: auto; left: 50%; transform: translateX(-50%); width: min(300px, 40vw); padding: 5px 8px; }
+    #tut .tn, #tut .tt { font-size: 12px; } #tut .td { font-size: 14px; } #tut .tp { font-size: 13px; }
+    #hotbar { bottom: 4px; padding: 2px; gap: 2px; } #hotbar .slot { width: 36px; height: 36px; } #hotbar .slot canvas { width: 28px; height: 28px; }
+    #stats { bottom: 48px; width: 300px; gap: 0 10px; font-size: 13px; } .srow { height: 11px; } .srow img { width: 11px; height: 11px; }
+    body.touch #touch .stick { left: 10px; bottom: 54px; width: 96px; height: 96px; } body.touch #touch .stick i { left: 23px; top: 23px; }
+    body.touch #touch .btns { right: 8px; bottom: 50px; grid-template-columns: repeat(3, 46px); gap: 6px; }
+    body.touch #touch .btns button { width: 46px; height: 46px; font-size: 11px; }
+    #info #biome { font-size: 15px; } #info { font-size: 13px; }
+    #toast { top: 14%; font-size: 15px; } #interactHint { font-size: 14px; }
+  }
   /* v6 */
   #objective { position: absolute; left: 12px; top: 128px; max-width: 320px; background: rgba(20,18,15,.62); border-left: 3px solid #d9823b; padding: 6px 10px; font-size: 18px; line-height: 1.15; color: #f0e6d0; pointer-events: none; }
   #objective small { display: block; color: #a89c88; font-size: 14px; }
@@ -248,7 +271,7 @@
   .emotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .emotes button { font-size: 18px; padding: 8px 4px; }
   .miss { color: #ff7a5a; }
   #podiumChamp h3 { margin: 10px 0 4px; } #podiumChamp div { font-size: 20px; }
-  @media (max-width: 700px) { #objective { top: 62px; left: 8px; font-size: 13px; max-width: 52vw; padding: 3px 6px; } #objective small { display: none; } }
+  @media (max-width: 700px), (pointer: coarse) and (max-height: 520px) { #objective { top: 56px; left: 8px; font-size: 12px; max-width: 40vw; padding: 3px 6px; } #objective small { display: none; } }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
@@ -266,6 +289,8 @@
     <button id="newWorld" class="primary" style="width:100%">+ Nuevo mundo</button>
     <div class="menuRow"><button id="joinWorld">Unirse a partida online</button><button id="openLobby">Partidas públicas</button></div>
     <div class="menuRow"><button id="openSkin">Personaje</button><button id="openGuide">Guía</button></div>
+    <button id="installApp" style="width:100%;margin-top:6px" hidden>📲 Instalar YERMO (pantalla completa, sin la barra)</button>
+    <p id="installHint" class="muted" style="font-size:15px;margin:6px 0 0" hidden></p>
     <div id="joinForm" hidden>
       <div class="row">
         <div><label for="jName">Tu nombre</label><input id="jName" maxlength="20" placeholder="Superviviente"></div>
@@ -293,7 +318,7 @@
       <div class="row"><button id="cancelNew">Cancelar</button><button id="createWorld" class="primary">Crear mundo</button></div>
     </div>
   </div>
-  <div class="credits">v4 · hecho con Three.js · arte, sonido y música procedurales</div>
+  <div class="credits">v7 · hecho con Three.js · arte, sonido y música procedurales</div>
 </div>
 
 <div id="loading" hidden><div style="text-align:center"><div id="loadText">Generando…</div><div class="bar"><i></i></div></div></div>
