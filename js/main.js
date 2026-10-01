@@ -1005,6 +1005,7 @@ $('#optQuality').value = settings.quality; $('#optVol').value = settings.sfx; $(
 for (const [k, t] of Object.entries(TEAMS)) { const o = document.createElement('option'); o.value = k; o.textContent = t.name; $('#optTeam').appendChild(o); }
 $('#helpClose').onclick = () => { $('#help').hidden = true; lockPointer(); };
 $('#bigmapWrap').onclick = () => { bigMap = false; $('#bigmapWrap').hidden = true; };
+$('#invClose').onclick = () => closeInventory();
 
 // ---------- v5: notas, carreras, personaje, lista pública, voz ----------
 $('#noteClose').onclick = () => { $('#noteReader').hidden = true; lockPointer(); };
@@ -1156,8 +1157,12 @@ const input = new Input({
 // ---------- Bucle ----------
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
+let wasPlaying = null;
 function loop(now) {
   requestAnimationFrame(loop);
+  // controles táctiles visibles sólo jugando (sin menús, mochila ni ventanas encima)
+  const playing = !!game && !paused && !ui.open && !chatting && $('#menu').hidden && $('#loading').hidden && !document.querySelector('.overlay:not([hidden]), .v6modal');
+  if (playing !== wasPlaying) { wasPlaying = playing; document.body.classList.toggle('playing', playing); }
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   fpsAcc += dt; fpsN++; if (fpsAcc > 0.5) { fps = Math.round(fpsN / fpsAcc); fpsAcc = 0; fpsN = 0; }
   renderer.clear();

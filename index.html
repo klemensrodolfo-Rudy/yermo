@@ -180,6 +180,8 @@
   select { cursor: pointer; }
   /* táctil */
   #touch { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  body:not(.playing) #touch { display: none; } /* sólo mientras se juega: en menús tapaban los botones */
+  #inv .card { position: relative; } #invClose { position: absolute; top: 6px; right: 6px; width: 40px; height: 40px; padding: 0; font-size: 20px; z-index: 2; }
   #touch .look { position: absolute; right: 0; top: 0; width: 55%; height: 100%; pointer-events: auto; }
   #touch .stick { position: absolute; left: 24px; bottom: 110px; width: 130px; height: 130px; border-radius: 50%; background: rgba(0,0,0,0.25); border: 2px solid rgba(255,255,255,0.25); pointer-events: auto; }
   #touch .stick i { position: absolute; left: 40px; top: 40px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.35); }
@@ -232,7 +234,9 @@
     body.touch #touch .top { top: 112px; }
     #bossbar { top: 118px; }
     #inv .card { grid-template-columns: 1fr; overflow: auto; }
-    .grid { grid-template-columns: repeat(9, 1fr); } .slot { width: auto; aspect-ratio: 1; height: auto; }
+    .grid { grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; } .slot { width: auto; aspect-ratio: 1; height: auto; min-width: 0; }
+    .slot canvas { width: 78%; height: 78%; } .slot .count { font-size: 15px; }
+    #inv { padding: 6px; } #inv .card > div { min-width: 0; } #inv .card { padding: 12px 10px; }
     #hotbar .slot { width: 9vw; height: 9vw; }
   }
   /* v6 */
@@ -244,7 +248,7 @@
   .emotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .emotes button { font-size: 18px; padding: 8px 4px; }
   .miss { color: #ff7a5a; }
   #podiumChamp h3 { margin: 10px 0 4px; } #podiumChamp div { font-size: 20px; }
-  @media (max-width: 700px) { #objective { top: auto; bottom: 150px; font-size: 15px; max-width: 60vw; } }
+  @media (max-width: 700px) { #objective { top: 62px; left: 8px; font-size: 13px; max-width: 52vw; padding: 3px 6px; } #objective small { display: none; } }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
@@ -326,6 +330,7 @@
 
 <div id="inv" hidden>
   <div class="card">
+    <button id="invClose" title="Cerrar (E)">✕</button>
     <div>
       <h2>Mochila</h2>
       <div id="invMain" class="grid"></div>
