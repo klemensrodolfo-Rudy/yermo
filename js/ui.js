@@ -4,7 +4,7 @@ import { drawIcon } from './textures.js';
 import { MACHINE_INFO } from './sim.js';
 
 const $ = (s) => document.querySelector(s);
-const STATION_NAMES = { mesa: 'Mesa de trabajo', horno: 'Horno', fogata: 'Fogata', prensa: 'Prensa de fichas', taller: 'Taller mecánico' };
+const STATION_NAMES = { mesa: 'Mesa de trabajo', horno: 'Horno', fogata: 'Fogata', prensa: 'Prensa de fichas', taller: 'Taller mecánico', runas: 'Altar de runas', alquimia: 'Mesa de alquimia' };
 const BUFF_TXT = { coraje: 'Coraje: +30% de daño', coraza: 'Coraza: +20% de defensa', plomo: 'Hígado de plomo: -50% radiación', humo: 'Sigilo: las criaturas te ven de más cerca', acido: 'Regeneración rápida', frescura: 'Frescura: +15% de velocidad y correr sin hambre', furia: 'Furia: +60% de daño y +20% de defensa' };
 export { BUFF_TXT };
 

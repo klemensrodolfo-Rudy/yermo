@@ -19,6 +19,7 @@ import { Weather, Particles, WEATHER_NAMES } from './fx.js';
 import { Input } from './input.js';
 import { createFeatures } from './features.js';
 import { createFeatures2, TAME } from './features2.js';
+import { createEldra } from './eldra.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -339,6 +340,8 @@ function setHand(id) {
 // ---------- Estado del juego ----------
 function lockPointer() { if (input?.touch) return; try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch { /* sin foco */ } }
 const sfx = new Sfx();
+// ?mute: sin ningún sonido (pruebas automáticas)
+if (new URLSearchParams(location.search).has('mute')) sfx.start = () => {};
 const ui = new UI(atlasCanvas, sfx);
 const net = new Net();
 const mapView = new MapView(atlasCanvas);
@@ -573,7 +576,7 @@ async function renderCloud() {
     for (const w of worlds) {
       const row = document.createElement('div'); row.className = 'world';
       const d = new Date(w.updated_at);
-      row.innerHTML = `<div><b></b><small>${w.playing ? `<b>🟢 jugando: ${w.playing.replace(/[<>&]/g, '')}</b> · ` : '⚪ nadie conectado · '}${w.world_type === 'brew' ? '🍺 ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · ${w.players} miembro${w.players == 1 ? '' : 's'}${w.owner === Cloud.user.id ? ' · 👑 tuyo' : ''}</small></div><button class="play">Entrar</button><button class="cfg" title="Código, miembros y opciones">⚙</button>`;
+      row.innerHTML = `<div><b></b><small>${w.playing ? `<b>🟢 jugando: ${w.playing.replace(/[<>&]/g, '')}</b> · ` : '⚪ nadie conectado · '}${w.world_type === 'brew' ? '🍺 ' : w.world_type === 'magic' ? '🧙 ' : w.world_type === 'base' ? '🧰 ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · ${w.players} miembro${w.players == 1 ? '' : 's'}${w.owner === Cloud.user.id ? ' · 👑 tuyo' : ''}</small></div><button class="play">Entrar</button><button class="cfg" title="Código, miembros y opciones">⚙</button>`;
       row.querySelector('b').textContent = w.name;
       row.querySelector('.play').onclick = () => { row.querySelector('.play').disabled = true; enterCloud(w.id).catch((e) => { cloudMsg(e.message); row.querySelector('.play').disabled = false; }); };
       row.querySelector('.cfg').onclick = () => cloudWorldCfg(w);
@@ -953,6 +956,7 @@ async function startGame(meta, hello, cloudInfo) {
   if (!meta.inventory && !meta.remote) {
     if (meta.mode === 'creative') [2, 9, 13, 23, 14, 26, 28, 38, 80].forEach((id) => inv.add(id, 64));
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
+    else if (meta.worldType === 'magic') [[385, 6], [353, 10], [379, 1], [26, 8]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'base') [[268, 1], [269, 1], [270, 1], [276, 1], [26, 32], [272, 16], [329, 1], [306, 4], [360, 1], [339, 2], [24, 1]].forEach(([id, n]) => inv.add(id, n));
   }
   // mundo cervecero: siempre arrancás con un balde (también los que se unen online y los mundos ya creados)
@@ -967,7 +971,7 @@ async function startGame(meta, hello, cloudInfo) {
     const r = Object.assign({ rad: true, dayMobs: true, armed: false }, game.meta.rules);
     game.meta.rules = r;
     mobs.noArmed = !r.armed;
-    if (!r.armed && isAuthority()) for (const m of [...mobs.list.values()]) if (m.def.ranged) mobs.remove(m);
+    if (!r.armed && isAuthority()) for (const m of [...mobs.list.values()]) if (m.def.ranged && m.def.human) mobs.remove(m);
     player.noRad = !r.rad;
     if (player.noRad) { player.rad = 0; player.radExposure = 0; }
     mobs.peacefulDay = !r.dayMobs;
@@ -989,8 +993,11 @@ async function startGame(meta, hello, cloudInfo) {
   };
   const F = game.features = createFeatures(fctx);
   const F2 = game.features2 = createFeatures2(fctx);
-  sim.onMarker = (...a) => F2.onMarker(...a) || F.onMarker(...a);
-  player.onInteractMob = (m, h) => F2.onInteractMob(m, h) || F.onInteractMob(m, h);
+  const E = game.eldra = createEldra(fctx);
+  const useF2 = player.onUseItem;
+  player.onUseItem = (...a) => E.onUseItem(...a) || useF2(...a);
+  sim.onMarker = (...a) => E.onMarker(...a) || F2.onMarker(...a) || F.onMarker(...a);
+  player.onInteractMob = (m, h) => E.onInteractMob(m, h) || F2.onInteractMob(m, h) || F.onInteractMob(m, h);
   player.onGun = F.onGun;
   player.onReadNote = F.readNote;
   player.onLever = (x, y, z) => sim.toggleLever(x, y, z);
@@ -1037,7 +1044,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1097,6 +1104,7 @@ const SEED_PRESETS = [
   { id: 'settlement', seed: 3, type: 'normal', spawn: 'settlement', name: '🏘 Asentamiento', desc: 'Arrancás dentro de un pueblo de sobrevivientes con su líder, que da misiones y comercia.' },
   { id: 'circuit', seed: 1, type: 'normal', spawn: 'circuit', name: '🏁 Autódromo', desc: 'Arrancás en los boxes de un autódromo abandonado: autos, motos, carreras y el instructor.' },
   { id: 'base', seed: 556, type: 'base', mode: 'creative', name: '🧰 Base equipada', desc: 'Arrancás en una base con todo listo: helicóptero, bote, autos, motos, camión, tren y vagoneta sobre vías, monturas, taller y cofres llenos. Todos los planos aprendidos. Viene en Creativo, pero podés elegir Supervivencia.' },
+  { id: 'eldra', seed: 7, type: 'magic', name: '🧙 Reinos de Eldra', desc: 'Mundo medieval y mágico: colinas de medianos, bosques élficos de árboles de plata, montes enanos con mithril, ciénagas con arañas y un dragón en las Tierras de Brasa. Orcos de noche, trolls que se vuelven piedra con el sol, magos, báculos, anillos y pociones. Sin historia: explorá a tu ritmo.' },
   { id: 'zoo', seed: 5, type: 'normal', spawn: 'zoo', name: '🦁 Bioparque', desc: 'Arrancás en la entrada de un zoológico abandonado: leones, jirafas, elefantes, cebras, gorilas, pingüinos, hipopótamos y más andan sueltos. Algunos se domestican y se montan.' },
   { id: 'custom', name: '✏ Personalizada…', desc: 'Escribí tu propia semilla (número o palabra). La misma semilla genera siempre el mismo mundo.' },
 ];
@@ -1111,7 +1119,7 @@ $('#wSeedSel').onchange = () => {
 };
 $('#wSeedSel').onchange();
 $('#createWorld').onclick = () => {
-  const name = $('#wName').value.trim() || ($('#wType').value === 'brew' ? 'Cervecería del yermo' : 'Yermo sin nombre');
+  const name = $('#wName').value.trim() || ($('#wType').value === 'brew' ? 'Cervecería del yermo' : $('#wType').value === 'magic' ? 'Reinos de Eldra' : 'Yermo sin nombre');
   const preset = SEED_PRESETS.find((x) => x.id === $('#wSeedSel').value);
   const s = preset.id === 'custom' ? $('#wSeed').value.trim() : '';
   const seed = preset.seed ?? (s ? (/^-?\d+$/.test(s) ? parseInt(s) : [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7)) : (Math.random() * 2e9) | 0);
@@ -1422,7 +1430,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '8.3 · 2026-10-02';
+const VERSION = '9.0 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1479,6 +1487,7 @@ function loop(now) {
   game.tutorial.update(simDt);
   game.features.update(dt);
   game.features2.update(dt);
+  game.eldra?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';

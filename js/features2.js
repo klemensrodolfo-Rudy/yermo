@@ -15,6 +15,7 @@ export const TAME = {
   zebra: { food: [282, 285], veh: 'mzebra', name: 'cebra', hint: 'dale cebada o papas' },
   ostrich: { food: [281, 282], veh: 'mostrich', name: 'avestruz', hint: 'dale semillas o cebada' },
   elephant: { food: [282, 285], veh: 'melephant', name: 'elefante', hint: 'dale cebada o papas', hard: true },
+  horse: { food: [385, 282], veh: 'mhorse', name: 'caballo', hint: 'dale manzanas o cebada' },
 };
 import { EMOTES } from './net.js';
 import { BEERS } from './npc.js';
@@ -90,6 +91,7 @@ export function createFeatures2(ctx) {
   meta.flags = meta.flags || []; meta.events = meta.events || [];
   const api = { P };
   const auth = () => ctx.isAuthority();
+  const story = meta.worldType !== 'magic'; // Reinos de Eldra: sin historia principal
   const day = () => meta.nights || 0;
   const season = () => SEASONS[Math.floor(day() / SEASON_DAYS) % 4];
   g.season = season;
@@ -128,7 +130,7 @@ export function createFeatures2(ctx) {
   // ---------- eventos del juego ----------
   api.event = (n, id) => {
     // campaña
-    const st = CAMPAIGN[P.camp];
+    const st = (story ? CAMPAIGN[P.camp] : null);
     if (st?.ev && st.ev(n, id)) advanceCampaign();
     // desafíos diarios
     ensureDaily();
@@ -156,7 +158,7 @@ export function createFeatures2(ctx) {
     if (n === 'hordeSurvived') rep('acero', 5, 'resististe la horda');
   };
   function advanceCampaign() {
-    const st = CAMPAIGN[P.camp];
+    const st = (story ? CAMPAIGN[P.camp] : null);
     if (!st) return;
     for (const [id, n] of st.rew) give(id, n);
     P.camp++;
@@ -1268,7 +1270,7 @@ export function createFeatures2(ctx) {
   const obj = document.createElement('div'); obj.id = 'objective'; $('#hud').appendChild(obj);
   let hudAcc = 0, moodAcc = 0, secAcc = 0, lastObj = '';
   function renderObjective() {
-    const st = CAMPAIGN[P.camp];
+    const st = (story ? CAMPAIGN[P.camp] : null);
     let txt = st ? `📜 ${st.goal}` : '';
     if (P.delivery) txt += `${txt ? '<br>' : ''}🚚 Entrega a ${Math.round(Math.hypot(P.delivery.to[0] - p.pos.x, P.delivery.to[1] - p.pos.z))} m`;
     if (inAbyss()) txt = `🕳 Abismo · nivel ${abyssLevel(p.pos.x)}<br>` + txt;
@@ -1318,7 +1320,7 @@ export function createFeatures2(ctx) {
       secAcc = 0;
       if (day() !== lastDay) { lastDay = day(); dawn(); }
       // campaña por condición
-      const st = CAMPAIGN[P.camp];
+      const st = (story ? CAMPAIGN[P.camp] : null);
       if (st?.check && st.check({ P, inv })) advanceCampaign();
       if (auth()) {
         spawnAcc++;
@@ -1331,7 +1333,7 @@ export function createFeatures2(ctx) {
         if (api.raidOn && ![...g.mobs.list.values()].some((m) => m.raid && !m.dying)) { api.raidOn = false; addStat('raids'); flash('✔ ¡Rechazaste el asalto!'); p.onEvent('v6', 'asalto'); }
         evAcc++;
         meta.evT = (meta.evT ?? 240) - 1;
-        if (meta.evT <= 0 && !p.dead) { meta.evT = 360 + Math.random() * 300; randomEvent(); }
+        if (meta.evT <= 0 && !p.dead) { meta.evT = 360 + Math.random() * 300; if (story) randomEvent(); }
       }
       meta.events = meta.events.filter((e) => e.until > meta.clock);
       if (p.riding?.type === 'heli' && !p.onGround) p.onEvent('v6', 'heli');

@@ -4,7 +4,7 @@ import { MOB_TYPES } from './entities.js';
 import { ACHIEVEMENTS } from './achievements.js';
 
 const $ = (s) => document.querySelector(s);
-const ST = { mesa: 'Mesa de trabajo', horno: 'Horno', fogata: 'Fogata', prensa: 'Prensa de fichas', taller: 'Taller mecánico' };
+const ST = { mesa: 'Mesa de trabajo', horno: 'Horno', fogata: 'Fogata', prensa: 'Prensa de fichas', taller: 'Taller mecánico', runas: 'Altar de runas', alquimia: 'Mesa de alquimia' };
 
 export function setupGuide(ui, getGame) {
   const icon = (id) => `<img class="gi" src="${ui.icon(id).toDataURL()}" alt="">`;
@@ -182,6 +182,16 @@ export function setupGuide(ui, getGame) {
       <h3>Domesticar y montar</h3>
       <p>Dales de comer (clic derecho con la comida en la mano) hasta que acepten, y después usá una ${icon(360)} <b>Montura</b>:<br>
       cebra (cebada o papas), avestruz (semillas o cebada), elefante (cebada o papas; tarda más, pero carga 2 personas y tiene baúl), jabalí (papas) y lobo (carne).</p>`,
+    'Reinos de Eldra': () => `
+      <p>Tipo de mundo <b>🧙 Reinos de Eldra</b>: un mundo medieval y mágico sin historia principal, para explorar a tu ritmo.</p>
+      <h3>Los reinos</h3>
+      <p><b>Colinas de Valverde</b>: aldeas de medianos en cuevas redondas (comercian comida y pociones). <b>Bosque de Lunaria</b>: árboles gigantes y de plata que brillan de noche; viven elfas y ents. <b>Montes de Hierroalto</b>: minas enanas con mithril y cristal arcano. <b>Ciénaga Sombría</b>: telarañas que te frenan (rompelas con la espada) y arañas venenosas. <b>Tierras de Brasa</b>: basalto, lava y la guarida del <b>Dragón de Brasa</b> sobre montones de oro.</p>
+      <h3>Criaturas</h3>
+      <p>De noche bajan <b>orcos</b> y <b>huargos</b>. Los <b>trolls</b> salen en montes y ciénagas: si los agarra el sol, se vuelven piedra. Los <b>ents</b> son tranquilos hasta que les pegás. Los <b>caballos</b> se domestican con manzanas o cebada y se montan con una ${icon(360)} Montura. El mago de la torre, los medianos, los enanos y las elfas comercian (clic derecho) a cambio de ${icon(353)} fichas de oro.</p>
+      <h3>Magia</h3>
+      <p>La barra <b>✦ maná</b> se recarga sola, y mucho más rápido al lado de un ${icon(219)} <b>altar de runas</b>. Con el ${icon(386)} <b>Tomo de hechizos</b> (lo vende el mago) aprendés a fabricar en el altar:</p>
+      <p>${icon(370)} <b>Luz</b>: crea un orbe de luz · ${icon(371)} <b>Fuego</b>: bola de fuego que quema · ${icon(372)} <b>Curación</b>: +8 de vida y cura el veneno · ${icon(373)} <b>Escudo</b>: 20 s recibiendo mucho menos daño · ${icon(374)} <b>Viento</b>: empuja a las criaturas y te eleva.</p>
+      <p>Los <b>anillos</b> funcionan con sólo llevarlos en la mochila: ${icon(375)} rapidez, ${icon(376)} visión nocturna y ${icon(377)} sigilo (los monstruos no te ven hasta que estás muy cerca). En la ${icon(220)} <b>mesa de alquimia</b> se hacen ${icon(378)} pociones de vida y ${icon(379)} de maná con ${icon(380)} flores de luna.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

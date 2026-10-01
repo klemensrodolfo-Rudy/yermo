@@ -853,6 +853,98 @@ HD.tile_white = (t) => {
   });
   crackLine(t, 1);
 };
+// ---------- v9: Reinos de Eldra ----------
+HD.basalt = (t) => t.fill((x, y) => {
+  const col = Math.floor(x / 8), seam = x % 8 === 0 || (y + col * 11) % 16 === 0;
+  const n = t.fbm(x, y, 4, 3);
+  t.H(x, y, seam ? 0.1 : 0.6 + n * 0.3); t.S(x, y, 0.15);
+  return scl([58, 56, 62], seam ? 0.55 : 0.8 + n * 0.35 + (t.rnd() - 0.5) * 0.06);
+});
+const leafy = (c1, c2, tintK, glow) => (t) => t.fill((x, y) => {
+  const c = t.cells(x, y, 7, 21, 1), n = t.fbm(x, y, 8, 2, 6);
+  if (c.f1 > 0.5 || (n < 0.3 && c.f1 > 0.32)) return { c: c1, a: 0 };
+  if (tintK) t.M(x, y, tintK);
+  if (glow && t.rnd() < 0.03) { t.E(x, y, 0.8); return [230, 250, 255]; }
+  t.H(x, y, 1 - c.f1);
+  return scl(mixc(c1, c2, c.rid), 1.15 - c.f1 * 0.6 + (t.rnd() - 0.5) * 0.08);
+});
+HD.oak_leaves = leafy([70, 120, 50], [46, 90, 36], 230, false);
+HD.silver_leaves = leafy([170, 200, 190], [120, 160, 150], 0, true);
+HD.silver_bark = (t) => t.fill((x, y) => {
+  const r = t.anoise(x, y, 8, 2, 31) * 0.6 + t.anoise(x, y, 16, 4, 32) * 0.4, g = r < 0.32;
+  t.H(x, y, g ? 0.15 : r); t.S(x, y, 0.2);
+  return scl([196, 204, 200], (g ? 0.62 : 0.85 + r * 0.25) + (t.rnd() - 0.5) * 0.05);
+});
+HD.oak_bark = (t) => t.fill((x, y) => {
+  const r = t.anoise(x, y, 6, 2, 33) * 0.6 + t.anoise(x, y, 12, 4, 34) * 0.4, g = r < 0.35;
+  t.H(x, y, g ? 0.1 : r);
+  return scl([104, 78, 52], (g ? 0.55 : 0.8 + r * 0.4) + (t.rnd() - 0.5) * 0.06);
+});
+HD.elf_planks = (t) => t.fill((x, y) => {
+  const p = y >> 3, ly = y % 8, g = t.anoise(x, y, 2, 16, p + 40) * 0.5 + t.anoise(x, y, 4, 32, p + 41) * 0.3;
+  if (ly === 7) { t.H(x, y, 0.1); return [150, 140, 110]; }
+  t.H(x, y, 0.6 + g * 0.2); t.S(x, y, 0.2);
+  return scl([226, 214, 178], 0.82 + g * 0.3 + (mulberry32(p * 7)() - 0.5) * 0.1);
+});
+const bricks = (moss) => (t) => t.fill((x, y) => {
+  const row = y >> 3, off = row % 2 ? 6 : 0, lx = (x + off) % 12, ly = y % 8;
+  const r = mulberry32(row * 13 + Math.floor((x + off) / 12) * 7 + 3)();
+  if (ly === 7 || lx === 11) { t.H(x, y, 0.1); return moss && t.fbm(x, y, 4, 2, 5) > 0.5 ? [70, 100, 50] : [90, 88, 84]; }
+  const n = t.fbm(x, y, 8, 3);
+  t.H(x, y, 0.7 + n * 0.2 - (ly === 6 || lx === 10 ? 0.1 : 0));
+  let c = scl([138, 134, 126], 0.82 + r * 0.2 + (n - 0.5) * 0.25);
+  if (moss && t.fbm(x, y, 4, 3, 9) > 0.58) c = mixc(c, [74, 110, 54], 0.7);
+  return c;
+});
+HD.stone_bricks = bricks(false);
+HD.stone_bricks_moss = bricks(true);
+HD.thatch = (t) => t.fill((x, y) => {
+  const s = t.anoise(x, y, 16, 2, 50), row = y % 6 === 5;
+  t.H(x, y, row ? 0.2 : s);
+  return scl([196, 164, 92], (row ? 0.6 : 0.75 + s * 0.4) + (t.rnd() - 0.5) * 0.1);
+});
+HD.green_frame = (t) => { HD.planks(t); for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const c = t.G(x, y); t.P(x, y, mixc(c, [60, 120, 60], 0.6)); } };
+HD.flowers = (t) => {
+  t.clear();
+  for (let s = 0; s < 7; s++) {
+    const x = 2 + s * 4 + Math.floor(t.rnd() * 2), h = 10 + Math.floor(t.rnd() * 12);
+    for (let y = 0; y < h; y++) t.P(x, 31 - y, [70, 120, 50]);
+    const col = [[230, 220, 255], [255, 210, 80], [240, 120, 160], [160, 200, 255]][s % 4];
+    for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) if (Math.abs(a) + Math.abs(b) <= 2) t.P(x + a, 31 - h + b, scl(col, 1 - (Math.abs(a) + Math.abs(b)) * 0.08));
+    t.P(x, 31 - h, [255, 230, 120]); if (s % 4 === 0) t.E(x, 31 - h, 0.6);
+  }
+};
+HD.web = (t) => {
+  t.clear();
+  for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; for (let r = 0; r < 22; r++) t.P(16 + Math.cos(a) * r, 16 + Math.sin(a) * r, [230, 230, 236], 200); }
+  for (let ring = 4; ring < 22; ring += 4) for (let a = 0; a < Math.PI * 2; a += 0.05) t.P(16 + Math.cos(a) * ring, 16 + Math.sin(a) * ring, [220, 220, 228], 170);
+};
+HD.mithril_ore = (t) => { ore([210, 230, 240], [170, 200, 220], 0.38, 0.35, 'deepstone')(t); };
+HD.crystal = (t) => t.fill((x, y) => {
+  const c = t.cells(x, y, 4, 22, 1), facet = ((x - c.cx) - (y - c.cy)) > 0 ? 1.15 : 0.85;
+  t.E(x, y, 0.5); t.S(x, y, 0.9); t.H(x, y, 1 - c.f1);
+  return { c: scl(mixc([150, 110, 255], [110, 220, 255], c.rid), facet * (1.1 - c.f1 * 0.4)), a: 220 };
+});
+HD.gold_pile = (t) => t.fill((x, y) => {
+  const c = t.cells(x, y, 8, 23, 1);
+  t.H(x, y, 1 - c.f1); t.S(x, y, 0.85);
+  return scl([232, 186, 60], (c.f2 - c.f1 < 0.08 ? 0.6 : 1.15 - c.f1 * 0.5) + (t.rnd() - 0.5) * 0.08);
+});
+HD.rune_side = (t) => {
+  HD.stone_bricks(t);
+  for (let y = 8; y < 24; y++) for (let x = 8; x < 24; x++) { const r = ((x * 7 + y * 3) % 11 === 0) || (x === 16 && y % 3) || (y === 16 && x % 4); if (r) { t.P(x, y, [130, 200, 255]); t.E(x, y, 0.9); } }
+};
+HD.rune_top = (t) => {
+  HD.stone_bricks(t);
+  for (let a = 0; a < Math.PI * 2; a += 0.02) { for (const r of [9, 12]) { t.P(16 + Math.cos(a) * r, 16 + Math.sin(a) * r, [140, 210, 255]); t.E(16 + Math.cos(a) * r, 16 + Math.sin(a) * r, 1); } }
+  for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; for (let r = 0; r < 9; r++) { t.P(16 + Math.cos(a) * r, 16 + Math.sin(a) * r, [170, 230, 255]); t.E(16 + Math.cos(a) * r, 16 + Math.sin(a) * r, 1); } }
+};
+HD.alchemy_side = (t) => {
+  HD.elf_planks(t);
+  for (const [bx, col] of [[5, [200, 60, 60]], [14, [60, 120, 220]], [23, [100, 210, 120]]]) for (let y = 10; y < 22; y++) for (let x = bx; x < bx + 5; x++) { const neck = y < 13 && (x === bx || x === bx + 4); if (!neck) { t.P(x, y, scl(col, y < 15 ? 0.7 : 1)); t.S(x, y, 0.8); if (y > 16) t.E(x, y, 0.4); } }
+};
+HD.alchemy_top = (t) => { HD.elf_planks(t); for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) if (Math.hypot(x - 16, y - 16) < 7) { t.P(x, y, [60, 50, 40]); if (Math.hypot(x - 16, y - 16) < 5) { t.P(x, y, [120, 230, 160]); t.E(x, y, 0.7); } } };
+HD.light_orb = (t) => { t.clear(); for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const d = Math.hypot(x - 16, y - 16); if (d < 9) { t.P(x, y, mixc([255, 255, 230], [255, 220, 120], d / 9), 255); t.E(x, y, 1); } } };
 // hojas de acacia: matas con huecos (recorte) que se tiñen con el bioma
 HD.leaves = (t) => t.fill((x, y) => {
   const c = t.cells(x, y, 6, 12, 1), n = t.fbm(x, y, 8, 2, 4);
@@ -1085,7 +1177,7 @@ export function applyPack(atlasCanvas, img) {
 }
 
 // ---------- Íconos ----------
-const TOOL_COL = { wood: 0x8a6e48, scrap: 0x9a5a30, steel: 0xc8ccd2 };
+const TOOL_COL = { wood: 0x8a6e48, scrap: 0x9a5a30, steel: 0xc8ccd2, iron: 0x9aa0a8, elf: 0xb8f0d0, mithril: 0xe0f0ff, light: 0xfff0a0, fire: 0xff6a2a, heal: 0x6aff8a, shield: 0x6ab0ff, wind: 0xe0f8ff };
 const PIX = {
   stick: ['........', '......#.', '.....#..', '....#...', '...#....', '..#.....', '.#......', '........'],
   pick: ['.hhhhh..', 'h....hh.', '....#.h.', '...#....', '..#.....', '.#......', '#.......', '........'],
@@ -1099,6 +1191,8 @@ const PIX = {
   bow: ['..###...', '.#...h..', '#....h..', '#....h..', '#....h..', '#....h..', '.#...h..', '..###...'],
   arrow: ['......hh', '.....#hh', '....#...', '...#....', '..#.....', '.#......', 'h.......', '........'],
   flamer: ['........', '.hhhhh##', 'hhhhhh##', '.#h.....', '.##.....', '.#......', '........', '........'],
+  sword: ['.......h', '......hh', '.....hh.', '....hh..', '.#.hh...', '..##....', '.#.#....', '#.......'],
+  staff: ['.....hh.', '....hhhh', '....hhh.', '...#h...', '..#.....', '.#......', '#.......', '........'],
 };
 
 export function drawIcon(canvas, id, atlas) {
@@ -1139,7 +1233,7 @@ export function drawIcon(canvas, id, atlas) {
   const rgb = (h, k = 1) => `rgb(${((h >> 16) & 255) * k | 0},${((h >> 8) & 255) * k | 0},${(h & 255) * k | 0})`;
   if (PIX[it.icon]) {
     const pat = PIX[it.icon];
-    const head = TOOL_COL[typeof it.color === 'string' ? it.color : (['bat', 'machete', 'crossbow', 'pistol', 'shotgun', 'flamer', 'arrow'].includes(it.icon) ? 'steel' : it.icon === 'bow' ? 'scrap' : 'wood')];
+    const head = TOOL_COL[typeof it.color === 'string' ? it.color : (['bat', 'machete', 'crossbow', 'pistol', 'shotgun', 'flamer', 'arrow', 'sword'].includes(it.icon) ? 'steel' : it.icon === 'bow' ? 'scrap' : 'wood')];
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
       const ch = pat[y][x];
       if (ch === '#') { put(x * 2, y * 2, rgb(0x6b5234)); put(x * 2 + 1, y * 2, rgb(0x6b5234)); put(x * 2, y * 2 + 1, rgb(0x4a3822)); put(x * 2 + 1, y * 2 + 1, rgb(0x4a3822)); }
@@ -1158,6 +1252,15 @@ export function drawIcon(canvas, id, atlas) {
     for (let y = 6; y < 12; y++) for (let x = 2 + (11 - y) * 0.5; x < 14 - (11 - y) * 0.5; x++) put(Math.floor(x), y, rgb(col, y === 6 ? 1.25 : y > 9 ? 0.75 : 1));
   };
   switch (it.icon) {
+    case 'ring': { const c = it.color; for (let a = 0; a < Math.PI * 2; a += 0.05) { const r = 4.5; put(Math.round(8 + Math.cos(a) * r), Math.round(9 + Math.sin(a) * r * 0.8), rgb(0xd8b040, 0.9 + Math.sin(a) * 0.2)); } lump(c, 8, 4, [2.2, 2]); put(7, 3, '#ffffff'); break; }
+    case 'potion': { const c = it.color; for (let y = 6; y < 15; y++) for (let x = 3; x < 13; x++) if (Math.hypot(x - 7.5, y - 10.5) < 4.8) put(x, y, rgb(y < 9 ? 0xc8e0e8 : c, x < 6 ? 1.3 : 1)); for (let y = 2; y < 7; y++) for (let x = 6; x < 10; x++) put(x, y, rgb(y < 3 ? 0x8a6a40 : 0xc8e0e8)); break; }
+    case 'flower': for (let y = 8; y < 15; y++) put(8, y, '#4a7a2a'); put(7, 11, '#5a8a34'); put(6, 10, '#5a8a34'); lump(0xe8e0ff, 8, 6, [3, 3]); put(8, 6, '#ffe070'); break;
+    case 'shield': for (let y = 2; y < 15; y++) for (let x = 3; x < 13; x++) { const w = y < 10 ? 5 : 5 - (y - 9); if (Math.abs(x - 7.5) < w) put(x, y, rgb(Math.abs(x - 7.5) > w - 1.2 || y === 2 ? 0x9aa0a8 : it.color, 1 + (7.5 - x) * 0.03)); } put(7, 7, '#d8b040'); put(8, 7, '#d8b040'); break;
+    case 'mithril_ingot': ingot(0xd8e8f0); break;
+    case 'apple': lump(0xc83a2a, 8, 9, [4.5, 4.2]); put(6, 7, '#ff9a8a'); put(8, 4, '#5a3a1a'); put(9, 3, '#4a8a2a'); put(10, 3, '#4a8a2a'); break;
+    case 'tome': for (let y = 3; y < 14; y++) for (let x = 3; x < 13; x++) put(x, y, rgb(x === 3 || x === 12 ? 0x3a1a4a : y === 3 || y === 13 ? 0xd8b040 : 0x5a2a7a)); for (let y = 6; y < 11; y++) put(8, y, '#9ad8ff'); put(7, 8, '#9ad8ff'); put(9, 8, '#9ad8ff'); break;
+    case 'crystal': for (let y = 2; y < 15; y++) { const w = y < 6 ? (y - 1) : (15 - y) * 0.45; for (let x = 8 - w; x <= 8 + w; x++) put(Math.round(x), y, rgb(x < 8 ? 0xb0a0ff : 0x7a6ad8, 1)); } put(7, 5, '#ffffff'); break;
+    case 'scale': for (let y = 3; y < 14; y++) for (let x = 3; x < 13; x++) if (Math.hypot((x - 8) / 5, (y - 6) / 7) < 1) put(x, y, rgb(0x8a2a1a, 1.2 - Math.hypot(x - 8, y - 5) * 0.08)); break;
     case 'coal': lump(0x4a4644, 8, 9, [5, 4]); put(6, 7, '#8a8580'); put(9, 8, '#77726c'); break;
     case 'scrap': lump(0x8a4a24, 6, 9, [4, 3]); lump(0x9a9aa0, 10, 8, [3, 4]); break;
     case 'copper_ingot': ingot(0xc27a3e); break;

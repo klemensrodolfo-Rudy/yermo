@@ -75,6 +75,12 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 - Monturas nuevas: cebra, avestruz y elefante (2 asientos y baúl).
 - Texturas en todas las criaturas (pelaje, escamas, plumas, piel, rayas, manchas) y el personaje con cara, manos, botas, cinturón y mochila.
 
+**v9 — Reinos de Eldra** (tipo de mundo / semilla **🧙 Reinos de Eldra**, sin historia: explorás a tu ritmo)
+- Cinco reinos: **Colinas de Valverde** (aldeas de medianos en cuevas redondas), **Bosque de Lunaria** (árboles gigantes y de plata que brillan), **Montes de Hierroalto** (minas enanas con mithril), **Ciénaga Sombría** (telarañas y arañas gigantes) y **Tierras de Brasa** (basalto, lava y la guarida del dragón sobre su oro). Torres de magos y castillos en ruinas con cofres antiguos.
+- Criaturas: orcos y huargos de noche, **trolls que se vuelven piedra con el sol**, arañas venenosas, ents (tranquilos hasta que los molestás), caballos para domesticar y montar, y el **Dragón de Brasa** (vuela y escupe fuego).
+- **Magia**: barra de maná ✦ que se recarga sola (más rápido junto a un altar de runas). Báculos de luz, fuego, curación, escudo y viento; anillos de rapidez, visión nocturna y sigilo (funcionan en la mochila); pociones de vida y maná en la mesa de alquimia. El mago de la torre vende el Tomo de hechizos.
+- Comercio con medianos, enanos, elfas y magos (se paga con fichas de oro). Espadas de hierro y élficas, escudo, cota y herramientas de mithril, yelmo de escamas de dragón.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

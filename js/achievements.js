@@ -56,6 +56,11 @@ export const ACHIEVEMENTS = [
   { id: 'bioparque', name: 'Entrada libre', desc: 'Entrá a un bioparque abandonado.' },
   { id: 'elefante', name: 'Sobre la trompa', desc: 'Ensillá un elefante.' },
   { id: 'safari', name: 'Safari', desc: 'Encontrate con 10 especies distintas de animales.' },
+  // v9
+  { id: 'hechicero', name: 'Aprendiz de hechicero', desc: 'Lanzá tu primer hechizo con un báculo.' },
+  { id: 'troll', name: 'Amanecer', desc: 'Mirá cómo un troll se vuelve piedra con el sol.' },
+  { id: 'dragon', name: 'Matadragones', desc: 'Derrotá al Dragón de Brasa.' },
+  { id: 'ent', name: 'Leñador arrepentido', desc: 'Derrotá a un Ent enojado.' },
 ];
 
 export class Achievements {
@@ -106,6 +111,10 @@ export class Achievements {
     if (name === 'kill' && id === 'leviathan') u('leviatan');
     if (name === 'kill' && id === 'alpha') u('alfa');
     if (name === 'refuel') u('nafta');
+    if (name === 'spell') u('hechicero');
+    if (name === 'v9') u(id);
+    if (name === 'kill' && id === 'dragon') u('dragon');
+    if (name === 'kill' && id === 'ent') u('ent');
     if (name === 'v6') u(id === 'guardian' ? 'guardian' : id);
     if (name === 'champion') u('campeon');
     if (name === 'dawn') { this.meta.nights++; u('noche'); if (this.meta.nights >= 7) u('semana'); }

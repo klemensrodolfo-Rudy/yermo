@@ -4,6 +4,7 @@ import { SOLID, OPAQUE, SEA, TORCHES, LIQ, isWater, collBox, BLOCKS as BLOCKS_RE
 import { BIOME } from './worldgen.js';
 import { mulberry32 } from './noise.js';
 
+export const ELDRA_MOBS = ['orc', 'troll', 'spider', 'warg', 'ent', 'dragon', 'horse'];
 export const ZOO_ANIMALS = ['lion', 'giraffe', 'elephant', 'zebra', 'gorilla', 'bear', 'crocodile', 'ostrich', 'kangaroo', 'flamingo', 'penguin', 'hippo', 'snake', 'monkey', 'rhino'];
 export const MOB_TYPES = {
   boar: {
@@ -55,6 +56,19 @@ export const MOB_TYPES = {
   snake: { name: 'Serpiente', animal: true, hp: 6, hw: 0.25, h: 0.3, speed: 2.8, hostile: true, range: 8, dmg: 2, rad: 0, poison: true, drops: [[271, 1, 1, 0.3]] },
   monkey: { name: 'Mono', hp: 10, hw: 0.25, h: 1, speed: 5, flee: 6, hostile: false, drops: [[271, 1, 1, 0.5]] },
   rhino: { name: 'Rinoceronte', animal: true, hp: 80, hw: 0.7, h: 1.8, speed: 3, charge: 7.5, hostile: true, neutral: true, range: 18, dmg: 8, rad: 0, knock: 3, drops: [[271, 3, 5, 1], [336, 2, 3, 1]] },
+  // v9: Reinos de Eldra
+  orc: { name: 'Orco', hp: 22, hw: 0.32, h: 1.9, speed: 3.4, hostile: true, range: 18, dmg: 3, rad: 0, drops: [[271, 1, 1, 0.4], [353, 1, 3, 0.6], [381, 1, 1, 0.03]] },
+  troll: { name: 'Troll de las cavernas', hp: 70, hw: 0.7, h: 3, speed: 2.4, hostile: true, range: 16, dmg: 7, rad: 0, knock: 2.5, stoneInSun: true, drops: [[353, 3, 8, 1], [387, 1, 2, 0.5]] },
+  spider: { name: 'Araña gigante', animal: true, hp: 18, hw: 0.7, h: 0.9, speed: 4.2, hostile: true, range: 14, dmg: 3, rad: 0, poison: true, drops: [[336, 1, 1, 0.3], [271, 1, 1, 0.3]] },
+  warg: { name: 'Huargo', animal: true, hp: 24, hw: 0.5, h: 1.2, speed: 5.6, hostile: true, range: 20, dmg: 4, rad: 0, drops: [[271, 1, 2, 1], [336, 1, 2, 0.7]] },
+  ent: { name: 'Ent', hp: 120, hw: 0.8, h: 4, speed: 1.8, hostile: true, neutral: true, range: 14, dmg: 8, rad: 0, knock: 3, drops: [[222, 4, 8, 1], [380, 2, 4, 1], [385, 2, 5, 1]] },
+  dragon: { name: 'Dragón de Brasa', hp: 320, hw: 1.5, h: 3, speed: 4, hostile: true, range: 42, dmg: 8, rad: 0, boss: true, fly: true, knock: 2.5, ranged: { cd: 3.2, range: 30, acc: 0.65, dmg: 6, fire: true },
+    drops: [[388, 4, 8, 1], [353, 40, 80, 1], [218, 4, 8, 1], [386, 1, 1, 1]] },
+  horse: { name: 'Caballo', hp: 20, hw: 0.45, h: 1.9, speed: 3.4, flee: 7, hostile: false, drops: [[271, 1, 2, 1], [336, 1, 1, 0.6]] },
+  elf: { name: 'Elfa de Lunaria', hp: 40, hw: 0.3, h: 2, speed: 1.6, hostile: false, npc: 'elf', drops: [] },
+  dwarf: { name: 'Enano de Hierroalto', hp: 50, hw: 0.32, h: 1.45, speed: 1.4, hostile: false, npc: 'dwarf', drops: [], stay: true },
+  halfling: { name: 'Mediano', hp: 20, hw: 0.28, h: 1.3, speed: 1.6, hostile: false, npc: 'halfling', drops: [], stay: true },
+  mage: { name: 'Mago de la torre', hp: 80, hw: 0.3, h: 2, speed: 1.1, hostile: false, npc: 'mage', drops: [], stay: true },
   // v6: humanos armados, empleados y el guardián del abismo
   bandit: { name: 'Bandido', hp: 22, hw: 0.3, h: 1.9, speed: 3.4, hostile: true, range: 24, dmg: 2, rad: 0, human: 'bandit', ranged: { cd: 1.8, range: 16, acc: 0.5, dmg: 3 },
     drops: [[353, 1, 4, 0.8], [332, 2, 6, 0.5], [258, 1, 3, 0.5], [271, 1, 1, 0.3]] },
@@ -124,7 +138,7 @@ const box = (w, h, d, mat, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d
 // patrón de cada criatura
 const MODEL_PAT = {
   boar: 'fur', ghoul: 'skin', rat: 'fur', crow: 'feather', behemoth: 'wrinkle', dog: 'fur', shroom: 'skin', wolf: 'fur', ratqueen: 'fur', leviathan: 'scales',
-  alpha: 'skin', guardian: 'skin', scorpion: 'shell', lion: 'fur', giraffe: 'giraffe', elephant: 'wrinkle', zebra: 'zebra', gorilla: 'fur', bear: 'fur',
+  alpha: 'skin', guardian: 'skin', scorpion: 'shell', orc: 'skin', troll: 'wrinkle', spider: 'fur', warg: 'fur', ent: 'shell', dragon: 'scales', horse: 'shortfur', lion: 'fur', giraffe: 'giraffe', elephant: 'wrinkle', zebra: 'zebra', gorilla: 'fur', bear: 'fur',
   crocodile: 'scales', ostrich: 'feather', kangaroo: 'shortfur', flamingo: 'feather', penguin: 'feather', hippo: 'wrinkle', snake: 'scales', monkey: 'fur', rhino: 'wrinkle',
 };
 
@@ -208,9 +222,12 @@ function buildModel(type) {
     g.add(head); parts.head = head;
   } else if (ZOO_ANIMALS.includes(type)) {
     buildZooAnimal(type, g, parts, M);
+  } else if (ELDRA_MOBS.includes(type)) {
+    buildEldraMob(type, g, parts, M);
   } else if (MOB_TYPES[type].npc || MOB_TYPES[type].human) {
     // personas: ropa según el oficio
     const outfit = { trader: [0x6a4a8a, 0xd8a040], settler: [0x5a6a4a, 0x8a6a4a], leader: [0x8a2a24, 0xe0c23a], instructor: [0xe8e8e8, 0xc8302a], worker: [0x3a5a8a, 0xe0a030],
+      elf: [0x4a7a5a, 0xd8d0a0], dwarf: [0x7a4a2a, 0x9a9aa0], halfling: [0x8a6a3a, 0x4a7a3a], mage: [0x34346a, 0xd8d8e0],
       bandit: [0x4a3020, 0x8a1a1a], pirate: [0x2a3a5a, 0xd8d0c0], soldier: [0x4a5a3a, 0x2a3024] }[MOB_TYPES[type].npc || MOB_TYPES[type].human];
     const jacket = M(outfit[0]), trim = M(outfit[1]), pants = M(0x3a3530, false, 'denim'), skin = M(0xb08a6a, false, 'skin'), hair = M(0x3a2a1a, false, 'fur');
     parts.legs = [];
@@ -230,6 +247,10 @@ function buildModel(type) {
     if (type === 'pirate') { head.add(box(0.5, 0.12, 0.5, trim, 0, 0.36, 0)); head.add(box(0.12, 0.1, 0.02, M(0x1a1a1a), 0.1, 0.12, -0.24)); }
     if (type === 'soldier') { head.add(box(0.5, 0.16, 0.5, trim, 0, 0.36, 0)); g.add(box(0.56, 0.5, 0.34, trim, 0, 1.15, 0)); }
     if (type === 'worker') head.add(box(0.48, 0.14, 0.48, trim, 0, 0.36, 0));
+    if (type === 'elf') { head.add(box(0.08, 0.2, 0.06, skin, 0.25, 0.2, 0)); head.add(box(0.08, 0.2, 0.06, skin, -0.25, 0.2, 0)); head.add(box(0.48, 0.5, 0.2, M(0xe0d0a0, false, 'fur'), 0, 0.05, 0.22)); g.scale.set(0.95, 1.08, 0.95); }
+    if (type === 'dwarf') { head.add(box(0.46, 0.4, 0.14, M(0xb06a3a, false, 'fur'), 0, -0.12, -0.24)); head.add(box(0.5, 0.16, 0.5, trim, 0, 0.36, 0)); g.scale.set(1.15, 0.78, 1.15); }
+    if (type === 'halfling') { head.add(box(0.48, 0.16, 0.48, M(0x6a4a2a, false, 'fur'), 0, 0.33, 0)); g.scale.set(0.85, 0.7, 0.85); }
+    if (type === 'mage') { head.add(box(0.6, 0.06, 0.6, jacket, 0, 0.34, 0)); head.add(box(0.38, 0.22, 0.38, jacket, 0, 0.47, 0)); head.add(box(0.2, 0.22, 0.2, jacket, 0, 0.66, 0)); head.add(box(0.36, 0.42, 0.1, M(0xe8e8e8, false, 'fur'), 0, -0.16, -0.24)); g.add(box(0.56, 0.75, 0.32, jacket, 0, 0.42, 0)); }
     head.add(box(0.06, 0.06, 0.02, M(0x1a1a1a), 0.1, 0.12, -0.23)); head.add(box(0.06, 0.06, 0.02, M(0x1a1a1a), -0.1, 0.12, -0.23));
     g.add(head); parts.head = head;
   } else if (type === 'dog') {
@@ -511,8 +532,95 @@ function buildZooAnimal(type, g, parts, M) {
   }
 }
 
+function buildEldraMob(type, g, parts, M) {
+  const eye = (c = 0x111111) => M(c, c !== 0x111111, null);
+  const H = (x, y, z) => { const h = new THREE.Group(); h.position.set(x, y, z); g.add(h); parts.head = h; return h; };
+  switch (type) {
+    case 'orc': case 'troll': {
+      const big = type === 'troll', s = big ? 1.55 : 1;
+      const skin = M(big ? 0x6a7a62 : 0x5a7a3a, false, big ? 'wrinkle' : 'skin'), armor = M(big ? 0x4a4038 : 0x2e2a26, false, 'shell'), cloth = M(0x4a3a2a, false, 'cloth');
+      parts.legs = [];
+      for (const x of [0.15 * s, -0.15 * s]) { const l = new THREE.Group(); l.position.set(x, 0.8 * s, 0); l.add(box(0.26 * s, 0.8 * s, 0.26 * s, cloth, 0, -0.4 * s, 0)); g.add(l); parts.legs.push(l); }
+      g.add(box(0.6 * s, 0.75 * s, 0.34 * s, big ? skin : armor, 0, 1.18 * s, 0));
+      parts.arms = [];
+      for (const x of [0.42 * s, -0.42 * s]) { const a = new THREE.Group(); a.position.set(x, 1.5 * s, 0); a.add(box(0.2 * s, 0.75 * s, 0.2 * s, skin, 0, -0.35 * s, 0)); g.add(a); parts.arms.push(a); }
+      parts.arms[0].add(box(0.14 * s, 0.75 * s, 0.14 * s, M(0x5a3a1a, false, 'shortfur'), 0, -0.8 * s, -0.25 * s)); // garrote
+      parts.armsRelaxed = true;
+      const h = H(0, 1.72 * s, 0);
+      h.add(box(0.46 * s, 0.44 * s, 0.44 * s, skin, 0, 0.1 * s, 0));
+      h.add(box(0.07, 0.07, 0.02, eye(0xff3a1a), 0.1 * s, 0.14 * s, -0.23 * s)); h.add(box(0.07, 0.07, 0.02, eye(0xff3a1a), -0.1 * s, 0.14 * s, -0.23 * s));
+      h.add(box(0.05, 0.12, 0.05, M(0xe8e0c8, false, null), 0.12 * s, -0.06 * s, -0.24 * s)); h.add(box(0.05, 0.12, 0.05, M(0xe8e0c8, false, null), -0.12 * s, -0.06 * s, -0.24 * s));
+      if (!big) h.add(box(0.5, 0.18, 0.5, armor, 0, 0.36, 0));
+      break;
+    }
+    case 'spider': {
+      const fur = M(0x2a2420), dark = M(0x161210);
+      g.add(box(0.7, 0.45, 0.6, fur, 0, 0.55, -0.25)); g.add(box(0.95, 0.65, 0.95, dark, 0, 0.62, 0.45));
+      const h = H(0, 0.55, -0.6); h.add(box(0.45, 0.32, 0.3, fur, 0, 0, 0));
+      for (const [x, y] of [[0.12, 0.08], [-0.12, 0.08], [0.06, 0.13], [-0.06, 0.13]]) h.add(box(0.06, 0.06, 0.02, eye(0xff2a1a), x, y, -0.16));
+      parts.legs = []; parts.spider = true;
+      for (const z of [-0.4, -0.15, 0.1, 0.35]) for (const x of [0.4, -0.4]) { const l = new THREE.Group(); l.position.set(x, 0.55, z); l.add(box(0.6, 0.07, 0.07, fur, x > 0 ? 0.3 : -0.3, 0.05, 0)); l.add(box(0.07, 0.55, 0.07, fur, x > 0 ? 0.6 : -0.6, -0.25, 0)); g.add(l); parts.legs.push(l); }
+      break;
+    }
+    case 'warg': {
+      const fur = M(0x3a3634), dark = M(0x24201e);
+      g.add(box(0.6, 0.6, 1.3, fur, 0, 0.85, 0)); g.add(box(0.66, 0.3, 0.6, dark, 0, 1.15, -0.25));
+      parts.legs = [];
+      for (const [x, z] of [[0.2, -0.45], [-0.2, -0.45], [0.2, 0.45], [-0.2, 0.45]]) { const l = new THREE.Group(); l.position.set(x, 0.6, z); l.add(box(0.16, 0.6, 0.16, dark, 0, -0.3, 0)); g.add(l); parts.legs.push(l); }
+      const h = H(0, 1.0, -0.8); h.add(box(0.45, 0.42, 0.45, fur, 0, 0, 0)); h.add(box(0.28, 0.22, 0.32, dark, 0, -0.08, -0.32));
+      h.add(box(0.07, 0.06, 0.02, eye(0xffb02a), 0.12, 0.08, -0.23)); h.add(box(0.07, 0.06, 0.02, eye(0xffb02a), -0.12, 0.08, -0.23));
+      h.add(box(0.1, 0.2, 0.08, dark, 0.15, 0.3, 0.05)); h.add(box(0.1, 0.2, 0.08, dark, -0.15, 0.3, 0.05));
+      const t = new THREE.Group(); t.position.set(0, 0.95, 0.65); t.add(box(0.14, 0.14, 0.6, fur, 0, 0, 0.28)); t.rotation.x = -0.4; g.add(t); parts.tail = t;
+      break;
+    }
+    case 'ent': {
+      const bark = M(0x6a5034), moss = M(0x4a7a3a, false, 'fur'), leaf = M(0x3e7a34, false, 'fur');
+      parts.legs = [];
+      for (const x of [0.3, -0.3]) { const l = new THREE.Group(); l.position.set(x, 1.2, 0); l.add(box(0.4, 1.2, 0.4, bark, 0, -0.6, 0)); l.add(box(0.6, 0.15, 0.6, bark, 0, -1.15, -0.05)); g.add(l); parts.legs.push(l); }
+      g.add(box(1.0, 1.7, 0.7, bark, 0, 2.05, 0)); g.add(box(1.02, 0.3, 0.72, moss, 0, 2.6, 0));
+      parts.arms = [];
+      for (const x of [0.7, -0.7]) { const a = new THREE.Group(); a.position.set(x, 2.7, 0); a.add(box(0.28, 1.4, 0.28, bark, 0, -0.6, 0)); a.add(box(0.5, 0.4, 0.5, leaf, 0, -1.3, 0)); g.add(a); parts.arms.push(a); }
+      parts.armsRelaxed = true;
+      const h = H(0, 3.15, 0); h.add(box(0.8, 0.6, 0.6, bark, 0, 0, 0));
+      h.add(box(0.12, 0.1, 0.02, eye(0x9cff3a), 0.18, 0.05, -0.31)); h.add(box(0.12, 0.1, 0.02, eye(0x9cff3a), -0.18, 0.05, -0.31));
+      g.add(box(1.8, 0.8, 1.6, leaf, 0, 3.85, 0)); g.add(box(1.2, 0.6, 1.1, leaf, 0.2, 4.4, -0.1));
+      break;
+    }
+    case 'dragon': {
+      const scale = M(0x8a2a1a), belly = M(0xd8a060, false, 'shell'), horn = M(0xe8e0c8, false, null);
+      g.add(box(1.4, 1.1, 2.6, scale, 0, 1.5, 0)); g.add(box(1.2, 0.3, 2.4, belly, 0, 0.92, 0));
+      for (let i = 0; i < 5; i++) g.add(box(0.12, 0.3, 0.3, horn, 0, 2.15, -1 + i * 0.5));
+      parts.legs = [];
+      for (const [x, z] of [[0.55, -0.8], [-0.55, -0.8], [0.55, 0.9], [-0.55, 0.9]]) { const l = new THREE.Group(); l.position.set(x, 1.0, z); l.add(box(0.35, 1.0, 0.4, scale, 0, -0.5, 0)); g.add(l); parts.legs.push(l); }
+      const neck = new THREE.Group(); neck.position.set(0, 1.9, -1.2); neck.rotation.x = -0.6; g.add(neck); neck.add(box(0.55, 1.4, 0.55, scale, 0, 0.6, 0));
+      const h = new THREE.Group(); h.position.set(0, 1.35, -0.2); h.rotation.x = 0.6; neck.add(h); parts.head = h;
+      h.add(box(0.8, 0.6, 1.0, scale, 0, 0, -0.2)); h.add(box(0.6, 0.25, 0.6, belly, 0, -0.28, -0.6));
+      h.add(box(0.12, 0.1, 0.02, eye(0xffd83a), 0.28, 0.12, -0.71)); h.add(box(0.12, 0.1, 0.02, eye(0xffd83a), -0.28, 0.12, -0.71));
+      h.add(box(0.1, 0.45, 0.1, horn, 0.25, 0.45, 0.2)); h.add(box(0.1, 0.45, 0.1, horn, -0.25, 0.45, 0.2));
+      parts.wings = [];
+      for (const sx of [1, -1]) { const w = new THREE.Group(); w.position.set(sx * 0.7, 2.0, -0.2); w.add(box(2.6, 0.08, 1.8, M(0x6a1a12, false, 'wrinkle'), sx * 1.3, 0, 0.3)); g.add(w); parts.wings.push(w); }
+      parts.segs = [];
+      for (let i = 0; i < 5; i++) { const s = new THREE.Group(); s.position.set(0, 1.4 - i * 0.1, 1.5 + i * 0.6); const ww = 0.7 - i * 0.12; s.add(box(ww, ww, 0.65, scale, 0, 0, 0)); g.add(s); parts.segs.push(s); }
+      break;
+    }
+    case 'horse': {
+      const hide = M(0x7a5232), mane = M(0x2a1e14), hoof = M(0x1a1410, false, null);
+      g.add(box(0.7, 0.75, 1.5, hide, 0, 1.25, 0));
+      parts.legs = [];
+      for (const [x, z] of [[0.22, -0.55], [-0.22, -0.55], [0.22, 0.55], [-0.22, 0.55]]) { const l = new THREE.Group(); l.position.set(x, 0.9, z); l.add(box(0.17, 0.85, 0.17, hide, 0, -0.42, 0)); l.add(box(0.19, 0.12, 0.2, hoof, 0, -0.84, 0)); g.add(l); parts.legs.push(l); }
+      const neck = new THREE.Group(); neck.position.set(0, 1.5, -0.65); neck.rotation.x = -0.55; g.add(neck);
+      neck.add(box(0.3, 0.8, 0.38, hide, 0, 0.35, 0)); neck.add(box(0.08, 0.8, 0.14, mane, 0, 0.38, 0.22));
+      const h = new THREE.Group(); h.position.set(0, 0.8, -0.1); h.rotation.x = 0.55; neck.add(h); parts.head = h;
+      h.add(box(0.3, 0.34, 0.66, hide, 0, 0, -0.2)); h.add(box(0.07, 0.07, 0.02, eye(), 0.16, 0.06, -0.15)); h.add(box(0.07, 0.07, 0.02, eye(), -0.16, 0.06, -0.15));
+      h.add(box(0.07, 0.16, 0.06, hide, 0.09, 0.24, 0.05)); h.add(box(0.07, 0.16, 0.06, hide, -0.09, 0.24, 0.05));
+      const t = new THREE.Group(); t.position.set(0, 1.4, 0.75); t.add(box(0.12, 0.12, 0.7, mane, 0, 0, 0.32)); t.rotation.x = 1.0; g.add(t); parts.tail = t;
+      break;
+    }
+  }
+}
+
 let NEXT_ID = 1;
-const NPC_LABELS = { worker: ['Empleado', '#6ab0ff'], trader: ['Comerciante', '#ffd84a'], leader: ['Líder del asentamiento', '#ff8a4a'], instructor: ['Instructor Rolo', '#ff5a4a'], settler: ['Superviviente', '#d8d0c0'], dog: ['Tu perro', '#9cff3a'] };
+const NPC_LABELS = { elf: ['Elfa', '#b8f0d0'], dwarf: ['Enano', '#e0a060'], halfling: ['Mediano', '#c8e07a'], mage: ['Mago', '#a8a8ff'], worker: ['Empleado', '#6ab0ff'], trader: ['Comerciante', '#ffd84a'], leader: ['Líder del asentamiento', '#ff8a4a'], instructor: ['Instructor Rolo', '#ff5a4a'], settler: ['Superviviente', '#d8d0c0'], dog: ['Tu perro', '#9cff3a'] };
 function labelSprite(text, color) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 48;
   const x = c.getContext('2d');
@@ -673,7 +781,7 @@ export class Mobs {
         if (m.pos.distanceTo(m.home) > (d.stay ? 5 : 20)) { m.walking = true; m.targetYaw = Math.atan2(-(m.home.x - m.pos.x), -(m.home.z - m.pos.z)); }
         if (m.walking) { mx = -Math.sin(m.targetYaw); mz = -Math.cos(m.targetYaw); speed = d.speed; }
       }
-    } else if (d.hostile && near && !near.dead && !near.creative && nd < d.range && (!d.neutral || m.provoked) && !(this.peacefulDay && d.animal && daylight > 0.45 && !m.provoked)) {
+    } else if (d.hostile && near && !near.dead && !near.creative && nd < (near.player?.stealth && !m.provoked ? Math.min(d.range, 3.5) : d.range) && (!d.neutral || m.provoked) && !(this.peacefulDay && d.animal && daylight > 0.45 && !m.provoked)) {
       target = near;
     }
     // la reina de las ratas llama a sus crías
@@ -728,6 +836,12 @@ export class Mobs {
       if (m.walking) { mx = -Math.sin(m.targetYaw); mz = -Math.cos(m.targetYaw); speed = d.speed * 0.5; }
     }
     if (m.burnT > 0) { m.burnT -= dt; m.burnAcc = (m.burnAcc || 0) + dt; if (m.burnAcc > 0.6) { m.burnAcc = 0; this.hit(m, 2, null, m.burnBy || null); } }
+    // los trolls se convierten en piedra bajo el sol
+    if (d.stoneInSun && daylight > 0.55 && this.skyOpen(m)) {
+      const bx = Math.floor(m.pos.x), by = Math.floor(m.pos.y), bz = Math.floor(m.pos.z);
+      for (let k = 0; k < 3; k++) if (!SOLID[w.getBlock(bx, by + k, bz)]) w.setBlock(bx, by + k, bz, k === 2 ? 211 : 210);
+      this.onPetrify?.(m); this.remove(m); return;
+    }
     // los necrófagos se desintegran bajo el sol
     if (m.type === 'ghoul' && daylight > 0.6 && this.skyOpen(m)) { m.burn = (m.burn || 0) + dt; if (m.burn > 1) { m.burn = 0; this.hit(m, 2, null, null); } }
 
@@ -795,7 +909,7 @@ export class Mobs {
     const walk = m.walking ? 1 : 0;
     m.phase += dt * (m.type === 'scorpion' || m.type === 'rat' ? 16 : m.type === 'behemoth' ? 5 : 9) * walk;
     const s = Math.sin(m.phase) * 0.7 * walk;
-    if (P.legs) P.legs.forEach((l, i) => { if (m.type === 'scorpion') l.rotation.y = Math.sin(m.phase + i) * 0.4 * walk; else l.rotation.x = i % 2 ? s : -s; });
+    if (P.legs) P.legs.forEach((l, i) => { if (m.type === 'scorpion' || P.spider) l.rotation.y = Math.sin(m.phase + i) * 0.4 * walk; else l.rotation.x = i % 2 ? s : -s; });
     if (P.arms) { const atk = m.attackAnim ? Math.sin(m.attackAnim / 0.3 * Math.PI) * 0.8 : 0; P.arms.forEach((a, i) => (a.rotation.x = -1.35 + (i ? s : -s) * 0.2 - atk)); }
     if (P.tail) P.tail.rotation.x = -0.2 + Math.sin(performance.now() / 300) * 0.1 - (m.attackAnim ? 0.8 : 0);
     if (P.claws) P.claws.forEach((c, i) => (c.rotation.y = Math.sin(performance.now() / 200 + i) * 0.2));
@@ -914,7 +1028,7 @@ export class Mobs {
         const a = Math.random() * Math.PI * 2, dd = 18 + Math.random() * 10;
         const hx = Math.floor(p.pos.x + Math.cos(a) * dd), hz = Math.floor(p.pos.z + Math.sin(a) * dd);
         const hy = this.surfaceY(hx, hz);
-        if (hy != null) this.add(i === 2 ? 'rat' : 'ghoul', hx + 0.5, hy, hz + 0.5).hordeMob = true;
+        if (hy != null) this.add(this.gen.type === 'magic' ? (i === 2 ? 'warg' : 'orc') : i === 2 ? 'rat' : 'ghoul', hx + 0.5, hy, hz + 0.5).hordeMob = true;
       }
     }
     // comerciante errante de día
@@ -923,6 +1037,7 @@ export class Mobs {
       const ty = this.surfaceY(tx, tz);
       if (ty != null) { this.add('trader', tx + 0.5, ty, tz + 0.5); this.onTrader?.(); return; }
     }
+    if (this.gen.type === 'magic') { this.spawnEldra(p, players, daylight, count); return; }
     // jefes especiales según dónde esté el jugador
     const pc = this.gen.column(Math.floor(p.pos.x), Math.floor(p.pos.z));
     if (pc.biome === BIOME.CITY && p.pos.y < pc.cityLevel - 4 && count.ratqueen < 1 && Math.random() < 0.03) {
@@ -976,6 +1091,38 @@ export class Mobs {
         if (count.rat < 6 && Math.random() < 0.4) { this.add('rat', x + 0.5, cy, z + 0.5); this.add('rat', x + 1.1, cy, z + 0.5); }
         else this.add('ghoul', x + 0.5, cy, z + 0.5);
       }
+    }
+  }
+
+  // fauna de los Reinos de Eldra
+  spawnEldra(p, players, daylight, count) {
+    const ang = Math.random() * Math.PI * 2, dist = 22 + Math.random() * 20;
+    const x = Math.floor(p.pos.x + Math.cos(ang) * dist), z = Math.floor(p.pos.z + Math.sin(ang) * dist);
+    for (const q of players) if (Math.hypot(q.pos.x - x, q.pos.z - z) < 18) return;
+    const col = this.gen.column(x, z), night = daylight < 0.35, r = Math.random(), b = col.biome;
+    const sy = this.surfaceY(x, z);
+    const add = (t, n = 1) => { for (let i = 0; i < n; i++) this.add(t, x + 0.5 + i * 0.9, sy, z + 0.5 + (i % 2) * 0.8); };
+    if (sy != null) {
+      if (night && !this.torchNear(x, sy, z, 7)) {
+        if ((b === BIOME.PEAKS || b === BIOME.MIRE) && count.troll < 2 && r < 0.12) return add('troll');
+        if (b !== BIOME.VALE || r < 0.4) { if (count.orc < 7 && r < 0.45) return add('orc', 1 + (r < 0.15 ? 1 : 0)); }
+        if (count.warg < 5 && r > 0.75 && (b === BIOME.PEAKS || b === BIOME.ASHEN)) return add('warg', 2);
+      }
+      if (b === BIOME.MIRE && count.spider < 5 && r < 0.35) return add('spider');
+      if (b === BIOME.ELFWOOD) {
+        if (count.ent < 2 && r < 0.04) return add('ent');
+        if (!night && count.elf < 2 && r > 0.95) { this.onTrader?.(); return add('elf'); }
+        if (night && count.spider < 3 && r < 0.2) return add('spider');
+      }
+      if (b === BIOME.ASHEN && count.orc < 6 && r < 0.3) return add('orc', 2);
+      if ((b === BIOME.VALE || b === BIOME.ELFWOOD) && !night && count.horse < 6 && r > 0.8) return add('horse', 2 + (r > 0.93 ? 1 : 0));
+      if (b === BIOME.VALE && count.boar < 5 && r < 0.2) return add('boar', 1 + (r < 0.07 ? 1 : 0));
+      if (b === BIOME.PEAKS && !night && count.boar < 4 && r < 0.12) return add('boar');
+    }
+    // cuevas oscuras: arañas
+    if (count.spider < 6 && r < 0.3) {
+      const cy = this.caveY(x, z, col.h);
+      if (cy != null && !this.torchNear(x, cy, z, 7)) this.add('spider', x + 0.5, cy, z + 0.5);
     }
   }
 
@@ -1127,6 +1274,7 @@ export const VEHICLE_TYPES = {
   mwolf: { name: 'Lobo de monta', speed: 13, accel: 6, turn: 2.8, hw: 0.4, step: 1.05, eye: 0.4, tank: 0, use: 0, hp: 36, seats: 1, storage: 0, mount: 'wolf', jump: 10, mscale: 1.45, saddleY: 1.02 },
   mzebra: { name: 'Cebra de monta', speed: 13, accel: 6, turn: 2.6, hw: 0.4, step: 1.05, eye: 0.7, tank: 0, use: 0, hp: 40, seats: 1, storage: 0, mount: 'zebra', jump: 9, mscale: 1.15, saddleY: 1.62 },
   mostrich: { name: 'Avestruz de monta', speed: 15.5, accel: 7, turn: 3, hw: 0.4, step: 1.05, eye: 1.0, tank: 0, use: 0, hp: 30, seats: 1, storage: 0, mount: 'ostrich', jump: 10, mscale: 1.05, saddleY: 1.92 },
+  mhorse: { name: 'Caballo', speed: 16, accel: 6, turn: 2.7, hw: 0.45, step: 1.05, eye: 0.85, tank: 0, use: 0, hp: 40, seats: 1, storage: 0, mount: 'horse', jump: 9.5, mscale: 1.05, saddleY: 1.66 },
   melephant: { name: 'Elefante de monta', speed: 8, accel: 3, turn: 1.4, hw: 1.0, step: 1.05, eye: 2.1, tank: 0, use: 0, hp: 160, seats: 2, storage: 9, mount: 'elephant', jump: 0, ram: 2, mscale: 1, saddleY: 3.02 },
 };
 // piezas del taller: multiplicadores

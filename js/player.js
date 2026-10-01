@@ -319,6 +319,7 @@ export class Player {
       if (VT.boat) speed = liquid ? VT.speed : 1.2;
       else if (liquid) speed *= 0.4;
     } else if (liquid && !this.flying) speed *= this.inLava ? 0.35 : 0.55;
+    if (!R) speed *= this.speedMul ?? 1;
     if (this.drunk >= 3 && !R) { const t = performance.now() / 700; mx += Math.sin(t) * 0.25; mz += Math.cos(t * 1.3) * 0.25; }
 
     if (w.getBlock(fx0, 1, fz0) === -1) { this.vel.set(0, 0, 0); this.updateCamera(dt, sprint, 0); return; }

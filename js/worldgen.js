@@ -1,13 +1,14 @@
 // Generación procedural del mundo postapocalíptico.
 import { Simplex, hash2, hash3, mulberry32 } from './noise.js';
-import { CHUNK, HEIGHT, SEA } from './blocks.js';
+import { CHUNK, HEIGHT, SEA, doorId, ladderFor } from './blocks.js';
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
 const mod = (a, n) => ((a % n) + n) % n;
 
-export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11, ZOO: 12 };
-export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo', 'Bioparque'];
+export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11, ZOO: 12, VALE: 13, ELFWOOD: 14, PEAKS: 15, MIRE: 16, ASHEN: 17 };
+export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo', 'Bioparque', 'Colinas de Valverde', 'Bosque de Lunaria', 'Montes de Hierroalto', 'Ciénaga Sombría', 'Tierras de Brasa'];
+export const MAGIC_BIOMES = new Set([13, 14, 15, 16, 17]);
 // El Abismo: mazmorra infinita lejos del mundo normal; cada nivel ocupa ABYSS_W bloques en x
 export const ABYSS_X = 300000, ABYSS_W = 256;
 export const abyssLevel = (x) => (x >= ABYSS_X - 64 ? Math.floor((x - ABYSS_X) / ABYSS_W) + 1 : 0);
@@ -67,6 +68,237 @@ export class WorldGen {
       if (d < r * 1.5 && (!best || d / r < best.d / best.r)) best = { d, r };
     }
     return best;
+  }
+
+  // ---------- Reinos de Eldra: vegetación ----------
+  oakTree(set, setAir, lx, y, lz, wx, wz) {
+    const s = this.seed, hgt = 4 + Math.floor(hash2(s + 411, wx, wz) * 3);
+    for (let k = 0; k < hgt; k++) set(lx, y + k, lz, 222);
+    const top = y + hgt;
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -3; dx <= 3; dx++) for (let dz = -3; dz <= 3; dz++) {
+      const d = Math.hypot(dx, dy * 1.3, dz);
+      if (d < 3.1 && hash3(s + 412, wx + dx, top + dy, wz + dz) > 0.1) setAir(lx + dx, top + dy, lz + dz, 206);
+    }
+  }
+  eldraDeco(cx, cz, set, setAir, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed, M = 4;
+    for (let wz = z0 - M; wz < z0 + CHUNK + M; wz++) for (let wx = x0 - M; wx < x0 + CHUNK + M; wx++) {
+      const r = hash2(s + 421, wx, wz);
+      if (r > 0.03) continue;
+      const c = colAt(wx, wz);
+      if (c.h <= SEA || c.eldraFlat) continue;
+      const lx = wx - x0, lz = wz - z0, b = c.biome;
+      if (b === BIOME.VALE && r < 0.005) this.oakTree(set, setAir, lx, c.h + 1, lz, wx, wz);
+      else if (b === BIOME.ELFWOOD && r < 0.008) this.oakTree(set, setAir, lx, c.h + 1, lz, wx, wz);
+      else if (b === BIOME.PEAKS && r < 0.002 && c.h < 80) this.oakTree(set, setAir, lx, c.h + 1, lz, wx, wz);
+      else if (b === BIOME.MIRE && r < 0.009) { this.deadTree(set, setAir, lx, c.h + 1, lz, wx, wz); if (r < 0.005) setAir(lx + 1, c.h + 2, lz, 215); }
+      else if (b === BIOME.ASHEN && r < 0.004) { const hh = 3 + Math.floor(r * 900); for (let k = 1; k <= hh; k++) set(lx, c.h + k, lz, 205); }
+    }
+    // flores, telarañas y cristales sueltos (sólo dentro del chunk)
+    for (let lz = 0; lz < CHUNK; lz++) for (let lx = 0; lx < CHUNK; lx++) {
+      const wx = x0 + lx, wz = z0 + lz, c = colAt(wx, wz);
+      if (c.h <= SEA || c.eldraFlat) continue;
+      const r = hash2(s + 431, wx, wz), patch = this.nBrew.noise2(wx / 11, wz / 11);
+      if ((c.biome === BIOME.VALE || c.biome === BIOME.ELFWOOD) && patch > 0.4 && r < 0.3) setAir(lx, c.h + 1, lz, 214);
+      else if (c.biome === BIOME.MIRE && r < 0.012) setAir(lx, c.h + 1, lz, 215);
+      else if (c.biome === BIOME.PEAKS && c.h > 80 && r < 0.004) setAir(lx, c.h + 1, lz, 217);
+    }
+    // árboles gigantes del bosque élfico (celdas de 16)
+    for (let gx = Math.floor((x0 - 10) / 16); gx <= Math.floor((x0 + 26) / 16); gx++) for (let gz = Math.floor((z0 - 10) / 16); gz <= Math.floor((z0 + 26) / 16); gz++) {
+      if (hash2(s + 441, gx, gz) > 0.45) continue;
+      const tx = gx * 16 + 4 + Math.floor(hash2(s + 442, gx, gz) * 8), tz = gz * 16 + 4 + Math.floor(hash2(s + 443, gx, gz) * 8);
+      const c = colAt(tx, tz);
+      if (c.biome !== BIOME.ELFWOOD || c.h <= SEA + 1 || c.eldraFlat) continue;
+      this.giantTree(set, setAir, tx - x0, c.h + 1, tz - z0, tx, tz);
+    }
+  }
+  giantTree(set, setAir, lx, y, lz, wx, wz) {
+    const s = this.seed, H = 18 + Math.floor(hash2(s + 451, wx, wz) * 9);
+    for (let k = -1; k < H; k++) for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) set(lx + a, y + k, lz + b, 207);
+    // raíces
+    for (const [a, b] of [[2, 0], [-2, 0], [0, 2], [0, -2]]) { set(lx + a, y, lz + b, 207); set(lx + a * 1.5, y, lz + b * 1.5, 207); }
+    // copa en pisos
+    for (const [dy, r] of [[H - 9, 6], [H - 4, 7], [H, 5], [H + 2, 3]]) for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++) {
+      const d = Math.hypot(a, b);
+      if (d <= r && hash3(s + 452, wx + a, y + dy, wz + b) > 0.15) setAir(lx + a, y + dy, lz + b, 208);
+    }
+    // plataforma élfica con escalera y faroles
+    const py = y + 9;
+    for (let a = -4; a <= 4; a++) for (let b = -4; b <= 4; b++) { const d = Math.max(Math.abs(a), Math.abs(b)); if (d >= 2 && d <= 4) setAir(lx + a, py, lz + b, 209); }
+    for (const [a, b] of [[4, 4], [-4, 4], [4, -4], [-4, -4]]) setAir(lx + a, py - 1, lz + b, 28);
+    const lad = ladderFor(0, 1);
+    for (let k = 0; k < 9; k++) setAir(lx, y + k, lz + 2, lad);
+  }
+
+  // ---------- Reinos de Eldra: estructuras ----------
+  eldraStructures(cx, cz, set, colAt) {
+    this.halflingHoles(cx, cz, set, colAt);
+    this.mageTowers(cx, cz, set, colAt);
+    this.castles(cx, cz, set, colAt);
+    this.dwarfMines(cx, cz, set, colAt);
+    this.dragonLairs(cx, cz, set, colAt);
+  }
+  eldraCells(cx, cz, cell, pad, salt, chance, test) {
+    const out = [], x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    for (let gx = Math.floor((x0 - pad) / cell); gx <= Math.floor((x0 + 16 + pad) / cell); gx++) for (let gz = Math.floor((z0 - pad) / cell); gz <= Math.floor((z0 + 16 + pad) / cell); gz++) {
+      if (hash2(s + salt, gx, gz) > chance) continue;
+      const x = Math.floor((gx + 0.25 + hash2(s + salt + 1, gx, gz) * 0.5) * cell), z = Math.floor((gz + 0.25 + hash2(s + salt + 2, gx, gz) * 0.5) * cell);
+      const c = this.column(x, z);
+      if (test(c, x, z)) out.push({ gx, gz, x, z, y: c.h, c });
+    }
+    return out;
+  }
+  // casas-cueva en las colinas: domos de pasto con puerta redonda verde
+  halflingHoles(cx, cz, set, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    const S = (wx, yy, wz, id) => set(wx - x0, yy, wz - z0, id);
+    for (const v of this.eldraCells(cx, cz, 70, 30, 461, 0.6, (c) => c.biome === BIOME.VALE && c.h > SEA + 2)) {
+      const n = 3 + Math.floor(hash2(s + 464, v.gx, v.gz) * 3);
+      for (let i = 0; i < n; i++) {
+        const a = i / n * Math.PI * 2 + hash2(s + 465, v.gx, v.gz), hx = Math.round(v.x + Math.cos(a) * 13), hz = Math.round(v.z + Math.sin(a) * 13);
+        if (Math.abs(hx - x0 - 8) > 16 || Math.abs(hz - z0 - 8) > 16) continue;
+        const y = colAt(hx, hz).h;
+        for (let dx = -6; dx <= 6; dx++) for (let dz = -6; dz <= 6; dz++) {
+          const wx = hx + dx, wz = hz + dz, d = Math.hypot(dx, dz);
+          if (wx < x0 || wx >= x0 + 16 || wz < z0 || wz >= z0 + 16) continue;
+          if (d > 5.6) continue;
+          const dome = Math.round(4.6 * Math.sqrt(Math.max(0, 1 - (d / 5.7) ** 2)));
+          for (let k = 1; k <= dome; k++) S(wx, y + k, wz, k === dome ? 84 : 4);
+          if (d < 3.8) { S(wx, y, wz, 23); for (let k = 1; k <= 3; k++) S(wx, y + k, wz, 0); }
+        }
+        // frente: marco verde, puerta y ventanas redondas (al sur)
+        const fz = hz + 4;
+        if (hx >= x0 && hx < x0 + 16) {
+          for (let dx = -1; dx <= 1; dx++) for (let k = 1; k <= 3; k++) if (fz >= z0 && fz < z0 + 16) S(hx + dx, y + k, fz, 213);
+          for (let k = 1; k <= 3; k++) if (fz + 1 >= z0 && fz + 1 < z0 + 16) S(hx, y + k, fz + 1, 0);
+          if (fz >= z0 && fz < z0 + 16) { S(hx, y + 1, fz, doorId(0, 'x', 0)); S(hx, y + 2, fz, doorId(0, 'x', 1)); }
+        }
+        for (const ox of [-3, 3]) { const wx = hx + ox, wz = hz + 3; if (wx >= x0 && wx < x0 + 16 && wz >= z0 && wz < z0 + 16) S(wx, y + 2, wz, 14); }
+        // muebles
+        const F = [[0, -2, 110], [1, -2, 111], [-2, 0, 33], [2, 0, 226], [-2, -2, 115], [2, 2, 108]];
+        for (const [ox, oz, id] of F) { const wx = hx + ox, wz = hz + oz; if (wx >= x0 && wx < x0 + 16 && wz >= z0 && wz < z0 + 16) S(wx, y + 1, wz, id); }
+        if (hx >= x0 && hx < x0 + 16 && hz >= z0 && hz < z0 + 16) S(hx, y + 3, hz, 28);
+      }
+      // plaza de la aldea (aparecen los medianos)
+      if (v.x >= x0 && v.x < x0 + 16 && v.z >= z0 && v.z < z0 + 16) { S(v.x, v.y, v.z, 225); for (let k = 1; k <= 3; k++) S(v.x + 2, v.y + k, v.z, 85); S(v.x + 2, v.y + 4, v.z, 28); }
+    }
+  }
+  // torres de mago: piedra tallada, pisos con escalera y una sala arriba con el altar de runas
+  mageTowers(cx, cz, set, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK;
+    const S = (wx, yy, wz, id) => set(wx - x0, yy, wz - z0, id);
+    for (const v of this.eldraCells(cx, cz, 380, 12, 471, 0.55, (c) => (c.biome === BIOME.VALE || c.biome === BIOME.ELFWOOD) && c.h > SEA + 2)) {
+      const H = 24, R = 4.6;
+      for (let dx = -6; dx <= 6; dx++) for (let dz = -6; dz <= 6; dz++) {
+        const wx = v.x + dx, wz = v.z + dz, d = Math.hypot(dx, dz);
+        if (wx < x0 || wx >= x0 + 16 || wz < z0 || wz >= z0 + 16 || d > R + 1.2) continue;
+        for (let k = 0; k <= H + 6; k++) {
+          const yy = v.y + k;
+          let id = 0;
+          if (k === 0) id = 210;
+          else if (k <= H) {
+            if (d > R - 0.5 && d <= R + 0.5) id = k % 6 === 3 && (dx === 0 || dz === 0) ? 14 : (hash3(this.seed + 472, wx, yy, wz) < 0.25 ? 211 : 210);
+            else if (d < R - 0.5 && k % 6 === 0) id = 209;
+          } else if (d <= R + 1.2 - (k - H) * 0.9) id = 211;
+          S(wx, yy, wz, id);
+        }
+        // puerta
+        if (dx === 0 && dz === Math.round(R)) { S(wx, v.y + 1, wz, 0); S(wx, v.y + 2, wz, 0); }
+        // escalera de mano por dentro
+        if (dx === 0 && dz === -3) for (let k = 1; k <= H; k++) S(wx, v.y + k, wz, ladderFor(0, 1));
+        if (dx === 0 && dz === -3) for (let k = 6; k <= H; k += 6) S(wx, v.y + k, wz, ladderFor(0, 1));
+      }
+      // sala de arriba: altar, alquimia, libros, cofre antiguo y luz
+      const top = v.y + H - 5;
+      const F = [[2, 0, 219], [-2, 0, 220], [2, 2, 115], [-2, 2, 115], [0, 2, 226]];
+      for (const [ox, oz, id] of F) { const wx = v.x + ox, wz = v.z + oz; if (wx >= x0 && wx < x0 + 16 && wz >= z0 && wz < z0 + 16) S(wx, top, wz, id); }
+      if (v.x >= x0 && v.x < x0 + 16 && v.z >= z0 && v.z < z0 + 16) { S(v.x, top + 3, v.z, 28); S(v.x, v.y, v.z, 224); }
+    }
+  }
+  // castillos en ruinas
+  castles(cx, cz, set, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    const S = (wx, yy, wz, id) => set(wx - x0, yy, wz - z0, id);
+    for (const v of this.eldraCells(cx, cz, 520, 20, 481, 0.4, (c) => c.biome === BIOME.VALE && c.h > SEA + 2)) {
+      const y = v.y;
+      for (let dx = -14; dx <= 14; dx++) for (let dz = -14; dz <= 14; dz++) {
+        const wx = v.x + dx, wz = v.z + dz;
+        if (wx < x0 || wx >= x0 + 16 || wz < z0 || wz >= z0 + 16) continue;
+        const ax = Math.abs(dx), az = Math.abs(dz), tower = ax >= 10 && az >= 10;
+        S(wx, y, wz, ax <= 12 && az <= 12 ? 210 : 84);
+        for (let k = 1; k <= 12; k++) S(wx, y + k, wz, 0);
+        const ruin = hash2(s + 482, wx, wz);
+        let hgt = 0;
+        if (tower && ax <= 14 && az <= 14 && (ax === 14 || az === 14 || ax === 10 || az === 10)) hgt = 10;
+        else if ((ax === 12 || az === 12) && ax <= 12 && az <= 12) hgt = 6;
+        if (dz === 12 && ax <= 2) hgt = 0; // portón
+        if (hgt) { const top = Math.max(2, Math.round(hgt - ruin * 4 * (ruin > 0.55 ? 1 : 0))); for (let k = 1; k <= top; k++) S(wx, y + k, wz, hash3(s + 483, wx, y + k, wz) < 0.3 ? 211 : 210); if (top === hgt && (dx + dz) % 2 === 0) S(wx, y + top + 1, wz, 210); }
+        // torre del homenaje
+        if (ax <= 4 && az <= 4) {
+          const wall = ax === 4 || az === 4;
+          for (let k = 1; k <= 9; k++) S(wx, y + k, wz, k === 5 || k === 9 ? 210 : wall ? (k === 3 && (ax === 0 || az === 0) ? 14 : 210) : 0);
+          if (dz === 4 && dx === 0) { S(wx, y + 1, wz, 0); S(wx, y + 2, wz, 0); }
+          if (dx === -3 && dz === -3) for (let k = 1; k <= 8; k++) S(wx, y + k, wz, ladderFor(1, 0));
+          if (dx === 2 && dz === -2) S(wx, y + 1, wz, 226);
+          if (dx === 0 && dz === 0) { S(wx, y + 4, wz, 28); S(wx, y + 6, wz, 226); }
+        }
+      }
+    }
+  }
+  // minas enanas: túnel que baja desde la montaña hasta un gran salón
+  dwarfMines(cx, cz, set, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    const S = (wx, yy, wz, id) => set(wx - x0, yy, wz - z0, id);
+    for (const v of this.eldraCells(cx, cz, 300, 60, 491, 0.7, (c) => c.biome === BIOME.PEAKS && c.h > 74)) {
+      const hy = 36, hx = v.x + 30, hz = v.z; // salón a 30 bloques al este de la entrada
+      // túnel en escalera (ancho 3, alto 4)
+      for (let t = 0; t <= 30; t++) {
+        const wx = v.x + t, fy = Math.max(hy, v.y - Math.floor(t * (v.y - hy) / 26));
+        for (let w = -1; w <= 1; w++) {
+          const wz = v.z + w;
+          if (wx < x0 || wx >= x0 + 16 || wz < z0 || wz >= z0 + 16) continue;
+          S(wx, fy, wz, 210);
+          for (let k = 1; k <= 4; k++) S(wx, fy + k, wz, 0);
+          if (t % 6 === 0 && w === 0) S(wx, fy + 4, wz, 28);
+        }
+      }
+      // arco de entrada
+      for (let w = -2; w <= 2; w++) for (let k = 0; k <= 5; k++) { const wz = v.z + w, wx = v.x - 1; if (wx >= x0 && wx < x0 + 16 && wz >= z0 && wz < z0 + 16 && (Math.abs(w) === 2 || k === 5)) S(wx, v.y + k, wz, 210); }
+      // salón con columnas, faroles, fragua, cofres y vetas a la vista
+      for (let dx = -11; dx <= 11; dx++) for (let dz = -8; dz <= 8; dz++) {
+        const wx = hx + dx, wz = hz + dz;
+        if (wx < x0 || wx >= x0 + 16 || wz < z0 || wz >= z0 + 16) continue;
+        const edge = Math.abs(dx) === 11 || Math.abs(dz) === 8;
+        for (let k = 0; k <= 8; k++) {
+          const yy = hy + k;
+          if (k === 0) S(wx, yy, wz, 210);
+          else if (edge) { const r = hash3(s + 492, wx, yy, wz); S(wx, yy, wz, r < 0.06 ? 216 : r < 0.1 ? 217 : 210); }
+          else if (dx % 5 === 0 && dz % 4 === 0 && dx !== 0) S(wx, yy, wz, 210);
+          else S(wx, yy, wz, k === 8 ? 210 : 0);
+        }
+        if (dx % 5 === 2 && dz % 4 === 2 && !edge) S(wx, hy + 7, wz, 28);
+        if (dx === 0 && dz === 0) S(wx, hy, wz, 225);
+        if (dx === 9 && dz === -6) S(wx, hy + 1, wz, 25);
+        if ((dx === 9 || dx === -9) && dz === 6) S(wx, hy + 1, wz, 226);
+      }
+    }
+  }
+  // guarida del dragón: cráter de basalto con oro y lava
+  dragonLairs(cx, cz, set, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    const S = (wx, yy, wz, id) => set(wx - x0, yy, wz - z0, id);
+    for (const v of this.eldraCells(cx, cz, 600, 24, 501, 0.7, (c) => c.biome === BIOME.ASHEN)) {
+      for (let dx = -20; dx <= 20; dx++) for (let dz = -20; dz <= 20; dz++) {
+        const wx = v.x + dx, wz = v.z + dz, d = Math.hypot(dx, dz);
+        if (wx < x0 || wx >= x0 + 16 || wz < z0 || wz >= z0 + 16 || d > 20) continue;
+        const depth = Math.round(7 * (1 - (d / 20) ** 2));
+        const fy = v.y - depth;
+        for (let k = fy + 1; k <= v.y + 6; k++) S(wx, k, wz, 0);
+        S(wx, fy, wz, d < 6 ? (hash2(s + 502, wx, wz) < 0.6 ? 218 : 205) : d > 9 && d < 10.5 ? 55 : 205);
+        if (d < 4 && hash2(s + 503, wx, wz) < 0.35) S(wx, fy + 1, wz, 218);
+        if (dx === 0 && dz === 0) S(wx, fy, wz, 223);
+      }
+    }
   }
 
   // ---------- base equipada: hangar, helipuerto, muelle, vías, corral y taller ----------
@@ -375,7 +607,37 @@ export class WorldGen {
     return this.baseColumn(wx, wz);
   }
 
+  // ---------- Reinos de Eldra: terreno y biomas propios ----------
+  magicColumn(wx, wz) {
+    const ox = wx + this.ox, oz = wz + this.oz;
+    const cont = this.nCont.fbm2(ox / 420, oz / 420, 3);
+    const detail = this.nDetail.fbm2(ox / 64, oz / 64, 4);
+    const hills = this.nHills.fbm2(ox / 160, oz / 160, 3);
+    const moist = this.nMoist.fbm2(ox / 380, oz / 380, 2);
+    const near = smooth(220, 120, Math.hypot(wx, wz)); // el valle verde rodea el inicio
+    const mount = smooth(0.18, 0.42, this.nScrap.fbm2(ox / 520, oz / 520, 3)) * (1 - near);
+    const ash = smooth(0.42, 0.56, this.nMil.fbm2(ox / 700, oz / 700, 2)) * smooth(500, 800, Math.hypot(wx, wz));
+    const mire = smooth(0.22, 0.4, moist) * (1 - near) * (1 - mount);
+    const wood = smooth(0.25, 0.42, this.nMush.fbm2(ox / 360, oz / 360, 2)) * (1 - mount) * (1 - ash) * (1 - mire);
+    // colinas suaves
+    let h = 50 + cont * 6 + Math.sin(ox / 38) * Math.cos(oz / 45) * 3 + detail * 3 + Math.max(0, hills) * 10;
+    if (wood > 0) h = lerp(h, 52 + cont * 5 + detail * 3, wood);
+    if (mire > 0) h = lerp(h, SEA - 1 + detail * 2.2, mire);
+    if (mount > 0) h = lerp(h, 70 + Math.pow(Math.max(0, hills + 0.4), 1.3) * 40 + detail * 6, mount);
+    if (ash > 0) h = lerp(h, 54 + Math.abs(detail) * 9 + cont * 6, ash);
+    const rv = Math.abs(this.nRiver.fbm2(ox / 330, oz / 330, 2));
+    const riverT = smooth(0.03, 0.01, rv) * (1 - mount) * (1 - ash);
+    if (riverT > 0) h = lerp(h, Math.min(h, SEA - 2), riverT);
+    let biome = BIOME.VALE;
+    if (ash > 0.5) biome = BIOME.ASHEN;
+    else if (mount > 0.5) biome = BIOME.PEAKS;
+    else if (mire > 0.5) biome = BIOME.MIRE;
+    else if (wood > 0.5) biome = BIOME.ELFWOOD;
+    return { h: Math.max(4, Math.min(HEIGHT - 12, Math.round(h))), biome, urbanT: 0, cityLevel: 47, temp: biome === BIOME.PEAKS ? -0.5 : 0.1, river: riverT > 0.5 };
+  }
+
   baseColumn(wx, wz) {
+    if (this.type === 'magic') return this.magicColumn(wx, wz);
     const cx0 = wx, cz0 = wz;
     wx += this.ox; wz += this.oz;
     const cont = this.nCont.fbm2(wx / 420, wz / 420, 3);
@@ -491,6 +753,10 @@ export class WorldGen {
             case BIOME.TUNDRA: id = depth === 0 ? (h < SEA + 1 ? 8 : 147) : depth < 3 ? 4 : 2; break;
             case BIOME.CIRCUIT: id = depth === 0 ? 5 : depth < 3 ? 4 : 2; break;
             case BIOME.ZOO: id = depth === 0 ? 84 : depth < 3 ? 4 : 2; break;
+            case BIOME.VALE: case BIOME.ELFWOOD: id = depth === 0 ? (h < SEA + 1 ? 4 : 84) : depth < 3 ? 4 : 2; break;
+            case BIOME.PEAKS: id = depth === 0 ? (h > 92 ? 147 : h > 76 ? 2 : 84) : depth < 2 && h <= 76 ? 4 : 2; break;
+            case BIOME.MIRE: id = depth < 2 ? 7 : 4; break;
+            case BIOME.ASHEN: id = depth === 0 ? (hash2(seed + 401, wx, wz) < 0.3 ? 6 : 205) : 205; break;
             case BIOME.SCRAPSEA: id = depth < 3 ? 192 : 4; break;
             case BIOME.MILITARY: id = depth === 0 ? (hash2(seed + 191, wx, wz) < 0.004 ? 182 : hash2(seed + 192, wx, wz) < 0.3 ? 8 : 5) : 4; break;
             default:
@@ -499,7 +765,7 @@ export class WorldGen {
         }
         data[I(x, y, z)] = id;
       }
-      const waterId = b === BIOME.BREW ? 47 : 17;
+      const waterId = b === BIOME.BREW || this.type === 'magic' ? (b === BIOME.ASHEN ? 55 : 47) : 17;
       for (let y = h + 1; y <= SEA; y++) data[I(x, y, z)] = waterId;
       if (b === BIOME.TUNDRA && h < SEA) data[I(x, SEA, z)] = 148; // lagos congelados
 
@@ -537,6 +803,7 @@ export class WorldGen {
       { id: 20, n: 7, maxY: 48, size: 6 },
       { id: 21, n: 3, maxY: 24, size: 4 },
     ];
+    if (this.type === 'magic') { for (const v of veins) if (v.id === 21) v.id = 216; veins.push({ id: 217, n: 2, maxY: 40, size: 3 }); }
     for (const v of veins) for (let k = 0; k < v.n; k++) {
       let x = (rnd() * 16) | 0, y = 3 + ((rnd() * (v.maxY - 3)) | 0), z = (rnd() * 16) | 0;
       const s = 2 + ((rnd() * v.size) | 0);
@@ -558,6 +825,8 @@ export class WorldGen {
 
     // --- árboles muertos y chatarra dispersa ---
     const M = 4;
+    if (this.type === 'magic') this.eldraDeco(cx, cz, set, setAir, colAt);
+    else
     for (let wz = z0 - M; wz < z0 + CHUNK + M; wz++) for (let wx = x0 - M; wx < x0 + CHUNK + M; wx++) {
       const r = hash2(seed + 11, wx, wz);
       if (r > 0.02) continue;
@@ -601,6 +870,7 @@ export class WorldGen {
     }
 
     // --- ciudad ---
+    if (this.type === 'magic') { this.eldraStructures(cx, cz, set, colAt); return data; }
     this.city(data, cx, cz, cols, set, setAir, colAt, I);
     // --- búnkeres y otras estructuras ---
     this.bunkers(cx, cz, set);
@@ -1338,6 +1608,13 @@ export class WorldGen {
   }
 
   findSpawn(pref) {
+    if (this.type === 'magic') {
+      for (let r = 0; r < 600; r += 6) for (let a = 0; a < 16; a++) {
+        const wx = Math.round(Math.cos(a / 16 * Math.PI * 2) * r), wz = Math.round(Math.sin(a / 16 * Math.PI * 2) * r);
+        const c = this.column(wx, wz);
+        if (c.biome === BIOME.VALE && c.h > SEA + 1) return { x: wx + 0.5, y: c.h + 2, z: wz + 0.5 };
+      }
+    }
     const bs = this.baseSite();
     if (bs) return { x: bs.x + 0.5, y: bs.y + 1.5, z: bs.z - 22.5 };
     if (pref === 'zoo') {
