@@ -1150,6 +1150,28 @@ HD.tires = (t) => t.fill((x, y) => {
 HD.cloth = (t) => t.fill((x, y) => { const w = (x + y) % 4 < 2 ? 1.05 : 0.93, n = t.fbm(x, y, 4, 3); t.H(x, y, 0.5 + (w - 1) * 3); return scl([154, 138, 106], w * (0.85 + n * 0.25)); });
 HD.bar_top = (t) => { HD.planks(t); for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const c = t.G(x, y); t.P(x, y, scl(mixc(c, [110, 60, 30], 0.35), 0.9)); t.S(x, y, 0.35); } };
 
+// v12: hormigón de colores
+const concColor = (c) => (t) => {
+  t.fill((x, y) => {
+    const n = t.fbm(x, y, 4, 4);
+    const k = 0.9 + n * 0.12 + (t.rnd() - 0.5) * 0.05;
+    t.H(x, y, 0.6 + n * 0.2); t.S(x, y, 0.12);
+    return scl(c, k);
+  });
+  for (let x = 0; x < 32; x++) { t.shadeN(x, 0, 0.9); t.shadeN(x, 31, 0.9); }
+};
+HD.conc_rojo = concColor([176, 48, 42]);
+HD.conc_naranja = concColor([214, 110, 34]);
+HD.conc_amarillo = concColor([226, 190, 48]);
+HD.conc_lima = concColor([120, 186, 48]);
+HD.conc_verde = concColor([52, 120, 58]);
+HD.conc_cian = concColor([40, 146, 150]);
+HD.conc_celeste = concColor([96, 160, 214]);
+HD.conc_azul = concColor([44, 70, 160]);
+HD.conc_violeta = concColor([112, 56, 160]);
+HD.conc_rosa = concColor([222, 120, 160]);
+HD.conc_negro = concColor([34, 34, 38]);
+HD.conc_blanco = concColor([224, 222, 214]);
 // los dibujos HD reemplazan a los clásicos (así los que derivan de ellos, como hornos o palancas, también mejoran)
 for (const k of Object.keys(HD)) DRAW[k] = HD[k];
 const HD_SET = new Set(Object.keys(HD));
@@ -1163,7 +1185,7 @@ function emitClassic(mode, r, g, b) {
   return 0;
 }
 
-// Arma dos atlas de 768×768: color (RGBA) y material (normal XY, brillo/emisión, máscara de tinte).
+// Arma dos atlas de 1536×1536: color (RGBA) y material (normal XY, brillo/emisión, máscara de tinte).
 // Devuelve un canvas (para íconos y minimapa) con .colorData y .matData invertidos en vertical para la GPU.
 export function buildAtlas() {
   const SZ = ATLAS.size, C = ATLAS.cell, PD = ATLAS.pad;
@@ -1183,7 +1205,7 @@ export function buildAtlas() {
     const bump = BUMP[name] ?? (HD_SET.has(name) ? 3.2 : 1.6);
     const sp0 = SPEC[name] ?? 0.03;
     const em = EMIT_CLASSIC[name];
-    const col0 = (ti % 16) * C, row0 = Math.floor(ti / 16) * C;
+    const col0 = (ti % ATLAS.cols) * C, row0 = Math.floor(ti / ATLAS.cols) * C;
     for (let cy = 0; cy < C; cy++) for (let cx = 0; cx < C; cx++) {
       const x = W(cx - PD), y = W(cy - PD), i = y * R + x;
       const ix = col0 + cx, iy = row0 + cy;
@@ -1244,7 +1266,7 @@ export function applyPack(atlasCanvas, img) {
     n++;
     const lum = (x, y) => { const i = (W(y) * R + W(x)) * 4; return (d[i] * 0.3 + d[i + 1] * 0.55 + d[i + 2] * 0.15) / 255; };
     const wasTint = HD_SET.has(name) && /grass/.test(name);
-    const col0 = (ti % 16) * C, row0 = Math.floor(ti / 16) * C;
+    const col0 = (ti % ATLAS.cols) * C, row0 = Math.floor(ti / ATLAS.cols) * C;
     for (let cy = 0; cy < C; cy++) for (let cx = 0; cx < C; cx++) {
       const x = W(cx - PD), y = W(cy - PD), i = (y * R + x) * 4;
       const ix = col0 + cx, iy = row0 + cy, o = (iy * SZ + ix) * 4, og = ((SZ - 1 - iy) * SZ + ix) * 4;

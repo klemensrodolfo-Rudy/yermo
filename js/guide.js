@@ -303,6 +303,8 @@ export function setupGuide(ui, getGame) {
       <p>Fabricala (2 lingotes de acero y una tabla) y hacé clic derecho sobre un bloque común (piedra, madera, ladrillo, hormigón…). Cada toque cambia la forma: <b>losa</b> → <b>losa de arriba</b> → <b>escalón</b> (mirando para donde estás vos) → <b>panel</b> → <b>alfombra</b> → otra vez cubo. Conserva el material. Al romperla te devuelve el bloque.</p>
       <h3>Decoración</h3>
       <p>${icon(406)} Maceta · ${icon(407)} Farol · ${icon(408)} Mesa · ${icon(409)} Silla · ${icon(410)} Estante · ${icon(411)} Barril · ${icon(412)} Banco · ${icon(413)} Alfombra roja · ${icon(414)} Caja. Se fabrican en la mesa de trabajo y se apoyan arriba de un bloque mirando hacia vos; con la sierra se giran.</p>
+      <h3>Hormigón de colores</h3>
+      <p>12 colores (rojo, naranja, amarillo, lima, verde, cian, celeste, azul, violeta, rosa, negro y blanco). En la mesa de trabajo: 8 de hormigón y una ficha dan 8 del color que elijas.</p>
       <h3>Herramientas de obra</h3>
       <p>Marcá un área con la ${icon(361)} cinta métrica y abrí el ${icon(362)} plano de obra: <b>rellenar</b> con el bloque que tenés en la mano, <b>vaciar</b>, <b>reemplazar</b> el bloque que mirás por el de la mano y <b>deshacer</b> lo último (también los diseños construidos). Copiar y pegar con rotación sigue en el mismo plano.</p>`,
     'Juntos y comodidad': () => `

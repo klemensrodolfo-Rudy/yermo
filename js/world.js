@@ -165,7 +165,7 @@ export class World {
   }
 
   buildVolume(cx, cz) {
-    const vol = new Uint8Array(W * W * HEIGHT);
+    const vol = new Uint16Array(W * W * HEIGHT);
     for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
       const d = this.chunks.get(key(cx + dx, cz + dz)).data;
       const vx0 = PAD + dx * CHUNK, vz0 = PAD + dz * CHUNK;

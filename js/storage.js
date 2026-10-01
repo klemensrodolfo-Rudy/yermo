@@ -1,4 +1,5 @@
 // Guardado en IndexedDB: metadatos de mundos + chunks modificados.
+import { toVox } from './blocks.js';
 let dbp = null;
 function db() {
   if (dbp) return dbp;
@@ -36,6 +37,6 @@ export const Storage = {
     await tx('chunks', 'readwrite', (s) => s.delete(IDBKeyRange.bound(id + ':', id + ':￿')));
   },
   chunkKeys: (id) => tx('chunks', 'readonly', (s) => s.getAllKeys(IDBKeyRange.bound(id + ':', id + ':￿'))).catch(() => []),
-  loadChunk: (id, cx, cz) => tx('chunks', 'readonly', (s) => s.get(`${id}:${cx},${cz}`)),
+  loadChunk: (id, cx, cz) => tx('chunks', 'readonly', (s) => s.get(`${id}:${cx},${cz}`)).then(toVox),
   saveChunks: (id, list) => tx('chunks', 'readwrite', (s) => { for (const c of list) s.put(c.data, `${id}:${c.cx},${c.cz}`); }),
 };

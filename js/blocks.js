@@ -46,13 +46,15 @@ export const TILES = [
   'button_off', 'button_on', 'battery', 'note_block', 'music_box', 'canvas',
   // v9.6
   'sapling',
+  // v12: hormigón de colores (primeros bloques con id de 16 bits)
+  'conc_rojo', 'conc_naranja', 'conc_amarillo', 'conc_lima', 'conc_verde', 'conc_cian', 'conc_celeste', 'conc_azul', 'conc_violeta', 'conc_rosa', 'conc_negro', 'conc_blanco',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
-// Atlas: 16×16 celdas de 48 px; cada tile de 32 px va centrado con 8 px de borde repetido (para los mipmaps)
-export const ATLAS = { res: 32, cell: 48, pad: 8, cols: 16, size: 768 };
+// Atlas: 32×32 celdas de 48 px; cada tile de 32 px va centrado con 8 px de borde repetido (para los mipmaps)
+export const ATLAS = { res: 32, cell: 48, pad: 8, cols: 32, size: 1536 }; // hasta 1024 texturas
 // rectángulo del tile en píxeles del atlas (imagen, y hacia abajo) y sus UV (v invertida, como la textura)
-export const tileRect = (ti) => [(ti % 16) * ATLAS.cell + ATLAS.pad, Math.floor(ti / 16) * ATLAS.cell + ATLAS.pad, ATLAS.res, ATLAS.res];
+export const tileRect = (ti) => [(ti % ATLAS.cols) * ATLAS.cell + ATLAS.pad, Math.floor(ti / ATLAS.cols) * ATLAS.cell + ATLAS.pad, ATLAS.res, ATLAS.res];
 export const tileUV = (ti) => { const [x, y] = tileRect(ti), s = ATLAS.size; return { u0: x / s, u1: (x + ATLAS.res) / s, v0: 1 - y / s, v1: 1 - (y + ATLAS.res) / s }; };
 // tinte del pasto por bioma (128 = neutro; multiplica el color de los píxeles marcados)
 export const BIOME_TINT = [
@@ -63,7 +65,7 @@ export const BIOME_TINT = [
 ];
 // banderas por tile para el shader: 1 variación completa (rota/espeja por bloque), 2 sólo espejo, 4 agua que fluye,
 // 8 lava, 16 se mece con el viento, 32 remolino (portal), 64 llama que titila
-export const TILE_FLAGS = new Uint8Array(256);
+export const TILE_FLAGS = new Uint8Array(1024);
 {
   const set = (names, f) => names.split(' ').forEach((n) => { if (T[n] != null) TILE_FLAGS[T[n]] |= f; });
   set('leaves flowers oak_leaves silver_leaves', 16);
@@ -83,6 +85,9 @@ export const AIR = 0;
 // tool: 'pick' | 'axe' | 'shovel' | null ; tier: nivel mínimo para que suelte algo
 // solid: colisiona ; opaque: bloquea luz y oculta caras ; light: emisión 0-15
 // render: 'cube' | 'torch' | 'liquid' | 'box' | 'cross'
+// v12: los bloques se guardan en 16 bits. Ids 1-255 (los de siempre) y 1024-4095 (los nuevos);
+// del 256 al 1023 quedan para los ítems.
+export const MAXB = 4096, NEW_BLOCKS = 1024;
 const B = [];
 function def(id, o) {
   B[id] = Object.assign({
@@ -353,22 +358,37 @@ def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12
 // colisión: normalizar a lista de cajas
 for (const b of B) if (b?.coll && typeof b.coll[0] === 'number') b.coll = [b.coll];
 
+// ---------- v12: bloques nuevos (desde el 1024) ----------
+def(1024, { name: 'Hormigón rojo', tex: tx(T.conc_rojo), hardness: 2, tool: 'pick', tier: 1 });
+def(1025, { name: 'Hormigón naranja', tex: tx(T.conc_naranja), hardness: 2, tool: 'pick', tier: 1 });
+def(1026, { name: 'Hormigón amarillo', tex: tx(T.conc_amarillo), hardness: 2, tool: 'pick', tier: 1 });
+def(1027, { name: 'Hormigón lima', tex: tx(T.conc_lima), hardness: 2, tool: 'pick', tier: 1 });
+def(1028, { name: 'Hormigón verde', tex: tx(T.conc_verde), hardness: 2, tool: 'pick', tier: 1 });
+def(1029, { name: 'Hormigón cian', tex: tx(T.conc_cian), hardness: 2, tool: 'pick', tier: 1 });
+def(1030, { name: 'Hormigón celeste', tex: tx(T.conc_celeste), hardness: 2, tool: 'pick', tier: 1 });
+def(1031, { name: 'Hormigón azul', tex: tx(T.conc_azul), hardness: 2, tool: 'pick', tier: 1 });
+def(1032, { name: 'Hormigón violeta', tex: tx(T.conc_violeta), hardness: 2, tool: 'pick', tier: 1 });
+def(1033, { name: 'Hormigón rosa', tex: tx(T.conc_rosa), hardness: 2, tool: 'pick', tier: 1 });
+def(1034, { name: 'Hormigón negro', tex: tx(T.conc_negro), hardness: 2, tool: 'pick', tier: 1 });
+def(1035, { name: 'Hormigón blanco', tex: tx(T.conc_blanco), hardness: 2, tool: 'pick', tier: 1 });
+export const CONC_COLORS = [1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035];
+
 export const BLOCKS = B;
 export const NUM_BLOCKS = B.length;
 export const DOOR_IDS = DOORS;
 
 // Tablas planas para el mesher (rápido en workers)
-export const OPAQUE = new Uint8Array(256);
-export const SOLID = new Uint8Array(256);
-export const EMIT = new Uint8Array(256);
+export const OPAQUE = new Uint8Array(MAXB);
+export const SOLID = new Uint8Array(MAXB);
+export const EMIT = new Uint8Array(MAXB);
 // color de la luz que emite cada bloque (0 cálida de fuego · 1 verde · 2 violeta · 3 fría · 4 roja · 5 lava · 6 cian · 7 blanca)
-export const LCOL = new Uint8Array(256);
-export const RENDER = new Uint8Array(256); // 0 none,1 cube,2 torch,3 liquid,4 box,5 cross
-export const TORCH_DIR = new Int8Array(512); // [dx, dz] por id (antorchas de pared)
-export const LIQ = new Uint8Array(256);     // 0 no, 1 tóxica, 2 limpia, 3 lava
-export const LIQ_LEVEL = new Uint8Array(256);
+export const LCOL = new Uint8Array(MAXB);
+export const RENDER = new Uint8Array(MAXB); // 0 none,1 cube,2 torch,3 liquid,4 box,5 cross
+export const TORCH_DIR = new Int8Array(MAXB * 2); // [dx, dz] por id (antorchas de pared)
+export const LIQ = new Uint8Array(MAXB);     // 0 no, 1 tóxica, 2 limpia, 3 lava
+export const LIQ_LEVEL = new Uint8Array(MAXB);
 export const BOXES = [];                    // id -> [[x0,y0,z0,x1,y1,z1] en 16avos]
-export const TEX_TOP = new Uint8Array(256), TEX_SIDE = new Uint8Array(256), TEX_BOTTOM = new Uint8Array(256), TEX_FRONT = new Uint8Array(256);
+export const TEX_TOP = new Uint16Array(MAXB), TEX_SIDE = new Uint16Array(MAXB), TEX_BOTTOM = new Uint16Array(MAXB), TEX_FRONT = new Uint16Array(MAXB);
 const RMAP = { cube: 1, torch: 2, liquid: 3, box: 4, cross: 5 };
 for (const b of B) {
   if (!b) continue;
@@ -625,7 +645,19 @@ LOOT_TABLES.abyss = [[353, 3, 10, 0.8], [261, 1, 4, 0.6], [313, 1, 1, 0.15], [30
 LOOT_TABLES.brew.push([350, 1, 1, 0.3], [327, 1, 3, 0.2]);
 export const LOOT = LOOT_TABLES.normal;
 
-export const isBlock = (id) => id > 0 && id < 256;
+export const isBlock = (id) => id > 0 && (id < 256 || (id >= NEW_BLOCKS && id < MAXB));
+// datos de un sector en 16 bits; los mundos guardados antes de la v12 (1 byte por bloque) se convierten solos
+const VOX = CHUNK * CHUNK * HEIGHT;
+export function toVox(d) {
+  if (!d) return null;
+  if (d instanceof Uint16Array) return d;
+  const u8 = d instanceof Uint8Array ? d : d instanceof ArrayBuffer ? new Uint8Array(d) : ArrayBuffer.isView(d) ? new Uint8Array(d.buffer, d.byteOffset, d.byteLength) : null;
+  if (!u8) return null;
+  if (u8.length === VOX) return Uint16Array.from(u8);
+  if (u8.length === VOX * 2) return new Uint16Array(u8.slice().buffer);
+  return null;
+}
+export const voxBytes = (v) => new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
 export const TORCHES = new Set([26, 34, 35, 36, 37]);
 export const wallTorchFor = (dx, dz) => BLOCKS.find((b) => b?.wall && b.wall[0] === dx && b.wall[1] === dz)?.id;
 export const ladderFor = (dx, dz) => BLOCKS.find((b) => b?.ladder && b.ladder[0] === dx && b.ladder[1] === dz)?.id;
@@ -633,12 +665,12 @@ export const doorId = (open, axis, top) => 65 + open * 4 + (axis === 'z' ? 2 : 0
 export const itemName = (id) => (isBlock(id) ? B[id]?.name : ITEMS[id]?.name) ?? '?';
 export const maxStack = (id) => (ITEMS[id]?.durability || ITEMS[id]?.stack === 1 ? 1 : ITEMS[id]?.stack ?? 64);
 // bloques que se prenden fuego (madera, plantas, tela)
-export const FLAMMABLE = new Uint8Array(256);
-for (let i = 1; i < 256; i++) { const b = B[i]; if (b && !b.container && !b.station && !b.marker && !b.loot && !LIQ[i] && (b.tool === 'axe' || /hoja|tela|cortina|paja|cebada|lúpulo|pasto|hongo|papa/i.test(b.name))) FLAMMABLE[i] = 1; }
+export const FLAMMABLE = new Uint8Array(MAXB);
+for (let i = 1; i < B.length; i++) { const b = B[i]; if (b && !b.container && !b.station && !b.marker && !b.loot && !LIQ[i] && (b.tool === 'axe' || /hoja|tela|cortina|paja|cebada|lúpulo|pasto|hongo|papa/i.test(b.name))) FLAMMABLE[i] = 1; }
 {
   const C = { 28: 1, 21: 1, 217: 2, 208: 3, 219: 3, 55: 5, 221: 7, 74: 7, 140: 4, 241: 4, 138: 4, 238: 0, 159: 1 };
   for (const [id, c] of Object.entries(C)) LCOL[+id] = c;
-  for (let i = 1; i < 256; i++) { const bl = B[i]; if (!bl?.light || LCOL[i]) continue; if (/hongo|seta/i.test(bl.name || '')) LCOL[i] = 6; else if (/portal/i.test(bl.name || '')) LCOL[i] = 2; }
+  for (let i = 1; i < B.length; i++) { const bl = B[i]; if (!bl?.light || LCOL[i]) continue; if (/hongo|seta/i.test(bl.name || '')) LCOL[i] = 6; else if (/portal/i.test(bl.name || '')) LCOL[i] = 2; }
 }
 export const PLACEABLE = (id) => isBlock(id) && id !== 1 && !LIQ[id] && !B[id]?.crop;
 
@@ -667,6 +699,7 @@ export const RECIPES = [
   { out: [59, 6], in: [[9, 3]], station: 'mesa' },
   { out: [60, 6], in: [[23, 3]], station: 'mesa' },
   { out: [9, 4], in: [[8, 2], [6, 2]], station: 'mesa' },
+  ...[1024, 1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035].map((c) => ({ out: [c, 8], in: [[9, 8], [353, 1]], station: 'mesa' })),
   { out: [32, 2], in: [[6, 2], [4, 2]], station: 'mesa' },
   { out: [277, 1], in: [[260, 3]], station: 'mesa' },
   { out: [277, 1], in: [[258, 5]], station: 'mesa' },

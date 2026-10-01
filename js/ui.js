@@ -369,7 +369,7 @@ export class UI {
       if (same) { const k = Math.min(it.count, maxStack(it.id) - same.count); same.count += k; it.count -= k; }
       if (it.count > 0) merged.push(it);
     }
-    const group = (id) => (id < 256 ? 0 : ITEMS[id]?.tool || ITEMS[id]?.weapon || ITEMS[id]?.ranged ? 1 : ITEMS[id]?.armor ? 2 : ITEMS[id]?.food || ITEMS[id]?.heal ? 3 : 4);
+    const group = (id) => (isBlock(id) ? 0 : ITEMS[id]?.tool || ITEMS[id]?.weapon || ITEMS[id]?.ranged ? 1 : ITEMS[id]?.armor ? 2 : ITEMS[id]?.food || ITEMS[id]?.heal ? 3 : 4);
     merged.sort((a, b) => group(a.id) - group(b.id) || a.id - b.id || b.count - a.count);
     merged.forEach((it, i) => { s[9 + i] = it; });
     this.inv.onChange(); this.renderGrid();

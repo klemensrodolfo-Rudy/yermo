@@ -98,7 +98,7 @@ class Buf {
   out() {
     return {
       pos: new Float32Array(this.pos), uv: new Float32Array(this.uv),
-      lit: new Uint8Array(this.lit), inf: new Uint8Array(this.inf), tint: new Uint8Array(this.tint), lcol: new Uint8Array(this.lcol), idx: this.n > 65000 ? new Uint32Array(this.idx) : new Uint16Array(this.idx),
+      lit: new Uint8Array(this.lit), inf: new Uint16Array(this.inf), tint: new Uint8Array(this.tint), lcol: new Uint8Array(this.lcol), idx: this.n > 65000 ? new Uint32Array(this.idx) : new Uint16Array(this.idx),
     };
   }
 }

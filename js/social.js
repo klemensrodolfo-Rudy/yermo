@@ -1,7 +1,7 @@
 // Social v9.7: buzón y marcas del mapa (mundos del grupo), galería de fotos y aventuras hechas por los jugadores.
 import * as THREE from 'three';
 import { Cloud, pack, unpack } from './cloud.js';
-import { CHUNK, HEIGHT, itemName, ITEMS } from './blocks.js';
+import { CHUNK, HEIGHT, itemName, ITEMS, isBlock } from './blocks.js';
 
 const esc = (s) => String(s ?? '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
 const hasSession = () => { try { return !!localStorage.getItem('yermo-cloud-auth'); } catch { return false; } };
@@ -193,7 +193,7 @@ export function createSocial(ctx) {
         row.innerHTML = `<p><b>${esc(m.from_name)}</b> <small class="muted">${new Date(m.created_at).toLocaleString()}</small><br>${esc(m.text || '')}${it ? `<br>🎁 ${it}` : ''}</p>`;
         if (it && !m.taken) {
           const b = document.createElement('button'); b.className = 'primary'; b.textContent = 'Agarrar';
-          b.onclick = async () => { b.disabled = true; const items = await Cloud.takeMail(m.id); if (items) { for (const x of items) if (ITEMS[x.id] || x.id < 256) p.give(x.id, x.count, { dur: x.dur ?? undefined, q: x.q ?? undefined }); sfx.craft(); flash('🎁 ¡Lo agarraste!'); } openMail(); };
+          b.onclick = async () => { b.disabled = true; const items = await Cloud.takeMail(m.id); if (items) { for (const x of items) if (ITEMS[x.id] || isBlock(x.id)) p.give(x.id, x.count, { dur: x.dur ?? undefined, q: x.q ?? undefined }); sfx.craft(); flash('🎁 ¡Lo agarraste!'); } openMail(); };
           row.appendChild(b);
         } else if (!it && !m.taken) Cloud.takeMail(m.id).catch(() => {});
         const del = document.createElement('button'); del.textContent = 'Borrar'; del.onclick = async () => { await Cloud.deleteMail(m.id); openMail(); };

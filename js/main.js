@@ -113,8 +113,8 @@ const vert = /* glsl */`
       // ráfagas: una onda que viaja en la dirección del viento
       float gust = 0.6 + 0.4 * sin(time * 0.9 + dot(wp.xz, wind) * 0.35);
       if (fc == 6) {
-        float cellY = floor(tinf.x / 16.0) * 48.0 + 8.0;
-        float ly = ((1.0 - uv.y) * 768.0 - cellY) / 32.0;
+        float cellY = floor(tinf.x / 32.0) * 48.0 + 8.0;
+        float ly = ((1.0 - uv.y) * 1536.0 - cellY) / 32.0;
         if (ly < 0.5) {
           float amp = 0.05 + wk * 0.12;
           wp.x += sin(time * (1.7 + wk) + wp.x * 0.7 + wp.z * 0.3) * amp + wind.x * 0.12 * gust;
@@ -151,7 +151,7 @@ const frag = (water) => /* glsl */`
   float vh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
   float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(vh(i), vh(i + vec2(1.0, 0.0)), f.x), mix(vh(i + vec2(0.0, 1.0)), vh(i + vec2(1.0, 1.0)), f.x), f.y); } varying vec4 vLit; varying float vDepth; varying vec3 vWorld; varying vec3 vTint;
   flat varying vec4 vInf; varying vec3 vLcol;
-  const float SZ = 768.0;
+  const float SZ = 1536.0;
   vec3 lightCol(float id) {
     int i = int(id + 0.5);
     if (i == 1) return vec3(0.55, 1.0, 0.4); if (i == 2) return vec3(0.8, 0.5, 1.0); if (i == 3) return vec3(0.7, 0.85, 1.0);
@@ -177,7 +177,7 @@ const frag = (water) => /* glsl */`
   }
   void main() {
     int tile = int(vInf.x + 0.5), flags = int(vInf.y + 0.5), face = int(vInf.z + 0.5);
-    vec2 cell = vec2(float(tile - (tile / 16) * 16), float(tile / 16)) * 48.0 + 8.0;
+    vec2 cell = vec2(float(tile - (tile / 32) * 32), float(tile / 32)) * 48.0 + 8.0;
     vec2 local = vec2(vUv.x * SZ - cell.x, (1.0 - vUv.y) * SZ - cell.y) / 32.0;
     vec3 N = faceN(face);
     vec3 bp = floor(vWorld - N * 0.01);
@@ -1704,7 +1704,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '11.0 · 2026-10-02';
+const VERSION = '12.0 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles

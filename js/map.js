@@ -1,5 +1,5 @@
 // Minimapa (esquina) y mapa grande (tecla M) a partir de los chunks explorados.
-import { BLOCKS, CHUNK, HEIGHT, LIQ, ATLAS, tileRect } from './blocks.js';
+import { BLOCKS, CHUNK, HEIGHT, LIQ, ATLAS, TILES, tileRect } from './blocks.js';
 
 export class MapView {
   constructor(atlas) {
@@ -7,7 +7,7 @@ export class MapView {
     const ctx = atlas.getContext('2d');
     const SZ = ATLAS.size, img = ctx.getImageData(0, 0, SZ, SZ).data;
     this.tileColor = [];
-    for (let t = 0; t < 256; t++) {
+    for (let t = 0; t < TILES.length; t++) {
       const [tx, ty, R] = tileRect(t);
       let r = 0, g = 0, b = 0, n = 0;
       for (let y = 0; y < R; y += 2) for (let x = 0; x < R; x += 2) {

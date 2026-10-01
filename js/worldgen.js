@@ -724,7 +724,7 @@ export class WorldGen {
 
   generate(cx, cz) {
     if (cx * CHUNK >= ABYSS_X - 64) return this.generateAbyss(cx, cz);
-    const data = new Uint8Array(CHUNK * CHUNK * HEIGHT);
+    const data = new Uint16Array(CHUNK * CHUNK * HEIGHT);
     const x0 = cx * CHUNK, z0 = cz * CHUNK;
     const seed = this.seed;
     const I = (x, y, z) => x + (z << 4) + (y << 8);
@@ -1673,7 +1673,7 @@ export class WorldGen {
 
   // ---------- el abismo: niveles de salas talladas en roca, cada vez más difíciles ----------
   generateAbyss(cx, cz) {
-    const data = new Uint8Array(CHUNK * CHUNK * HEIGHT);
+    const data = new Uint16Array(CHUNK * CHUNK * HEIGHT);
     const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
     const I = (x, y, z) => x + (z << 4) + (y << 8);
     for (let x = 0; x < 16; x++) for (let z = 0; z < 16; z++) for (let y = 0; y < HEIGHT - 1; y++) data[I(x, y, z)] = y === 0 ? 1 : 196;

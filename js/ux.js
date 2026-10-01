@@ -1,7 +1,7 @@
 // UX v10: marcadores propios (en pantalla y en el mapa), mapa grande con zoom y arrastre, modo foto con
 // filtros y cuenta regresiva, y consejos que aparecen la primera vez que ves algo.
 import * as THREE from 'three';
-import { BLOCKS, ITEMS, itemName, PLACEABLE } from './blocks.js';
+import { BLOCKS, ITEMS, itemName, PLACEABLE, isBlock } from './blocks.js';
 import { BIOME_NAMES } from './worldgen.js';
 import { MOB_TYPES } from './entities.js';
 
@@ -228,7 +228,7 @@ export function createUX(ctx) {
     let label = 'Usar', ctxOn = false;
     const mm = h.match(/Clic derecho(?: con una Montura)?: ([^·(/]+)/);
     if (mm) { label = mm[1].trim().split(' ').slice(0, 2).join(' '); ctxOn = true; }
-    else { const hand = g.inv.hand; if (hand && hand.id < 256) label = 'Poner'; else if (hand && (ITEMS[hand.id]?.food || ITEMS[hand.id]?.heal)) label = 'Comer'; else if (hand && ITEMS[hand.id]?.spell) label = 'Hechizo'; }
+    else { const hand = g.inv.hand; if (hand && isBlock(hand.id)) label = 'Poner'; else if (hand && (ITEMS[hand.id]?.food || ITEMS[hand.id]?.heal)) label = 'Comer'; else if (hand && ITEMS[hand.id]?.spell) label = 'Hechizo'; }
     label = label.charAt(0).toUpperCase() + label.slice(1);
     if (useB.textContent !== label) useB.textContent = label;
     useBtn.classList.toggle('ctx', ctxOn);

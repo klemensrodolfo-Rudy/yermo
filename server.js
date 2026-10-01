@@ -21,6 +21,7 @@ const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 let world = null;
 async function loadWorld() {
   const { WorldGen } = await import('./js/worldgen.js');
+  ({ toVox } = await import('./js/blocks.js'));
   const name = String(arg('mundo', 'servidor')).replace(/[^\w-]/g, '_');
   const dir = join(root, 'mundos', name);
   await mkdir(join(dir, 'chunks'), { recursive: true });
@@ -44,11 +45,12 @@ async function loadWorld() {
   };
   console.log(`Mundo "${name}" · semilla ${meta.seed} · ${meta.worldType === 'brew' ? 'cervecero' : 'normal'} · ${meta.mode === 'creative' ? 'creativo' : 'supervivencia'}${meta.pvp ? ' · PvP' : ''} · ${world.keys.size} sectores modificados`);
 }
+let toVox = (d) => d;
 async function getChunk(k, create) {
   let d = world.chunks.get(k);
   if (d) return d;
   if (world.keys.has(k)) {
-    try { d = new Uint8Array(await readFile(join(world.dir, 'chunks', k.replace(',', '_') + '.bin'))); } catch { d = null; }
+    try { d = toVox(new Uint8Array(await readFile(join(world.dir, 'chunks', k.replace(',', '_') + '.bin')))); } catch { d = null; }
   }
   if (!d && create) { const [cx, cz] = k.split(',').map(Number); d = world.gen.generate(cx, cz); }
   if (d) world.chunks.set(k, d);
@@ -139,7 +141,7 @@ async function onMessage(id, sock, m) {
   switch (m.t) {
     case 'getChunk': {
       const d = await getChunk(m.k, false);
-      wsSend(sock, { t: 'chunk', k: m.k, data: d && world.keys.has(m.k) ? Buffer.from(d).toString('base64') : null });
+      wsSend(sock, { t: 'chunk', k: m.k, data: d && world.keys.has(m.k) ? Buffer.from(d.buffer, d.byteOffset, d.byteLength).toString('base64') : null });
       break;
     }
     case 'set': {

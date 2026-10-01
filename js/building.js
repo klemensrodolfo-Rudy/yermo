@@ -1,6 +1,6 @@
 // Construcción v10.9: sierra de formas (losa, escalón, panel, alfombra de cualquier material), decoración
 // (maceta, farol, mesa, silla…) y herramientas de obra: rellenar, vaciar, reemplazar y deshacer.
-import { BLOCKS, ITEMS, OPAQUE, LIQ, RENDER, SHAPE_BOXES, DECOR, setShapeHook } from './blocks.js';
+import { BLOCKS, ITEMS, isBlock, OPAQUE, LIQ, RENDER, SHAPE_BOXES, DECOR, setShapeHook } from './blocks.js';
 
 const SHAPED = { 128: 'losa', 129: 'escalon', 254: 'panel', 255: 'decor' };
 const k3 = (x, y, z) => x + ',' + y + ',' + z;
@@ -116,7 +116,7 @@ export function createBuilding(ctx) {
   api.recordUndo = (changes, label) => { undo = { changes, label }; };
   ctx.ext.build = (list, t) => {
     const S = sel();
-    const hand = inv.hand, hb = hand && hand.id < 256 ? hand.id : 0;
+    const hand = inv.hand, hb = hand && isBlock(hand.id) ? hand.id : 0;
     const box = document.createElement('div'); box.className = 'quest';
     box.innerHTML = '<p><b>🏗 Herramientas de obra</b></p>';
     const btn = (txt, fn, dis) => { const b = document.createElement('button'); b.textContent = txt; b.disabled = !!dis; b.style.margin = '2px'; b.onclick = () => { fn(); ctx.closeInventory(); }; box.appendChild(b); };

@@ -1,6 +1,7 @@
 // Mundo del grupo en la nube (Supabase): cuentas, mundos compartidos y progreso de cada jugador.
 // El juego en vivo sigue yendo por PeerJS: el primero que entra hace de anfitrión (lo decide la base,
 // de forma atómica) y guarda el mundo; los demás se conectan a él solos. Si el anfitrión se va, otro toma la posta.
+import { toVox } from './blocks.js';
 const SB_URL = 'https://lvfigwfikckzejykgdeb.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2Zmlnd2Zpa2NremVqeWtnZGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4MjIwMzcsImV4cCI6MjEwNjM5ODAzN30.R-Rsvk7RmVWsVCTfL5MZESwLoBbsgXNbvAM5xTMzjRg';
 
@@ -20,7 +21,7 @@ export async function unpack(b64) {
   const bin = atob(b64), b = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
   const s = new Blob([b]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-  return new Uint8Array(await new Response(s).arrayBuffer());
+  return toVox(new Uint8Array(await new Response(s).arrayBuffer()));
 }
 const slug = (u) => u.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9._-]/g, '');
 

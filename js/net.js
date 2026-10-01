@@ -4,7 +4,7 @@
 //    elige a un jugador como autoridad para la simulación; si se va, pasa a otro.
 import * as THREE from 'three';
 import { patternTex, scaleBoxUV } from './entities.js';
-import { LIQ } from './blocks.js';
+import { LIQ, toVox, voxBytes } from './blocks.js';
 
 const PREFIX = 'yermo-v4-';
 let PeerCtor = null;
@@ -292,7 +292,7 @@ export class Net {
       }
       case 'getChunk': {
         const r = await g.world.chunkForNet(m.k);
-        if (conn.open) conn.send({ t: 'chunk', k: m.k, data: r.data, edits: r.edits });
+        if (conn.open) conn.send({ t: 'chunk', k: m.k, data: r.data ? voxBytes(r.data) : null, edits: r.edits });
         break;
       }
       case 'set': {
@@ -434,7 +434,7 @@ export class Net {
     const g = this.game;
     if (m.t === 'chunk') {
       const r = this.pendingChunk.get(m.k); this.pendingChunk.delete(m.k);
-      const data = typeof m.data === 'string' ? b64.dec(m.data) : m.data ? new Uint8Array(m.data) : null;
+      const data = toVox(typeof m.data === 'string' ? b64.dec(m.data) : m.data ? new Uint8Array(m.data) : null);
       r?.({ data, edits: m.edits });
       return;
     }
