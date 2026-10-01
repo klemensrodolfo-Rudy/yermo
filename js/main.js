@@ -38,6 +38,7 @@ import { createTogether } from './together.js';
 import { createGeo } from './geo.js';
 import { createMachines } from './machines.js';
 import { createHome } from './home.js';
+import { createNews } from './news.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
@@ -1232,6 +1233,7 @@ async function startGame(meta, hello, cloudInfo) {
   const blockMA = player.onUseBlock;
   player.onUseBlock = (...a) => MA.onUseBlock(...a) || blockMA(...a);
   const HO = game.home = createHome(fctx);
+  game.news = createNews(fctx);
   const blockHO = player.onUseBlock, useHO = player.onUseItem;
   player.onUseBlock = (...a) => HO.onUseBlock(...a) || blockHO(...a);
   player.onUseItem = (...a) => HO.onUseItem(...a) || useHO(...a);
@@ -1295,7 +1297,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); game.news?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1728,7 +1730,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '12.5 · 2026-10-02';
+const VERSION = '12.6 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles

@@ -375,6 +375,8 @@
   .rmore { display: flex; flex-direction: column; gap: 3px; } .rmore button { padding: 1px 8px; font-size: 15px; min-width: 46px; }
   .recipe { border-radius: 3px; transition: background .1s, border-color .1s; } .recipe.ok:hover { background: #241e18; }
   #craftTabs.creative button { display: none; }
+  #craftCats { display: flex; flex-wrap: wrap; gap: 4px; margin: -2px 0 8px; overflow-x: auto; scrollbar-width: none; } #craftCats::-webkit-scrollbar { display: none; }
+  #craftCats button { flex: none; padding: 1px 8px; font-size: 15px; white-space: nowrap; } #craftCats button.on { border-color: var(--accent); color: #fff; }
   #invSort { padding: 2px 10px; font-size: 16px; }
   #inv .chead { margin-bottom: 6px; }
   /* marcadores en pantalla */
@@ -480,6 +482,7 @@
     #craftList { max-height: calc(98vh - 84px); }
     .recipe .slot { width: 30px; height: 30px; } .rinfo b { font-size: 17px; } .ings span { font-size: 14px; } .ings canvas { width: 16px; height: 16px; }
     #craftTabs button { font-size: 14px; padding: 1px 6px; } #craftSearch { font-size: 15px; }
+    #craftCats { flex-wrap: nowrap; margin-bottom: 4px; } #craftCats button { font-size: 13px; padding: 0 6px; }
     #invClose { width: 34px; height: 34px; top: 4px; right: 4px; }
   }
   /* guía: índice al costado */
@@ -618,6 +621,7 @@
     <div id="craftSide">
       <h2 id="craftTitle">Fabricación</h2>
       <div id="craftTabs"><button data-f="all" class="on">Todo</button><button data-f="ok">Disponibles</button><input id="craftSearch" placeholder="🔍 Buscar…" autocomplete="off"></div>
+      <div id="craftCats"><button data-c="all" class="on">Todo</button><button data-c="cons">🧱 Construir</button><button data-c="deco">🛋 Decorar</button><button data-c="mec">⚙ Máquinas</button><button data-c="equipo">⚒ Equipo</button><button data-c="comida">🍲 Comida</button><button data-c="otros">📦 Otros</button></div>
       <div id="craftList"></div>
     </div>
   </div>

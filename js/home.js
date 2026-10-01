@@ -58,7 +58,7 @@ export function createHome(ctx) {
       w.setBlock(x, y, z, id);
       sim.containers.set(k, c); if (ctx.isAuthority()) sim.touch(k); else ctx.net.sendContainer(k, c);
       if (!p.creative) inv.consumeHand();
-      sfx.place?.(23);
+      sfx.place?.(23); p.onEvent('v12', 'galeria');
       return true;
     }
     return false;

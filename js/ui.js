@@ -5,9 +5,25 @@ import { MACHINE_INFO } from './sim.js';
 
 const $ = (s) => document.querySelector(s);
 const STATION_NAMES = { mesa: 'Mesa de trabajo', horno: 'Horno', fogata: 'Fogata', prensa: 'Prensa de fichas', taller: 'Taller mecánico', runas: 'Altar de runas', alquimia: 'Mesa de alquimia', cocina: 'Horno de barro' };
-const BUFF_TXT = { coraje: 'Coraje: +30% de daño', coraza: 'Coraza: +20% de defensa', plomo: 'Hígado de plomo: -50% radiación', humo: 'Sigilo: las criaturas te ven de más cerca', acido: 'Regeneración rápida', frescura: 'Frescura: +15% de velocidad y correr sin hambre', furia: 'Furia: +60% de daño y +20% de defensa' };
+const BUFF_TXT = { coraje: 'Coraje: +30% de daño', coraza: 'Coraza: +20% de defensa', plomo: 'Hígado de plomo: -50% radiación', humo: 'Sigilo: las criaturas te ven de más cerca', acido: 'Regeneración rápida', frescura: 'Frescura: +15% de velocidad y correr sin hambre', furia: 'Furia: +60% de daño y +20% de defensa', abrigo: 'Abrigado: el frío no te lastima', vision: 'Visión nocturna' };
 export { BUFF_TXT };
 
+// categorías para filtrar la fabricación y la paleta creativa
+const STRUCT = /losa|escalera de (hormig|tablas|ladrillo)|cerco|pared derruida|caños|vidrio|azulejo|alambrado|bolsas de arena/i;
+export function catOf(id) {
+  if (isBlock(id)) {
+    const b = BLOCKS[id];
+    if (b.elec || b.pipe || b.belt || b.elevator || b.station || b.container === 'hopper' || id === 1127 || id === 101) return 'mec';
+    if (STRUCT.test(b.name || '') && !b.tinted) return 'cons';
+    if (b.bed || b.door || b.wall2 || b.tinted || b.seat || b.container === 'sign' || b.container === 'canvas' || b.render === 'box' || b.render === 'cross' || [115, 1133, 1134].includes(id)) return 'deco';
+    return 'cons';
+  }
+  const it = ITEMS[id] || {};
+  if (it.tool || it.weapon || it.ranged || it.armor || it.gun || it.spell || it.durability) return 'equipo';
+  if (it.food || it.heal || it.thirst || it.beer || it.buff || it.antirad || it.cures) return 'comida';
+  if (it.decor != null || it.frame || it.artwork) return 'deco';
+  return 'otros';
+}
 export class UI {
   constructor(atlas, sfx) {
     this.atlas = atlas; this.sfx = sfx;
@@ -35,6 +51,11 @@ export class UI {
     search.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') { search.value = ''; search.blur(); this.renderCraft(); } });
     search.addEventListener('input', () => this.renderCraft());
     $('#invSort').addEventListener('click', () => { this.sortInv(); this.sfx.click(); });
+    document.querySelectorAll('#craftCats button').forEach((b) => b.addEventListener('click', () => {
+      this.cat = b.dataset.c;
+      document.querySelectorAll('#craftCats button').forEach((x) => x.classList.toggle('on', x === b));
+      this.renderCraft(); $('#craftList').scrollTop = 0;
+    }));
     document.querySelectorAll('#craftTabs button').forEach((b) => b.addEventListener('click', () => {
       this.filter = b.dataset.f;
       document.querySelectorAll('#craftTabs button').forEach((x) => x.classList.toggle('on', x === b));
@@ -135,6 +156,7 @@ export class UI {
     const st = [...stations].map((s) => STATION_NAMES[s]);
     $('#stationInfo').textContent = this.creative ? 'Modo creativo' : st.length ? 'Cerca: ' + st.join(' · ') : 'Sin estaciones cerca: fabricá una Mesa de trabajo';
     $('#craftTabs').style.display = this.cont || this.panel ? 'none' : '';
+    $('#craftCats').style.display = this.cont || this.panel ? 'none' : '';
     $('#craftTabs').classList.toggle('creative', !!this.creative);
     $('#craftTitle').textContent = this.panel ? this.panel.title : this.cont ? (this.cont.title ?? MACHINE_INFO[this.cont.c.type].title) : this.creative ? 'Todos los bloques' : 'Fabricación';
     this.renderGrid();
@@ -291,7 +313,7 @@ export class UI {
     else if (id === 328) sub = 'Clic derecho sobre agua de manantial para cargarla';
     else if (it?.note) sub = 'Clic derecho para leer';
     else if (it?.fuel) sub = `Combustible · clic derecho sobre un vehículo para cargar${it.heal ? ' · también desinfecta (clic derecho)' : ''}`;
-    else if (it?.food || it?.heal || it?.antirad) sub = [it.food && `Alimenta ${it.food}`, it.heal && `Cura ${it.heal / 2} ♥`, it.antirad && `Radiación -${it.antirad}%`].filter(Boolean).join(' · ') + ' · clic derecho';
+    else if (it?.food || it?.heal || it?.antirad || it?.buff) sub = [it.food && `Alimenta ${it.food}`, it.heal && `Cura ${it.heal / 2} ♥`, it.antirad && `Radiación -${it.antirad}%`, it.buff && BUFF_TXT[it.buff], it.thirst && `Quita la sed ${it.thirst}`].filter(Boolean).join(' · ') + ' · clic derecho';
     else if (it?.learn) sub = `Plano: enseña a fabricar ${BLUEPRINT_NAMES[it.learn]} · clic derecho`;
     else if (it?.plant) sub = 'Se siembra en tierra de cultivo (clic derecho). Arás la tierra con una pala.';
     else if (it?.bucket || id === 277) sub = id === 277 ? 'Clic derecho sobre agua o lava para llenarlo' : 'Clic derecho para volcarlo';
@@ -379,7 +401,8 @@ export class UI {
     const list = $('#craftList');
     list.innerHTML = '';
     const q = ($('#craftSearch')?.value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const match = (id) => !q || itemName(id).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
+    const cat = this.cat || 'all';
+    const match = (id) => (cat === 'all' || catOf(id) === cat) && (!q || itemName(id).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q));
     if (this.creative) {
       list.className = 'palette';
       const ids = [];
@@ -403,7 +426,7 @@ export class UI {
     list.className = '';
     const inv = this.inv;
     const rows = RECIPES.map((r) => ({ r, ok: inv.canCraft(r, this.stations, this.known), locked: r.bp && !this.known.has(r.bp) }))
-      .filter(({ ok, r }) => (this.filter === 'all' || ok) && (match(r.out[0]) || r.in.some(([id]) => match(id))));
+      .filter(({ ok, r }) => (this.filter === 'all' || ok) && (match(r.out[0]) || (q && cat === 'all' && r.in.some(([id]) => match(id)))));
     rows.sort((a, b) => (b.ok - a.ok) || (a.locked - b.locked));
     for (const { r, ok, locked } of rows) {
       const row = document.createElement('div');

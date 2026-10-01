@@ -87,6 +87,14 @@ export const ACHIEVEMENTS = [
   { id: 'semana', name: 'Semana perfecta', desc: 'Completá los 3 desafíos de una semana.' },
   { id: 'nivel', name: 'Experimentado', desc: 'Subí de nivel.' },
   { id: 'sierra', name: 'Carpintero fino', desc: 'Dale forma a un bloque con la sierra.' },
+  { id: 'geiser', name: 'Despegue natural', desc: 'Dejate lanzar por un géiser.' },
+  { id: 'cocinero', name: 'Cocinero del yermo', desc: 'Cociná una comida con efecto.' },
+  { id: 'vitral', name: 'Vitralista', desc: 'Colocá un vitral de color.' },
+  { id: 'molinero', name: 'Energía limpia', desc: 'Colocá un molino de viento.' },
+  { id: 'obsidiana', name: 'Filo volcánico', desc: 'Fabricá una herramienta de obsidiana.' },
+  { id: 'espeleo', name: 'Espeleólogo', desc: 'Encontrá un cristal de cueva.' },
+  { id: 'galeria', name: 'Galería propia', desc: 'Colgá un cuadro con tu dibujo.' },
+  { id: 'cañones', name: 'Tierra roja', desc: 'Visitá los cañones rojos, el salar y el campo de géiseres.' },
 ];
 
 export class Achievements {
@@ -139,7 +147,13 @@ export class Achievements {
     if (name === 'refuel') u('nafta');
     if (name === 'spell') u('hechicero');
     if (name === 'fish') u('pescador');
-    if (name === 'v9' || name === 'v10') u(id);
+    if (name === 'v9' || name === 'v10' || name === 'v12') u(id);
+    if (name === 'craft' && id >= 423 && id <= 428) u('cocinero');
+    if (name === 'craft' && id >= 417 && id <= 420) u('obsidiana');
+    if (name === 'place' && ((id >= 120 && id <= 125) || (id >= 1052 && id <= 1057))) u('vitral');
+    if (name === 'place' && id === 1121) u('molinero');
+    if (name === 'break' && id === 1115) u('espeleo');
+    if (name === 'biome' && (id === 20 || id === 21 || id === 22)) { this.meta.v12b = this.meta.v12b || []; if (!this.meta.v12b.includes(id)) this.meta.v12b.push(id); if (this.meta.v12b.length >= 3) u('cañones'); }
     if (name === 'kill' && id === 'dragon') u('dragon');
     if (name === 'kill' && id === 'ent') u('ent');
     if (name === 'v6') u(id === 'guardian' ? 'guardian' : id);
