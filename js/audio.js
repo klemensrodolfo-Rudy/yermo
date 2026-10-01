@@ -68,6 +68,14 @@ export class Sfx {
     const g = Math.max(0.03, 0.22 * (1 - dist / 22));
     if (type === 'boar') { this.tone({ freq: 160, dur: 0.12, gain: g, type: 'square', slide: 0.8 }); setTimeout(() => this.tone({ freq: 150, dur: 0.12, gain: g, type: 'square', slide: 0.8 }), 160); }
     else if (type === 'ghoul') this.tone({ freq: 95 + Math.random() * 30, dur: 1.2, gain: g, type: 'sawtooth', slide: 0.8 });
+    else if (type === 'lion' || type === 'bear') { this.tone({ freq: type === 'lion' ? 140 : 110, dur: 1.1, gain: g * 1.4, type: 'sawtooth', slide: 0.55 }); this.burst({ freq: 300, q: 0.6, dur: 0.9, gain: g * 0.8, type: 'lowpass' }); }
+    else if (type === 'elephant') { this.tone({ freq: 420, dur: 0.7, gain: g, type: 'square', slide: 1.5 }); this.tone({ freq: 640, dur: 0.6, gain: g * 0.6, type: 'sawtooth', slide: 1.2 }); }
+    else if (type === 'monkey') for (let i = 0; i < 4; i++) setTimeout(() => this.tone({ freq: 700 + Math.random() * 500, dur: 0.08, gain: g, type: 'square', slide: 1.4 }), i * 90);
+    else if (type === 'snake') this.burst({ freq: 5000, q: 1, dur: 0.7, gain: g, type: 'highpass' });
+    else if (type === 'hippo' || type === 'rhino' || type === 'gorilla') this.tone({ freq: 80, dur: 0.5, gain: g * 1.3, type: 'sawtooth', slide: 0.7 });
+    else if (type === 'penguin' || type === 'flamingo' || type === 'ostrich') { this.tone({ freq: 500, dur: 0.15, gain: g, type: 'square', slide: 0.7 }); setTimeout(() => this.tone({ freq: 450, dur: 0.2, gain: g, type: 'square', slide: 0.6 }), 180); }
+    else if (type === 'zebra' || type === 'giraffe' || type === 'kangaroo') this.tone({ freq: 300, dur: 0.3, gain: g * 0.8, type: 'triangle', slide: 1.3 });
+    else if (type === 'crocodile') this.tone({ freq: 60, dur: 0.6, gain: g, type: 'sawtooth', slide: 0.9 });
     else this.burst({ freq: 4000, q: 10, dur: 0.4, gain: g });
   }
   door(open) { this.tone({ freq: open ? 180 : 140, dur: 0.18, gain: 0.18, type: 'square', slide: open ? 1.4 : 0.7 }); this.burst({ freq: 900, q: 3, dur: 0.12, gain: 0.25 }); }

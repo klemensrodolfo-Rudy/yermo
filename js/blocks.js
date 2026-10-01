@@ -33,6 +33,8 @@ export const TILES = [
   'press_side', 'press_top', 'safe_front', 'safe_side', 'flame', 'mine_top', 'garage_side', 'garage_top', 'flag_check', 'flag_start',
   'cone', 'pipe', 'pump_side', 'pump_top', 'sprinkler', 'elevator_top', 'elevator_side', 'sign', 'sand_toxic', 'hull', 'mil_fence',
   'camo', 'abyss', 'portal', 'asphalt_under',
+  // v8
+  'leaves',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -44,13 +46,14 @@ export const tileUV = (ti) => { const [x, y] = tileRect(ti), s = ATLAS.size; ret
 // tinte del pasto por bioma (128 = neutro; multiplica el color de los píxeles marcados)
 export const BIOME_TINT = [
   [122, 112, 96], [130, 122, 104], [108, 120, 78], [116, 118, 102], [120, 138, 84], [104, 146, 98],
-  [126, 104, 140], [116, 124, 126], [106, 132, 100], [126, 114, 94], [112, 116, 92], [128, 128, 128],
+  [126, 104, 140], [116, 124, 126], [106, 132, 100], [126, 114, 94], [112, 116, 92], [128, 128, 128], [134, 128, 82],
 ];
 // banderas por tile para el shader: 1 variación completa (rota/espeja por bloque), 2 sólo espejo, 4 agua que fluye,
 // 8 lava, 16 se mece con el viento, 32 remolino (portal), 64 llama que titila
 export const TILE_FLAGS = new Uint8Array(256);
 {
   const set = (names, f) => names.split(' ').forEach((n) => { if (T[n] != null) TILE_FLAGS[T[n]] |= f; });
+  set('leaves', 16);
   set('bedrock stone deepstone dirt ash mud gravel coal_ore scrap_ore copper_ore uranium_ore trinitite grass_top deadgrass_top snow_top sand_toxic rubble abyss mycelium_top concrete asphalt asphalt_under track camo mush_cap_blue mush_cap_purple log_top ice oak_barrel_top', 1);
   set('brick concrete_cracked planks log_side grass_side deadgrass_side snow_side mycelium_side rust metal_plate hull sandbag tile_white crate_side crate_top farmland mush_stem bar_top cloth', 2);
   set('clean_water toxic_water', 4);
@@ -273,6 +276,8 @@ def(198, { name: 'Caja militar', tex: { top: T.camo, side: T.safe_side, bottom: 
 def(199, { name: 'Piso del mercado', tex: tx(T.pit_floor), hardness: 2, tool: 'pick', drop: 9, marker: 'undercity', hidden: true });
 def(200, { name: 'Caja del abismo', tex: { top: T.abyss, side: T.medcrate_side, bottom: T.abyss }, hardness: 2, tool: 'pick', drop: 0, loot: 'abyss', light: 3 });
 def(201, { name: 'Andén del subte', tex: tx(T.concrete), hardness: 2, tool: 'pick', tier: 1, drop: 9, marker: 'train', hidden: true });
+def(202, { name: 'Hojas de acacia', tex: tx(T.leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0 });
+def(203, { name: 'Plaza del bioparque', tex: tx(T.concrete), hardness: 2, tool: 'pick', tier: 1, drop: 9, marker: 'zoo', hidden: true });
 def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12, portal: true });
 
 // colisión: normalizar a lista de cajas

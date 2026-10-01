@@ -853,6 +853,13 @@ HD.tile_white = (t) => {
   });
   crackLine(t, 1);
 };
+// hojas de acacia: matas con huecos (recorte) que se tiñen con el bioma
+HD.leaves = (t) => t.fill((x, y) => {
+  const c = t.cells(x, y, 6, 12, 1), n = t.fbm(x, y, 8, 2, 4);
+  if (c.f1 > 0.48 || (n < 0.32 && c.f1 > 0.3)) return { c: [60, 70, 40], a: 0 };
+  t.M(x, y, 200); t.H(x, y, 1 - c.f1);
+  return scl(mixc([96, 120, 56], [64, 88, 40], c.rid), 1.15 - c.f1 * 0.6 + (t.rnd() - 0.5) * 0.08);
+});
 HD.rubble = (t) => t.fill((x, y) => {
   const c = t.cells(x, y, 5, 3, 1), e = c.f2 - c.f1;
   const pal = [[146, 142, 136], [120, 116, 110], [128, 72, 56], [96, 92, 86]];

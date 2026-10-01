@@ -6,8 +6,8 @@ const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a
 const lerp = (a, b, t) => a + (b - a) * t;
 const mod = (a, n) => ((a % n) + n) % n;
 
-export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11 };
-export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo'];
+export const BIOME = { FOREST: 0, DESERT: 1, SWAMP: 2, CITY: 3, CRATER: 4, BREW: 5, MUSHROOM: 6, TUNDRA: 7, CIRCUIT: 8, SCRAPSEA: 9, MILITARY: 10, ABYSS: 11, ZOO: 12 };
+export const BIOME_NAMES = ['Bosque muerto', 'Desierto de ceniza', 'Pantano tóxico', 'Ciudad en ruinas', 'Cráter', 'Valle cervecero', 'Bosque de hongos', 'Tundra nuclear', 'Autódromo abandonado', 'Mar de chatarra', 'Zona militar', 'El Abismo', 'Bioparque'];
 // El Abismo: mazmorra infinita lejos del mundo normal; cada nivel ocupa ABYSS_W bloques en x
 export const ABYSS_X = 300000, ABYSS_W = 256;
 export const abyssLevel = (x) => (x >= ABYSS_X - 64 ? Math.floor((x - ABYSS_X) / ABYSS_W) + 1 : 0);
@@ -26,6 +26,9 @@ const SETTLE_CELL = 260;
 const LAB_CELL = 330;
 const TRACK_W = 5; // medio ancho de la pista
 const SHIP_CELL = 70, PLANE_CELL = 110, MIL_CELL = 64, UNDER_CELL = 900;
+const ZOO_CELL = 1000, ZOO_R = 88;
+// recintos del bioparque: 0-3 anillo interior, 4-7 exterior (en sentido antihorario desde +x)
+export const ZOO_SECTORS = ['LEONES', 'JIRAFAS Y CEBRAS', 'ELEFANTES Y RINOCERONTES', 'GORILAS Y MONOS', 'HIPOPÓTAMOS Y COCODRILOS', 'PINGÜINOS Y OSOS', 'REPTILES', 'AVES Y CANGUROS'];
 
 export class WorldGen {
   constructor(seed, type = 'normal') {
@@ -64,6 +67,168 @@ export class WorldGen {
       if (d < r * 1.5 && (!best || d / r < best.d / best.r)) best = { d, r };
     }
     return best;
+  }
+
+  // ---------- bioparque (zoológico abandonado) ----------
+  zooAt(gx, gz) {
+    const s = this.seed, k = gx + ',' + gz;
+    this._zoo = this._zoo || new Map();
+    if (this._zoo.has(k)) return this._zoo.get(k);
+    let res = null;
+    if (hash2(s + 301, gx, gz) < 0.5) {
+      const x = Math.floor((gx + 0.3 + hash2(s + 302, gx, gz) * 0.4) * ZOO_CELL);
+      const z = Math.floor((gz + 0.3 + hash2(s + 303, gx, gz) * 0.4) * ZOO_CELL);
+      const c = this.baseColumn(x, z);
+      if ([BIOME.FOREST, BIOME.DESERT, BIOME.BREW].includes(c.biome) && c.h > SEA + 2 && !this.circuitNear(x, z)) res = { id: k, x, z, y: Math.min(60, Math.max(c.h, SEA + 3)), R: ZOO_R };
+    }
+    this._zoo.set(k, res);
+    return res;
+  }
+  zooNear(wx, wz) {
+    const gx = Math.floor(wx / ZOO_CELL), gz = Math.floor(wz / ZOO_CELL);
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
+      const z = this.zooAt(gx + dx, gz + dz);
+      if (z && Math.abs(wx - z.x) <= z.R + 24 && Math.abs(wz - z.z) <= z.R + 24 && Math.hypot(wx - z.x, wz - z.z) <= z.R + 24) return z;
+    }
+    return null;
+  }
+  nearestZoo(x, z, cells = 3) {
+    let best = null;
+    const gx0 = Math.floor(x / ZOO_CELL), gz0 = Math.floor(z / ZOO_CELL);
+    for (let gx = gx0 - cells; gx <= gx0 + cells; gx++) for (let gz = gz0 - cells; gz <= gz0 + cells; gz++) {
+      const c = this.zooAt(gx, gz);
+      if (c) { const d = Math.hypot(c.x - x, c.z - z); if (!best || d < best.d) best = { d, c }; }
+    }
+    return best?.c ?? null;
+  }
+  // centro de cada recinto y posición de su cartel
+  zooSectors(z) {
+    const out = [];
+    for (let i = 0; i < 8; i++) {
+      const outer = i >= 4, q = i % 4, mid = (q + 0.5) * Math.PI / 2;
+      const rad = outer ? (61 + z.R - 3) / 2 : 42;
+      const signR = outer ? 61.5 : 29.5;
+      out.push({ i, name: ZOO_SECTORS[i], cx: z.x + Math.round(Math.cos(mid) * rad), cz: z.z + Math.round(Math.sin(mid) * rad), sx: z.x + Math.round(Math.cos(mid) * signR), sz: z.z + Math.round(Math.sin(mid) * signR) });
+    }
+    return out;
+  }
+  zooSigns(z) {
+    const list = this.zooSectors(z).map((s) => ({ x: s.sx, z: s.sz, text: s.name }));
+    list.push({ x: z.x + 3, z: z.z + z.R - 9, text: 'BIOPARQUE · CERRADO POR FIN DEL MUNDO' });
+    list.push({ x: z.x - 3, z: z.z + 9, text: 'NO DAR DE COMER A LOS ANIMALES (YA NO HAY QUIÉN LOS CUIDE)' });
+    return list;
+  }
+  zoos(cx, cz, set, colAt) {
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, s = this.seed;
+    const z = this.zooNear(x0 + 8, z0 + 8) || this.zooNear(x0, z0) || this.zooNear(x0 + 15, z0 + 15) || this.zooNear(x0 + 15, z0) || this.zooNear(x0, z0 + 15);
+    if (!z) return;
+    const S = (wx, yy, wz, id) => set(wx - x0, yy, wz - z0, id);
+    const sectors = this.zooSectors(z);
+    const signs = this.zooSigns(z);
+    const sectorOf = (dx, dz, r) => {
+      if (r < 29.5 || r > z.R - 3 || (r > 54.5 && r < 61.5)) return -1;
+      let a = Math.atan2(dz, dx); if (a < 0) a += Math.PI * 2;
+      return Math.floor(a / (Math.PI / 2)) % 4 + (r > 58 ? 4 : 0);
+    };
+    // árboles: celdas de 9 bloques en los recintos de sabana
+    const TREE_SECT = new Set([1, 3, 7, 0]);
+    const treeAt = (gx, gz) => {
+      if (hash2(s + 311, gx, gz) > 0.55) return null;
+      const tx = gx * 9 + 2 + Math.floor(hash2(s + 312, gx, gz) * 5), tz = gz * 9 + 2 + Math.floor(hash2(s + 313, gx, gz) * 5);
+      const dx = tx - z.x, dz = tz - z.z, r = Math.hypot(dx, dz), sec = sectorOf(dx, dz, r);
+      if (!TREE_SECT.has(sec) || (sec === 0 && hash2(s + 314, gx, gz) > 0.3)) return null;
+      if (Math.abs(dx) < 6 || Math.abs(dz) < 6) return null;
+      return { x: tx, z: tz, y: colAt(tx, tz).h, hgt: 4 + Math.floor(hash2(s + 315, gx, gz) * 3) };
+    };
+    for (let lz = 0; lz < CHUNK; lz++) for (let lx = 0; lx < CHUNK; lx++) {
+      const wx = x0 + lx, wz = z0 + lz;
+      const dx = wx - z.x, dz = wz - z.z, r = Math.hypot(dx, dz);
+      if (r > z.R) continue;
+      const y = colAt(wx, wz).h;
+      for (let yy = y + 1; yy < y + 10; yy++) S(wx, yy, wz, 0); // despejar
+      const cracked = hash2(s + 320, wx, wz);
+      const pathBlock = cracked < 0.07 ? 84 : cracked < 0.25 ? 10 : 9;
+      // caminos: dos anillos y una cruz; plaza central
+      const onRing = Math.abs(r - 26) < 1.7 || Math.abs(r - 58) < 1.7;
+      const onSpoke = (Math.abs(dx) < 1.7 || Math.abs(dz) < 1.7) && r > 12;
+      if (r < 13) S(wx, y, wz, hash2(s + 321, wx, wz) < 0.15 ? 10 : 9);
+      else if (onRing || onSpoke) S(wx, y, wz, pathBlock);
+      // fuente de la plaza
+      if (r < 3.6) { S(wx, y, wz, r < 2.6 ? 47 : 13); if (r >= 2.6) S(wx, y + 1, wz, 59); }
+      if (dx === 0 && dz === 0) { S(wx, y, wz, 9); S(wx, y + 1, wz, 9); S(wx, y + 2, wz, 9); S(wx, y + 3, wz, 28); }
+      if (dx === 0 && dz === 5) S(wx, y, wz, 203); // marcador: carteles y animales
+      // bancos en la plaza
+      if (Math.abs(r - 10) < 0.5 && (Math.abs(dx) < 1 || Math.abs(dz) < 1) === false && hash2(s + 322, wx, wz) < 0.25) S(wx, y + 1, wz, 60);
+      // faroles a lo largo de los caminos
+      if (Math.abs(r - 28.2) < 0.5 && hash2(s + 323, wx, wz) < 0.06) { for (let k = 1; k <= 3; k++) S(wx, y + k, wz, 85); S(wx, y + 4, wz, 28); }
+      // cercos de los recintos (con tramos caídos)
+      const sec = sectorOf(dx, dz, r);
+      const edge = (Math.abs(r - 29.5) < 0.5 || Math.abs(r - 54.5) < 0.5 || Math.abs(r - 61.5) < 0.5 || Math.abs(r - (z.R - 3)) < 0.5 || ((Math.abs(dx) === 3 || Math.abs(dz) === 3) && r > 29 && r < z.R - 3 && !(r > 55 && r < 61)));
+      if (edge && !onSpoke && !onRing && hash2(s + 324, wx, wz) > 0.2) {
+        const wall = sec === 2 || sec === 4 || (sec < 0 && r > 54 && r < 62);
+        S(wx, y + 1, wz, wall ? 13 : 85);
+      }
+      if (sec < 0 || edge) continue;
+      const S0 = sectors[sec], ds = Math.hypot(wx - S0.cx, wz - S0.cz);
+      // temas de cada recinto
+      if (sec === 0 && ds < 5) { for (let k = 1; k <= Math.round((5 - ds) * 0.9); k++) S(wx, y + k, wz, 2); }
+      if (sec === 0 && ds >= 5 && ds < 9 && hash2(s + 325, wx, wz) < 0.4) S(wx, y, wz, 6);
+      if ((sec === 2 && ds < 6) || (sec === 4 && ds < 10) || (sec === 7 && ds < 4)) { S(wx, y, wz, 47); S(wx, y - 1, wz, 47); }
+      else if ((sec === 2 && ds < 7.5) || (sec === 4 && ds < 12)) S(wx, y, wz, 7);
+      if (sec === 5) {
+        S(wx, y, wz, ds < 6 ? 47 : ds < 7.5 ? 148 : 147);
+        if (ds < 6) S(wx, y - 1, wz, 47);
+        if (ds > 9 && ds < 11 && hash2(s + 326, wx, wz) < 0.3) S(wx, y + 1, wz, 148);
+      }
+      if (sec === 6) {
+        // casa de reptiles: paredes de hormigón, ventanales y techo
+        const hx = wx - S0.cx, hz = wz - S0.cz;
+        if (Math.abs(hx) <= 6 && Math.abs(hz) <= 4) {
+          const wallR = Math.abs(hx) === 6 || Math.abs(hz) === 4;
+          S(wx, y, wz, wallR ? 9 : 192);
+          for (let k = 1; k <= 4; k++) S(wx, y + k, wz, k === 4 ? 59 : wallR ? (k === 2 && (hx + hz) % 2 === 0 ? 14 : 9) : 0);
+          if (wallR && Math.abs(hx) <= 1 && hz === -4) { S(wx, y + 1, wz, 0); S(wx, y + 2, wz, 0); }
+          if (!wallR && Math.abs(hz) === 3 && Math.abs(hx) < 5 && hx % 3 === 0) S(wx, y + 1, wz, 14);
+          if (hx === 0 && hz === 0) S(wx, y + 3, wz, 28);
+        } else if (hash2(s + 327, wx, wz) < 0.5) S(wx, y, wz, 192);
+      }
+      if (sec === 3) {
+        // plataformas para los monos
+        const hx = wx - S0.cx, hz = wz - S0.cz;
+        if (Math.abs(hx) <= 3 && Math.abs(hz) <= 3) { S(wx, y + 4, wz, 60); if (Math.abs(hx) === 3 && Math.abs(hz) === 3) for (let k = 1; k < 4; k++) S(wx, y + k, wz, 15); }
+      }
+    }
+    // carteles
+    for (const sg of signs) if (sg.x >= x0 && sg.x < x0 + 16 && sg.z >= z0 && sg.z < z0 + 16) S(sg.x, colAt(sg.x, sg.z).h + 1, sg.z, 191);
+    // arco de entrada (sur)
+    for (let lz = 0; lz < CHUNK; lz++) for (let lx = 0; lx < CHUNK; lx++) {
+      const wx = x0 + lx, wz = z0 + lz, dx = wx - z.x, dz = wz - z.z;
+      if (dz !== z.R - 6 || Math.abs(dx) > 4) continue;
+      const y = colAt(wx, wz).h;
+      if (Math.abs(dx) >= 3) for (let k = 1; k <= 6; k++) S(wx, y + k, wz, 13);
+      S(wx, y + 7, wz, 13); if (Math.abs(dx) < 3) S(wx, y + 6, wz, 59);
+    }
+    // boletería
+    for (let lz = 0; lz < CHUNK; lz++) for (let lx = 0; lx < CHUNK; lx++) {
+      const wx = x0 + lx, wz = z0 + lz, hx = wx - z.x - 7, hz = wz - z.z - (z.R - 12);
+      if (hx < 0 || hx > 3 || hz < 0 || hz > 3) continue;
+      const y = colAt(wx, wz).h, wall = hx === 0 || hx === 3 || hz === 0 || hz === 3;
+      S(wx, y, wz, 9);
+      for (let k = 1; k <= 3; k++) S(wx, y + k, wz, k === 3 ? 59 : wall ? (k === 2 && hx === 0 ? 14 : 9) : 0);
+    }
+    // acacias
+    const gx0 = Math.floor((x0 - 4) / 9), gx1 = Math.floor((x0 + 20) / 9), gz0 = Math.floor((z0 - 4) / 9), gz1 = Math.floor((z0 + 20) / 9);
+    for (let gx = gx0; gx <= gx1; gx++) for (let gz = gz0; gz <= gz1; gz++) {
+      const t = treeAt(gx, gz);
+      if (!t) continue;
+      for (let k = 1; k <= t.hgt; k++) S(t.x, t.y + k, t.z, 15);
+      for (let ox = -3; ox <= 3; ox++) for (let oz = -3; oz <= 3; oz++) {
+        const d = Math.hypot(ox, oz);
+        if (d <= 3.2 && hash3(s + 316, t.x + ox, t.y, t.z + oz) > 0.12) S(t.x + ox, t.y + t.hgt + 1, t.z + oz, 202);
+        if (d <= 1.8) S(t.x + ox, t.y + t.hgt + 2, t.z + oz, 202);
+      }
+      S(t.x, t.y + t.hgt + 1, t.z, 15);
+    }
   }
 
   // ---------- autódromo ----------
@@ -117,6 +282,14 @@ export class WorldGen {
 
   column(wx, wz) {
     if (wx >= ABYSS_X - 64) return { h: 120, biome: BIOME.ABYSS, urbanT: 0, cityLevel: 47, temp: 0, level: abyssLevel(wx) };
+    const zoo = this.zooNear(wx, wz);
+    if (zoo) {
+      const b = this.baseColumn(wx, wz);
+      const d = Math.hypot(wx - zoo.x, wz - zoo.z);
+      const t = smooth(zoo.R + 24, zoo.R - 2, d);
+      const zh = zoo.y + Math.round(this.nDetail.noise2(wx / 34, wz / 34) * 1.4);
+      return { ...b, h: Math.round(lerp(b.h, zh, t)), biome: d < zoo.R ? BIOME.ZOO : b.biome, urbanT: d < zoo.R ? 0 : b.urbanT, zoo };
+    }
     const circ = this.circuitNear(wx, wz);
     if (circ) {
       const b = this.baseColumn(wx, wz);
@@ -240,6 +413,7 @@ export class WorldGen {
             case BIOME.MUSHROOM: id = depth === 0 ? (h < SEA + 1 ? 7 : 143) : 4; break;
             case BIOME.TUNDRA: id = depth === 0 ? (h < SEA + 1 ? 8 : 147) : depth < 3 ? 4 : 2; break;
             case BIOME.CIRCUIT: id = depth === 0 ? 5 : depth < 3 ? 4 : 2; break;
+            case BIOME.ZOO: id = depth === 0 ? 84 : depth < 3 ? 4 : 2; break;
             case BIOME.SCRAPSEA: id = depth < 3 ? 192 : 4; break;
             case BIOME.MILITARY: id = depth === 0 ? (hash2(seed + 191, wx, wz) < 0.004 ? 182 : hash2(seed + 192, wx, wz) < 0.3 ? 8 : 5) : 4; break;
             default:
@@ -314,7 +488,7 @@ export class WorldGen {
       if (c.h <= SEA) continue;
       const dens = c.biome === BIOME.FOREST ? 0.015 : c.biome === BIOME.SWAMP ? 0.008 : c.biome === BIOME.DESERT ? 0.0015 : c.biome === BIOME.BREW ? 0.004 : c.biome === BIOME.TUNDRA ? 0.004 : 0;
       if (c.biome === BIOME.MUSHROOM) { if (r < 0.011) this.giantMushroom(set, setAir, wx - x0, c.h + 1, wz - z0, wx, wz); continue; }
-      if (c.biome === BIOME.CIRCUIT) continue;
+      if (c.biome === BIOME.CIRCUIT || c.biome === BIOME.ZOO) continue;
       if (c.biome === BIOME.CITY) continue;
       const lx = wx - x0, lz = wz - z0;
       if (r < dens) this.deadTree(set, setAir, lx, c.h + 1, lz, wx, wz);
@@ -357,6 +531,7 @@ export class WorldGen {
     this.radioTowers(cx, cz, set);
     this.breweries(cx, cz, set);
     this.circuits(cx, cz, set, colAt);
+    this.zoos(cx, cz, set, colAt);
     this.settlements(cx, cz, set);
     this.labs(cx, cz, set);
     this.wrecks(cx, cz, set);
@@ -1085,6 +1260,10 @@ export class WorldGen {
   }
 
   findSpawn(pref) {
+    if (pref === 'zoo') {
+      const z = this.nearestZoo(0, 0);
+      if (z) return { x: z.x + 0.5, y: z.y + 2, z: z.z + z.R - 10.5 };
+    }
     if (pref === 'circuit') {
       const c = this.nearestCircuit(0, 0);
       if (c) return { x: c.x + 5.5, y: c.y + 1.5, z: c.z + c.R + TRACK_W + 2.5 };

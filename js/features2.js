@@ -7,6 +7,15 @@ import * as THREE from 'three';
 import { BLOCKS, ITEMS, itemName, SOLID, LIQ, FLAMMABLE, PLACEABLE, CROPS } from './blocks.js';
 import { BIOME, BIOME_NAMES, ABYSS_X, ABYSS_W, abyssLevel, abyssStart } from './worldgen.js';
 import { VEHICLE_TYPES } from './entities.js';
+
+// animales que se domestican con comida y después se montan con una Montura
+export const TAME = {
+  boar: { food: [285], veh: 'mboar', name: 'jabalí', hint: 'dale papas' },
+  wolf: { food: [271, 272], veh: 'mwolf', name: 'lobo', pet: true, hint: 'dale carne' },
+  zebra: { food: [282, 285], veh: 'mzebra', name: 'cebra', hint: 'dale cebada o papas' },
+  ostrich: { food: [281, 282], veh: 'mostrich', name: 'avestruz', hint: 'dale semillas o cebada' },
+  elephant: { food: [282, 285], veh: 'melephant', name: 'elefante', hint: 'dale cebada o papas', hard: true },
+};
 import { EMOTES } from './net.js';
 import { BEERS } from './npc.js';
 
@@ -1134,25 +1143,25 @@ export function createFeatures2(ctx) {
     const t = m.type;
     if (t === 'worker') { openWorker(m); return true; }
     if (t === 'leader' || t === 'trader' || t === 'settler' || t === 'instructor') { p.onEvent('talk', t); return false; }
-    if (t === 'boar' || t === 'wolf') {
-      const tamed = t === 'boar' ? m.tamed : m.owner === p.name;
+    const TM = TAME[t];
+    if (TM) {
+      const tamed = TM.pet ? m.owner === p.name : m.tamed;
       if (hand?.id === 360) {
-        if (!tamed) { flash(`Primero domesticalo (${t === 'boar' ? 'dale papas' : 'dale carne'})`); return true; }
+        if (!tamed) { flash(`Primero domesticalo (${TM.hint})`); return true; }
         if (!auth()) { flash('En línea, sólo el anfitrión puede ensillar por ahora'); return true; }
         g.mobs.remove(m);
-        const v = g.vehicles.spawn(m.pos.clone(), m.yaw, t === 'boar' ? 'mboar' : 'mwolf');
+        g.vehicles.spawn(m.pos.clone(), m.yaw, TM.veh);
         if (!p.creative) inv.consumeHand();
-        flash(`¡Ensillaste al ${t === 'boar' ? 'jabalí' : 'lobo'}! F para montar, Espacio para saltar.`); sfx.craft(); p.onEvent('v6', 'montura');
-        void v;
+        flash(`¡Ensillaste al ${TM.name}! F para montar${VEHICLE_TYPES[TM.veh].jump ? ', Espacio para saltar' : ''}.`); sfx.craft();
+        p.onEvent('v6', 'montura'); if (t === 'elephant') p.onEvent('v6', 'elefante');
         return true;
       }
-      const food = t === 'boar' ? [285] : [271, 272];
-      if (!tamed && hand && food.includes(hand.id)) {
+      if (!tamed && hand && TM.food.includes(hand.id)) {
         inv.consumeHand();
-        if (Math.random() < (hand.id === 272 ? 0.55 : 0.34)) {
-          if (t === 'boar') { m.tamed = true; m.keep = true; m.fleeT = 0; } else { m.owner = p.name; m.keep = true; }
+        if (Math.random() < (hand.id === 272 ? 0.55 : TM.hard ? 0.2 : 0.34)) {
+          if (TM.pet) { m.owner = p.name; m.keep = true; } else { m.tamed = true; m.keep = true; m.fleeT = 0; m.provoked = false; }
           particles.burst(m.pos.x - 0.5, m.pos.y + 1, m.pos.z - 0.5, [255, 90, 120], 10, 0.5);
-          flash(`¡Domesticaste al ${t === 'boar' ? 'jabalí' : 'lobo'}! Con una Montura (clic derecho) lo podés montar.`); p.onEvent('tame');
+          flash(`¡Domesticaste al ${TM.name}! Con una Montura (clic derecho) lo podés montar.`); p.onEvent('tame');
         } else flash('Come, pero todavía desconfía… seguí intentando');
         return true;
       }
@@ -1171,6 +1180,24 @@ export function createFeatures2(ctx) {
       for (let i = 0; i < 2; i++) { const s = g.mobs.add('settler', x + 0.5 + (i ? 3 : -3), y + 1, z + 3.5); s.home = s.pos.clone(); }
       return true;
     }
+    if (type === 'zoo') {
+      const zoo = g.gen.zooNear(x, z);
+      if (!zoo) return true;
+      for (const sg of g.gen.zooSigns(zoo)) {
+        const sy = g.gen.column(sg.x, sg.z).h + 1, k = k3(sg.x, sy, sg.z);
+        if (!sim.containers.get(k)?.text) { sim.containers.set(k, { type: 'sign', text: sg.text }); sim.touch(k); }
+      }
+      const SECT = [['lion', 2], ['giraffe', 2, 'zebra', 3], ['elephant', 2, 'rhino', 1], ['gorilla', 1, 'monkey', 3], ['hippo', 1, 'crocodile', 2], ['penguin', 4, 'bear', 1], ['snake', 3], ['ostrich', 2, 'flamingo', 3, 'kangaroo', 2]];
+      for (const s of g.gen.zooSectors(zoo)) {
+        const list = SECT[s.i];
+        for (let k = 0; k < list.length; k += 2) for (let n = 0; n < list[k + 1]; n++) {
+          const ax = s.cx + (Math.random() - 0.5) * 10, az = s.cz + (Math.random() - 0.5) * 10;
+          const m = g.mobs.add(list[k], ax, g.gen.column(Math.floor(ax), Math.floor(az)).h + 1.5, az);
+          m.keep = true; m.home = m.pos.clone();
+        }
+      }
+      return true;
+    }
     if (type === 'train') {
       for (const v of g.vehicles.list.values()) if (v.type === 'train' && Math.hypot(v.pos.x - x, v.pos.z - z) < 90) return true;
       g.vehicles.spawn(new THREE.Vector3(x + 0.5, y + 1.02, z + 0.5), 0, 'train'); return true;
@@ -1184,6 +1211,9 @@ export function createFeatures2(ctx) {
     const list = [], R = 1400;
     for (let gx = Math.floor((p.pos.x - R) / 900); gx <= Math.floor((p.pos.x + R) / 900); gx++) for (let gz = Math.floor((p.pos.z - R) / 900); gz <= Math.floor((p.pos.z + R) / 900); gz++) {
       const u = g.gen.undercityAt(gx, gz); if (u) list.push({ x: u.x + 2, z: u.z + 2, label: 'Ciudad subterránea', color: '#b07aff', kind: 'poi' });
+    }
+    for (let gx = Math.floor((p.pos.x - R) / 1000); gx <= Math.floor((p.pos.x + R) / 1000); gx++) for (let gz = Math.floor((p.pos.z - R) / 1000); gz <= Math.floor((p.pos.z + R) / 1000); gz++) {
+      const zz = g.gen.zooAt(gx, gz); if (zz) list.push({ x: zz.x, z: zz.z, label: 'Bioparque', color: '#e8c060', kind: 'poi' });
     }
     poiCache = { t: now, list };
     return list;

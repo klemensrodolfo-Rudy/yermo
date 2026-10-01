@@ -18,7 +18,7 @@ import { Achievements, ACHIEVEMENTS } from './achievements.js';
 import { Weather, Particles, WEATHER_NAMES } from './fx.js';
 import { Input } from './input.js';
 import { createFeatures } from './features.js';
-import { createFeatures2 } from './features2.js';
+import { createFeatures2, TAME } from './features2.js';
 import { Race } from './race.js';
 import { Voice } from './voice.js';
 import { VEHICLE_TYPES } from './entities.js';
@@ -889,6 +889,7 @@ const SEED_PRESETS = [
   { id: '317b', seed: 317, type: 'brew', name: '🍺 Ruta del Lúpulo', desc: 'Mundo cervecero con una ciudad en ruinas a unos 110 bloques para saquear.' },
   { id: 'settlement', seed: 3, type: 'normal', spawn: 'settlement', name: '🏘 Asentamiento', desc: 'Arrancás dentro de un pueblo de sobrevivientes con su líder, que da misiones y comercia.' },
   { id: 'circuit', seed: 1, type: 'normal', spawn: 'circuit', name: '🏁 Autódromo', desc: 'Arrancás en los boxes de un autódromo abandonado: autos, motos, carreras y el instructor.' },
+  { id: 'zoo', seed: 5, type: 'normal', spawn: 'zoo', name: '🦁 Bioparque', desc: 'Arrancás en la entrada de un zoológico abandonado: leones, jirafas, elefantes, cebras, gorilas, pingüinos, hipopótamos y más andan sueltos. Algunos se domestican y se montan.' },
   { id: 'custom', name: '✏ Personalizada…', desc: 'Escribí tu propia semilla (número o palabra). La misma semilla genera siempre el mismo mundo.' },
 ];
 for (const p of SEED_PRESETS) { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; $('#wSeedSel').appendChild(o); }
@@ -1210,7 +1211,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '7.6 · 2026-10-01';
+const VERSION = '8.0 · 2026-10-01';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1321,8 +1322,9 @@ function loop(now) {
     else if (mt?.def.npc === 'settler') hint = 'Clic derecho: hablar';
     else if (mt?.type === 'dog') hint = mt.owner === player.name ? 'Clic derecho: sentarse / seguirte' : 'Dale carne para domesticarlo (clic derecho)';
     else if (mt?.type === 'worker') hint = 'Clic derecho: hablar con tu empleado';
-    else if (mt?.type === 'boar') hint = mt.tamed ? 'Clic derecho con una Montura: ensillar' : 'Dale papas para domesticarlo (clic derecho)';
-    else if (mt?.type === 'wolf' && mt.owner === player.name) hint = 'Clic derecho con una Montura: ensillar';
+    else if (mt && TAME[mt.type]) { const TM = TAME[mt.type], tamed = TM.pet ? mt.owner === player.name : mt.tamed; if (tamed) hint = 'Clic derecho con una Montura: ensillar'; else if (!TM.pet || !mt.def.hostile) hint = `${mt.def.name}: ${TM.hint} para domesticarlo`; }
+    else if (mt?.def && !mt.def.hostile && !mt.def.npc) hint = mt.def.name;
+    else if (mt?.def?.neutral && !mt.provoked) hint = `${mt.def.name} · tranquilo mientras no lo molestes`;
     else if (player.vehTarget) hint = 'F: subir · clic derecho: baúl, nafta (bidón) o reparar (chatarra)';
     else if (t && active) {
       const b = BLOCKS[t.id];
@@ -1340,6 +1342,7 @@ function loop(now) {
       else if (b.elec === 'switch') hint = 'Clic derecho: accionar';
       else if (b.door) hint = 'Clic derecho: abrir / cerrar';
     }
+    if (mt && !mt.def.npc && !mt.def.human && !mt.def.boss) game.ach.event('seen', mt.type);
     if (hint !== game.hintTxt) { game.hintTxt = hint; $('#interactHint').textContent = hint; $('#interactHint').hidden = !hint; }
   }
 

@@ -63,6 +63,12 @@ Sandbox voxel postapocalíptico en 3D para el navegador. Three.js, sin dependenc
 - 🔧 **Planos de obra** (copiar y pegar construcciones, se guardan entre mundos), **cañerías, bombas y aspersores**, **ascensores**, **carteles** y **gestos** (B).
 - 🎵 **Música dinámica** según el bioma y la situación (explorar, peligro, carrera, taberna, abismo). 51 logros.
 
+**v8 — Bioparque y criaturas con textura**
+- 15 animales nuevos: león, jirafa, elefante, cebra, gorila, oso, cocodrilo, avestruz, canguro, flamenco, pingüino, hipopótamo, serpiente, mono y rinoceronte (pacíficos, neutrales y depredadores). Algunos también viven en la tundra, el pantano y el desierto.
+- **Bioparque**: zoológico abandonado con sabana, acacias, recintos rotos, estanques, pileta de pingüinos, casa de reptiles, fuente y carteles. Semilla **🦁 Bioparque**.
+- Monturas nuevas: cebra, avestruz y elefante (2 asientos y baúl).
+- Texturas en todas las criaturas (pelaje, escamas, plumas, piel, rayas, manchas) y el personaje con cara, manos, botas, cinturón y mochila.
+
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no y animales mutantes que atacan de día sí/no. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.
 
 **Gráficos v7 — texturas HD**

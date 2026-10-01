@@ -168,6 +168,16 @@ export function setupGuide(ui, getGame) {
       <h3>Pistas propias y campeonato</h3>
       <p>Poné una ${icon(185)} <b>bandera de largada</b> y varias ${icon(184)} <b>banderas de control</b> formando un circuito (se unen por cercanía, hasta 120 bloques entre sí). Los ${icon(186)} conos sirven de borde. Clic derecho en la bandera de largada para correr.</p>
       <p><b>Campeonato</b> (5 fichas): 5 fechas de 2 vueltas contra Rolo, La Chispa, Tuerca y Nafta Gómez. Puntos 10-6-4-3-2-1. El campeón gana un trofeo y 30 fichas.</p>`,
+    'Bioparque': () => `
+      <p>Después del colapso nadie cuidó el <b>bioparque</b>: los animales andan sueltos entre los recintos rotos (◆ dorado en el mapa). Con la semilla <b>🦁 Bioparque</b> arrancás en la entrada.</p>
+      <h3>Quién es quién</h3>
+      <p><b>Pacíficos</b> (huyen si los atacás): jirafa, cebra, avestruz, flamenco, pingüino, mono.<br>
+      <b>Neutrales</b> (tranquilos hasta que los molestás, y entonces pegan fuerte): elefante, rinoceronte (embiste), hipopótamo, gorila, canguro.<br>
+      <b>Depredadores</b> (atacan solos): león, oso, cocodrilo, serpiente (venenosa).</p>
+      <p>Algunos escaparon: hay <b>osos y pingüinos</b> en la tundra, <b>cocodrilos y flamencos</b> en el pantano y <b>serpientes</b> en el desierto. Con la regla «animales mutantes atacan de día» desactivada, de día no atacan.</p>
+      <h3>Domesticar y montar</h3>
+      <p>Dales de comer (clic derecho con la comida en la mano) hasta que acepten, y después usá una ${icon(360)} <b>Montura</b>:<br>
+      cebra (cebada o papas), avestruz (semillas o cebada), elefante (cebada o papas; tarda más, pero carga 2 personas y tiene baúl), jabalí (papas) y lobo (carne).</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

@@ -3,6 +3,7 @@
 //  · Modo servidor dedicado (WebSocket, `node server.js --dedicado`): el servidor guarda el mundo y
 //    elige a un jugador como autoridad para la simulación; si se va, pasa a otro.
 import * as THREE from 'three';
+import { patternTex, scaleBoxUV } from './entities.js';
 
 const PREFIX = 'yermo-v4-';
 let PeerCtor = null;
@@ -45,20 +46,47 @@ export class Avatar {
     this.dead = false; this.creative = false; this.phase = 0; this.seen = false; this.riding = 0;
     const g = new THREE.Group();
     const col = COLORS[idx % COLORS.length];
-    const M = (c) => new THREE.MeshLambertMaterial({ color: c });
-    const B = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); return o; };
-    const jacket = M(col), pants = M(0x3a3530), skin = M(0xb08a6a), mask = M(0x2a2a2a), lens = new THREE.MeshBasicMaterial({ color: 0x9cff3a });
+    // materiales con textura (tela, jean, piel, cuero) que se repite según el tamaño de cada pieza
+    const M = (c, pat) => new THREE.MeshLambertMaterial({ color: c, map: pat ? patternTex(pat) : null });
+    const B = (w, h, d, m, x, y, z) => { const geo = new THREE.BoxGeometry(w, h, d); if (m.map) scaleBoxUV(geo, w, h, d, 3); const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); return o; };
+    const jacket = M(col, 'cloth'), pants = M(0x3a3530, 'denim'), skin = M(0xb08a6a, 'skin'), mask = M(0x2a2a2a, 'skin'), lens = new THREE.MeshBasicMaterial({ color: 0x9cff3a });
+    const boot = M(0x2a2018, 'skin'), leather = M(0x5a3e26, 'skin'), dark = M(0x1e1a16), white = M(0xe8e4dc), hairM = M(0x3a2a1a, 'fur'), lip = M(0x7a4038);
+    const trim = M(0x2a2622, 'cloth');
     this.mats = { jacket, pants, skin, mask, lens };
     this.legs = [];
-    for (const x of [0.13, -0.13]) { const l = new THREE.Group(); l.position.set(x, 0.75, 0); l.add(B(0.24, 0.75, 0.24, pants, 0, -0.375, 0)); g.add(l); this.legs.push(l); }
+    for (const x of [0.13, -0.13]) {
+      const l = new THREE.Group(); l.position.set(x, 0.75, 0);
+      l.add(B(0.24, 0.75, 0.24, pants, 0, -0.375, 0));
+      l.add(B(0.27, 0.18, 0.32, boot, 0, -0.68, -0.03)); // botas
+      g.add(l); this.legs.push(l);
+    }
     g.add(B(0.52, 0.72, 0.28, jacket, 0, 1.11, 0));
+    g.add(B(0.04, 0.62, 0.02, trim, 0, 1.12, -0.145)); // cierre
+    g.add(B(0.14, 0.12, 0.02, trim, 0.15, 0.98, -0.145)); g.add(B(0.14, 0.12, 0.02, trim, -0.15, 0.98, -0.145)); // bolsillos
+    g.add(B(0.54, 0.08, 0.3, leather, 0, 0.79, 0)); g.add(B(0.08, 0.07, 0.02, M(0xb8a060), 0, 0.79, -0.155)); // cinturón y hebilla
+    g.add(B(0.4, 0.46, 0.18, leather, 0, 1.13, 0.23)); g.add(B(0.44, 0.13, 0.13, M(0x6a6a4a, 'cloth'), 0, 1.42, 0.25)); // mochila y bolsa de dormir
     this.arms = [];
-    for (const x of [0.36, -0.36]) { const a = new THREE.Group(); a.position.set(x, 1.44, 0); a.add(B(0.18, 0.7, 0.18, jacket, 0, -0.33, 0)); g.add(a); this.arms.push(a); }
+    for (const x of [0.36, -0.36]) {
+      const a = new THREE.Group(); a.position.set(x, 1.44, 0);
+      a.add(B(0.18, 0.7, 0.18, jacket, 0, -0.33, 0));
+      a.add(B(0.16, 0.14, 0.16, skin, 0, -0.74, 0)); // mano
+      g.add(a); this.arms.push(a);
+    }
     this.head = new THREE.Group(); this.head.position.set(0, 1.65, 0);
     this.head.add(B(0.44, 0.44, 0.44, skin, 0, 0.1, 0));
-    this.maskMeshes = [B(0.46, 0.2, 0.1, mask, 0, 0.05, -0.2), B(0.1, 0.08, 0.02, lens, 0.1, 0.12, -0.26), B(0.1, 0.08, 0.02, lens, -0.1, 0.12, -0.26)];
+    // cara (se tapa con la máscara de gas)
+    this.faceMeshes = [
+      B(0.08, 0.06, 0.02, white, 0.1, 0.12, -0.225), B(0.08, 0.06, 0.02, white, -0.1, 0.12, -0.225),
+      B(0.04, 0.05, 0.02, dark, 0.09, 0.12, -0.235), B(0.04, 0.05, 0.02, dark, -0.09, 0.12, -0.235),
+      B(0.1, 0.03, 0.02, hairM, 0.1, 0.19, -0.226), B(0.1, 0.03, 0.02, hairM, -0.1, 0.19, -0.226),
+      B(0.06, 0.08, 0.05, skin, 0, 0.04, -0.235), B(0.13, 0.03, 0.02, lip, 0, -0.04, -0.226),
+    ];
+    this.faceMeshes.forEach((m) => this.head.add(m));
+    this.hair = [B(0.46, 0.1, 0.46, hairM, 0, 0.33, 0.01), B(0.46, 0.22, 0.08, hairM, 0, 0.2, 0.2)];
+    this.hair.forEach((m) => this.head.add(m));
+    this.maskMeshes = [B(0.46, 0.2, 0.1, mask, 0, 0.05, -0.2), B(0.1, 0.08, 0.02, lens, 0.1, 0.12, -0.26), B(0.1, 0.08, 0.02, lens, -0.1, 0.12, -0.26), B(0.12, 0.12, 0.08, mask, 0, -0.02, -0.28)];
     this.maskMeshes.forEach((m) => this.head.add(m));
-    this.hat = B(0.5, 0.14, 0.5, M(0x5a5048), 0, 0.36, 0); this.hat.visible = false; this.head.add(this.hat);
+    this.hat = B(0.5, 0.14, 0.5, M(0x5a5048, 'cloth'), 0, 0.36, 0); this.hat.visible = false; this.head.add(this.hat);
     g.add(this.head);
     this.tag = nameSprite(name);
     g.add(this.tag);
@@ -69,9 +97,12 @@ export class Avatar {
     if (!s || s === this.skinKey) return;
     this.skinKey = s;
     const [jacket, pants, mask, hat, skinTone] = s.split('|');
-    this.mats.jacket.color.set('#' + jacket); this.mats.pants.color.set('#' + pants); this.mats.skin.color.set('#' + skinTone);
+    // las texturas oscurecen un poco: se compensa el color
+    this.mats.jacket.color.set('#' + jacket).multiplyScalar(1.12); this.mats.pants.color.set('#' + pants).multiplyScalar(1.12); this.mats.skin.color.set('#' + skinTone).multiplyScalar(1.1);
     this.maskMeshes.forEach((m) => (m.visible = mask === 'gas'));
+    this.faceMeshes.forEach((m) => (m.visible = mask !== 'gas'));
     this.hat.visible = hat !== 'none';
+    this.hair[0].visible = hat === 'none';
     if (hat === 'casco') this.hat.material.color.set(0x8a8e94); else if (hat === 'gorro') this.hat.material.color.set(0xc8302a); else if (hat === 'sombrero') this.hat.material.color.set(0x6a4a2a);
   }
   setName(name) {

@@ -52,6 +52,10 @@ export const ACHIEVEMENTS = [
   { id: 'tuning', name: 'Tuerca', desc: 'Mejorá un vehículo en el taller.' },
   { id: 'plano', name: 'Arquitecto', desc: 'Guardá un diseño con el plano de obra.' },
   { id: 'brindis', name: '¡Salud!', desc: 'Brindá con una cerveza en la mano (gesto).' },
+  // v8
+  { id: 'bioparque', name: 'Entrada libre', desc: 'Entrá a un bioparque abandonado.' },
+  { id: 'elefante', name: 'Sobre la trompa', desc: 'Ensillá un elefante.' },
+  { id: 'safari', name: 'Safari', desc: 'Encontrate con 10 especies distintas de animales.' },
 ];
 
 export class Achievements {
@@ -87,6 +91,8 @@ export class Achievements {
     if (name === 'drink') { u('cervecero'); if (p && p.drunk >= 3) u('fiesta'); }
     if (name === 'biome' && id === 4) u('zonacero');
     if (name === 'biome' && id === 5) u('valle');
+    if (name === 'biome' && id === 12) u('bioparque');
+    if (name === 'seen') { this.meta.seen = this.meta.seen || []; if (!this.meta.seen.includes(id)) { this.meta.seen.push(id); if (this.meta.seen.length >= 10) u('safari'); } }
     if (name === 'depth') u('profundo');
     if (name === 'hordeSurvived') u('horda');
     if (name === 'sellBeer') u('tabernero');
