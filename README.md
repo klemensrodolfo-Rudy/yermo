@@ -122,6 +122,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v10.5 — Clima que se nota**: sombras de nubes sobre el terreno, superficies mojadas con lluvia, nieve que se acumula y se derrite, mar dorado al atardecer, brasas de la lava, sombras bajo criaturas y objetos, posturas de salto, caída y nado, y la mano que se balancea con inercia.
 
+**v10.7 — Mundo vivo**: pueblos que crecen con casas y vecinos nuevos, rutina de día y de noche, manadas, cazadores y presas, historias de 4 partes por zona, aves en bandada y peces en el agua limpia.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

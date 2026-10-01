@@ -193,6 +193,7 @@ export function createFeatures(ctx) {
     $('#noteTitle').textContent = title; $('#noteBody').textContent = body;
     $('#noteReader').hidden = false;
     document.exitPointerLock();
+    if (i >= 2000) { g.meta.storyRead = g.meta.storyRead || []; if (!g.meta.storyRead.includes(i)) { g.meta.storyRead.push(i); p.onEvent('story', i); } return; }
     const k = ((i % 20) + 20) % 20;
     if (!g.meta.notesRead.includes(k)) { g.meta.notesRead.push(k); p.onEvent('note', g.meta.notesRead.length); }
   };

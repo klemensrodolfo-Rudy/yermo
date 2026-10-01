@@ -287,6 +287,12 @@ export function setupGuide(ui, getGame) {
       <li><b>Acciones</b>: «golpeá» o «rompé» (sigue hasta que digas «dejá de golpear» o «pará»), «usá», «abrí», «poné», «comé», «saltá», «agachate», «tirá», «subite» o «bajate» de un vehículo.</li>
       <li><b>Objetos y pantallas</b>: «elegí el tres», «siguiente», «abrí la mochila», «mapa», «pausa», «cerrá», «sacá una foto», «marcador», «cámara», «ayuda».</li></ul>
       <p>Se pueden encadenar: «caminá y después saltá». Las órdenes de frenar se cumplen apenas se escuchan, sin esperar a que termines de hablar.</p>`,
+    'Mundo vivo': () => `
+      <p><b>🏘 Pueblos que crecen</b>: los asentamientos (y las aldeas de Eldra) suben de nivel con los días que pasan y con tu ayuda (misiones y comercio). Cada nivel suma una casa nueva con un vecino. Aparecen en el mapa con su nombre y nivel.</p>
+      <p><b>🌙 Rutina</b>: de noche los vecinos, medianos, enanos y elfas vuelven a su casa a dormir; de día salen a pasear y trabajar.</p>
+      <p><b>🐾 Animales</b>: los pacíficos andan en manada, escapan de los cazadores y de noche vuelven a su lugar. Los cazadores (lobos, leones, osos, huargos…) persiguen presas cuando no hay nadie cerca.</p>
+      <p><b>📜 Historias</b>: cada zona (ciudad, desierto, cráter, zona militar, mar de chatarra, tundra, pantano, bosque y el archipiélago) tiene una historia en 4 partes. Las notas que encontrás en los cofres de esa zona son partes de su historia; las ves en pausa → Mundo → Historias. Completar una da 8 fichas.</p>
+      <p><b>🐦 Aves y 🐟 peces</b>: de día pasan bandadas por el cielo, y en el agua limpia nadan cardúmenes de colores que escapan si te acercás.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

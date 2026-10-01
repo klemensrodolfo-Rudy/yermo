@@ -851,6 +851,36 @@ export class Mobs {
       m.wanderT -= dt;
       if (m.wanderT <= 0) { m.wanderT = 2 + Math.random() * 4; m.walking = Math.random() < 0.6; m.targetYaw = Math.random() * Math.PI * 2; }
       if (m.walking) { mx = -Math.sin(m.targetYaw); mz = -Math.cos(m.targetYaw); speed = d.speed * 0.5; }
+      m.aiT = (m.aiT || Math.random()) - dt;
+      // cazadores: los animales hostiles persiguen presas cuando no hay jugadores cerca
+      if (d.hostile && d.animal && !m.siege && !d.boss) {
+        if (m.aiT <= 0) {
+          m.aiT = 1.5; m.prey = null; let pd = 14;
+          for (const o of this.list.values()) { if (o === m || o.dying || o.owner || !o.def.flee || o.def.hostile) continue; const dd = o.pos.distanceTo(m.pos); if (dd < pd) { pd = dd; m.prey = o; } }
+        }
+        const pr = m.prey;
+        if (pr && !pr.dying && this.list.has(pr.id)) {
+          mx = pr.pos.x - m.pos.x; mz = pr.pos.z - m.pos.z; speed = d.speed * 0.9;
+          if (Math.hypot(mx, mz) < 1.3 + d.hw && m.attackCd <= 0) { m.attackCd = 1.2; m.attackAnim = 0.3; this.hit(pr, d.dmg, new THREE.Vector3(mx, 0, mz).normalize(), null); }
+        }
+      } else if (d.flee && !d.hostile && !m.owner && !m.tamed) {
+        // presas: se juntan en manada, escapan de los cazadores y vuelven a su lugar de noche
+        if (m.aiT <= 0) {
+          m.aiT = 2;
+          let cx = 0, cz = 0, n = 0, danger = null, dd = 9;
+          for (const o of this.list.values()) {
+            if (o === m || o.dying) continue;
+            const dist = o.pos.distanceTo(m.pos);
+            if (o.type === m.type && dist < 18) { cx += o.pos.x; cz += o.pos.z; n++; }
+            if (o.def.hostile && o.def.animal && dist < dd) { dd = dist; danger = o; }
+          }
+          m.herd = n ? { x: cx / n, z: cz / n } : null;
+          if (danger) { m.fleeT = 3; m.fleeFrom = danger.pos.clone(); }
+        }
+        const night = daylight < 0.3;
+        if (night && m.home && m.pos.distanceTo(m.home) > 4) { mx = m.home.x - m.pos.x; mz = m.home.z - m.pos.z; speed = d.speed * 0.6; }
+        else if (m.herd && Math.hypot(m.herd.x - m.pos.x, m.herd.z - m.pos.z) > 6) { mx = m.herd.x - m.pos.x; mz = m.herd.z - m.pos.z; speed = d.speed * 0.55; }
+      }
     }
     // defensa del refugio: van al núcleo salvo que tengan un jugador muy cerca
     if (m.siege && (!target || nd > 8)) {

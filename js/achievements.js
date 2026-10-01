@@ -81,6 +81,8 @@ export const ACHIEVEMENTS = [
   { id: 'constructor', name: 'Maestro mayor de obras', desc: 'Terminá una construcción guiada.' },
   { id: 'marcador', name: 'Cartógrafo', desc: 'Poné tu primer marcador.' },
   { id: 'voz', name: 'A tus órdenes', desc: 'Hacé algo con el control por voz.' },
+  { id: 'historia', name: 'Cronista', desc: 'Completá las 4 partes de una historia de una zona.' },
+  { id: 'pueblo', name: 'Vecino querido', desc: 'Ayudá a que un pueblo crezca.' },
 ];
 
 export class Achievements {

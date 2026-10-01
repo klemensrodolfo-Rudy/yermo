@@ -765,13 +765,13 @@ export class Player {
     if (b.crop) { this.harvest(br.x, br.y, br.z, id, () => {}); return; }
     if (this.creative) return;
     if (b.loot) {
-      for (const [lid, a, bb, p] of LOOT_TABLES[b.loot]) if (Math.random() < p) this.give(lid, a + Math.floor(Math.random() * (bb - a + 1)), lid === 337 ? { note: Math.floor(Math.random() * 1000) } : ITEMS[lid]?.beer ? { q: 1 + Math.floor(Math.random() * 3) } : undefined);
+      for (const [lid, a, bb, p] of LOOT_TABLES[b.loot]) if (Math.random() < p) this.give(lid, a + Math.floor(Math.random() * (bb - a + 1)), lid === 337 ? { note: this.storyNote?.(br.x, br.z) ?? Math.floor(Math.random() * 1000) } : ITEMS[lid]?.beer ? { q: 1 + Math.floor(Math.random() * 3) } : undefined);
       this.onEvent('loot', id);
     }
     if (this.canHarvest(id) && b.drop) {
       if (!b.dropChance || Math.random() < b.dropChance) this.give(b.drop, b.dropCount);
     }
-    if (b.extra) for (const [eid, n, p] of b.extra) if (Math.random() < p) this.give(eid, n, eid === 337 ? { note: Math.floor(Math.random() * 1000) } : undefined);
+    if (b.extra) for (const [eid, n, p] of b.extra) if (Math.random() < p) this.give(eid, n, eid === 337 ? { note: this.storyNote?.(br.x, br.z) ?? Math.floor(Math.random() * 1000) } : undefined);
     const hand = this.inv.hand;
     if (hand && ITEMS[hand.id]?.tool) {
       if (this.inv.damageHand()) this.sfx?.toolBreak();
