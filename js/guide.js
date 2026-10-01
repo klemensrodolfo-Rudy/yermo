@@ -213,6 +213,14 @@ export function setupGuide(ui, getGame) {
       <p>Tipo de mundo <b>🏝 Archipiélago</b>: mar abierto con islas de arena y palmeras, arrecifes de coral, <b>naufragios</b> en el fondo con ${icon(228)} cofres del tesoro y <b>faros</b> en la costa (subí por la escalera de adentro).</p>
       <p>${icon(398)} <b>Caña de pescar</b> (3 ramas y un cuero): clic derecho apuntando al agua para tirar la línea. Cuando el corcho se hunde y dice <b>«¡Pica!»</b>, clic derecho rápido. Sale ${icon(399)} pescado (asalo en el horno o la fogata), a veces un ${icon(404)} pez dorado, fichas, regalos o un tanque de buceo. En mar abierto y con lluvia pican más.</p>
       <p>${icon(401)} <b>Tanque de buceo</b> (va en la cabeza): aguantás 90 s bajo el agua. ${icon(402)} <b>Velero</b>: más rápido que el bote, 3 asientos y 18 lugares de carga. ${icon(403)} <b>Cocos</b>: caen de las hojas de palmera, quitan el hambre y la sed.</p>`,
+    'Minijuegos': () => `
+      <p>Fabricá una ${icon(234)} <b>Mesa de minijuegos</b> (4 tablas y 2 fichas), ponela en un lugar abierto y hacé clic derecho. Juegan todos los que están en la partida (abrila a amigos); la arena se arma al lado de la mesa y desaparece al terminar. Ganar da 10 fichas.</p>
+      <ul><li><b>🔥 El piso es lava</b>: los bloques se ponen rojos y desaparecen, cada vez más rápido. Gana el último arriba.</li>
+      <li><b>❄ Spleef</b>: plataforma de nieve que se rompe de un golpe: rompé el piso debajo de los demás.</li>
+      <li><b>🏃 Parkour</b>: saltos en el aire, puntos de control ${icon(237)} y meta ${icon(238)}. Si te caés, volvés al último control. Guarda tu récord.</li>
+      <li><b>🙈 Escondidas</b> (2+): el que busca cuenta 30 s con la pantalla negra; encontrás a alguien acercándote a menos de 2 bloques.</li>
+      <li><b>🚩 Captura la bandera</b> (2+): rojos contra azules; tocá la bandera rival, llevala a tu base, y si te toca un rival vuelve. Gana el primero en llegar a 3.</li></ul>
+      <p>Los bloques ${icon(236)} rojo, ${icon(237)} azul y ${icon(239)} blanco también se fabrican, para armar tus propias pistas y canchas.</p>`,
     'Logros': () => '__ACH__',
     'Online': () => `
       <h3>Con código de sala (lo más fácil)</h3>

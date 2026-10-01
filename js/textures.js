@@ -853,6 +853,25 @@ HD.tile_white = (t) => {
   });
   crackLine(t, 1);
 };
+// ---------- v9.4: minijuegos ----------
+const padded = (c) => (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), n = t.fbm(x, y, 8, 2);
+  t.H(x, y, e < 2 ? 0.3 : 0.7); t.S(x, y, 0.12);
+  return scl(c, e < 2 ? 0.72 : 0.95 + n * 0.08 + (t.rnd() - 0.5) * 0.04);
+});
+HD.mg_red = padded([214, 64, 56]);
+HD.mg_blue = padded([60, 110, 214]);
+HD.mg_white = padded([228, 228, 222]);
+HD.mg_gold = (t) => t.fill((x, y) => {
+  const e = Math.min(x, y, 31 - x, 31 - y), star = Math.abs(x - 15.5) + Math.abs(y - 15.5) < 8;
+  t.H(x, y, e < 2 ? 0.3 : 0.8); t.S(x, y, 0.6); if (star) t.E(x, y, 0.4);
+  return scl(star ? [255, 236, 140] : [222, 170, 50], e < 2 ? 0.7 : 1 + (t.rnd() - 0.5) * 0.05);
+});
+HD.mg_table = (t) => t.fill((x, y) => {
+  const cell = (Math.floor(x / 8) + Math.floor(y / 8)) % 2, e = Math.min(x, y, 31 - x, 31 - y);
+  t.H(x, y, e < 2 ? 0.2 : 0.6);
+  return e < 2 ? [92, 64, 40] : cell ? [230, 222, 200] : [40, 40, 44];
+});
 // ---------- v9.3: archipiélago ----------
 HD.sand = (t) => t.fill((x, y) => {
   const n = t.fbm(x, y, 6, 3), r = Math.sin((x + n * 9) * 0.45 + y * 0.12) * 0.5 + 0.5;

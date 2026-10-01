@@ -40,6 +40,8 @@ export const TILES = [
   'flowers', 'web', 'mithril_ore', 'crystal', 'gold_pile', 'rune_top', 'rune_side', 'alchemy_top', 'alchemy_side', 'light_orb', 'oak_bark',
   // v9.3: archipiélago
   'sand', 'palm_bark', 'palm_leaves', 'coral_red', 'coral_yellow',
+  // v9.4: minijuegos
+  'mg_red', 'mg_blue', 'mg_gold', 'mg_white', 'mg_table',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -317,6 +319,12 @@ def(230, { name: 'Coral rojo', tex: tx(T.coral_red), hardness: 0.8, tool: 'pick'
 def(231, { name: 'Coral amarillo', tex: tx(T.coral_yellow), hardness: 0.8, tool: 'pick' });
 def(232, { name: 'Palmera', tex: { top: T.log_top, side: T.palm_bark, bottom: T.log_top }, hardness: 1.5, tool: 'axe', drop: 15 });
 def(233, { name: 'Hojas de palmera', tex: tx(T.palm_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[403, 1, 0.15]] });
+def(234, { name: 'Mesa de minijuegos', tex: { top: T.mg_table, side: T.planks, bottom: T.planks }, hardness: 1.5, tool: 'axe', light: 4 });
+def(235, { name: 'Nieve de spleef', tex: { top: T.snow_top, side: T.snow_top, bottom: T.snow_top }, hardness: 0.05, drop: 0 });
+def(236, { name: 'Bloque rojo', tex: tx(T.mg_red), hardness: 0.8, drop: 236 });
+def(237, { name: 'Bloque azul', tex: tx(T.mg_blue), hardness: 0.8, drop: 237 });
+def(238, { name: 'Meta dorada', tex: tx(T.mg_gold), hardness: 0.8, drop: 238, light: 8 });
+def(239, { name: 'Bloque blanco', tex: tx(T.mg_white), hardness: 0.8, drop: 239 });
 def(226, { name: 'Cofre antiguo', tex: { top: T.chest_top, side: T.chest_side, bottom: T.chest_top, front: T.chest_front }, hardness: 1.5, tool: 'axe', drop: 0, loot: 'eldra' });
 def(197, { name: 'Portal del abismo', tex: tx(T.portal), hardness: -1, light: 12, portal: true });
 
@@ -731,6 +739,10 @@ export const RECIPES = [
   { out: [393, 1], in: [[260, 4], [259, 4], [14, 1]], station: 'mesa', bp: 'electricidad' },
   { out: [227, 1], in: [[260, 4], [28, 1], [27, 2]], station: 'mesa' },
   { out: [398, 1], in: [[256, 3], [336, 1]], station: 'mesa' },
+  { out: [234, 1], in: [[23, 4], [353, 2]], station: 'mesa' },
+  { out: [236, 8], in: [[176, 1], [23, 2]], station: 'mesa' },
+  { out: [237, 8], in: [[176, 1], [9, 2]], station: 'mesa' },
+  { out: [239, 8], in: [[9, 4]], station: 'mesa' },
   { out: [400, 1], in: [[399, 1], [257, 1]], station: 'horno' },
   { out: [400, 1], in: [[399, 1]], station: 'fogata' },
   { out: [401, 1], in: [[260, 3], [14, 1], [336, 2]], station: 'mesa' },

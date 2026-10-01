@@ -67,6 +67,7 @@ export const ACHIEVEMENTS = [
   { id: 'unavida', name: 'Sin segundas oportunidades', desc: 'Terminá una partida de una sola vida.' },
   { id: 'pescador', name: 'Paciencia de pescador', desc: 'Pescá algo con la caña.' },
   { id: 'pezdorado', name: 'Pez dorado', desc: 'Pescá un pez dorado.' },
+  { id: 'minijuego', name: 'Campeón del recreo', desc: 'Ganá un minijuego.' },
 ];
 
 export class Achievements {
