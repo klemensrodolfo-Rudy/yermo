@@ -2,7 +2,7 @@
 // Archivos propios: primero la red (si hay conexión se usa lo nuevo; si tarda más de 3 s o falla, la copia guardada).
 // Librerías del CDN (Three.js, PeerJS, fuentes): primero la copia guardada (no cambian).
 // Al instalarse guarda todo lo necesario para jugar sin internet (en el avión, en el campo…).
-const CACHE = 'yermo-v4';
+const CACHE = 'yermo-v5';
 const CORE = [
   './', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png',
   ...['achievements', 'audio', 'blocks', 'cloud', 'creative', 'eldra', 'entities', 'extras', 'features', 'features2', 'fx', 'guide', 'input',

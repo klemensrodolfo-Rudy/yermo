@@ -50,6 +50,7 @@ export function createUX(ctx) {
   const box = $('#wps'), els = new Map(), v = new THREE.Vector3();
   function drawWaypoints() {
     const W = innerWidth, H = innerHeight, seen = new Set(), stack = {};
+    const Z = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--uiz')) || 1;
     if (ctx.isPhoto?.() || $('#hud').hidden) { box.hidden = true; return; } box.hidden = false;
     for (const w of all()) {
       if (w.on === false) continue;
@@ -70,9 +71,10 @@ export function createUX(ctx) {
         const k = (stack[side] = (stack[side] || 0) + 1);
         x = side > 0 ? W - 12 : 12; y = H * 0.38 + (k - 1) * 30;
       }
+      if (!off && y > H - 140) y = H - 140; // que no pise la barra de abajo
       el.classList.toggle('edge', off);
       el.style.transform = off ? (side > 0 ? 'translate(-100%, -50%)' : 'translate(0, -50%)') : '';
-      el.style.left = x + 'px'; el.style.top = y + 'px';
+      el.style.left = x / Z + 'px'; el.style.top = y / Z + 'px'; // el HUD puede estar agrandado
       el.style.color = w.color; el.querySelector('i').style.background = w.color;
       el.querySelector('span').textContent = `${off && side < 0 ? '◀ ' : ''}${w.name} · ${d < 1000 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km'}${off && side > 0 ? ' ▶' : ''}`;
       el.style.opacity = d > 600 ? 0.65 : 1;
@@ -197,11 +199,53 @@ export function createUX(ctx) {
     }
   }
 
+  // ---------- HUD: botones táctiles según lo que mirás, daño y mira ----------
+  const T = $('#touch'), useB = T?.querySelector('.b-use span'), useBtn = T?.querySelector('.b-use');
+  let lastHp = p.health, hudAcc = 0;
+  const dmgI = $('#dmgDir i'), dmgBox = $('#dmgDir'), low = $('#lowHp'), xh = $('#crosshair');
+  const hitWrap = g.mobs.hit.bind(g.mobs);
+  g.mobs.hit = (m, dmg, dir, attacker, ...r) => {
+    if (attacker === p) { xh.classList.remove('hit'); void xh.offsetWidth; xh.classList.add('hit'); ctx.input?.buzz?.(6); }
+    return hitWrap(m, dmg, dir, attacker, ...r);
+  };
+  function hudTick(dt) {
+    // daño: vibración, flecha de dónde vino el golpe y pulso rojo con poca vida
+    if (p.health < lastHp - 0.01) {
+      ctx.input?.buzz?.(Math.min(60, 15 + (lastHp - p.health) * 8));
+      if (p.lastHit && performance.now() - p.lastHit.t < 300) {
+        const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd);
+        const ang = Math.atan2(fwd.x * p.lastHit.z - fwd.z * p.lastHit.x, fwd.x * p.lastHit.x + fwd.z * p.lastHit.z);
+        dmgBox.style.transform = `rotate(${ang}rad)`; dmgI.classList.add('on'); setTimeout(() => dmgI.classList.remove('on'), 350);
+      }
+    }
+    lastHp = p.health;
+    low.classList.toggle('on', !p.creative && !p.dead && p.health <= 5);
+    xh.classList.toggle('dot', settings.crosshair === 'punto'); xh.classList.toggle('ring', settings.crosshair === 'aro');
+    hudAcc += dt; if (hudAcc < 0.2 || !T || T.hidden) return; hudAcc = 0;
+    // botón de usar: dice qué va a hacer
+    const h = g.hintTxt || '';
+    let label = 'Usar', ctxOn = false;
+    const mm = h.match(/Clic derecho(?: con una Montura)?: ([^·(/]+)/);
+    if (mm) { label = mm[1].trim().split(' ').slice(0, 2).join(' '); ctxOn = true; }
+    else { const hand = g.inv.hand; if (hand && hand.id < 256) label = 'Poner'; else if (hand && (ITEMS[hand.id]?.food || ITEMS[hand.id]?.heal)) label = 'Comer'; else if (hand && ITEMS[hand.id]?.spell) label = 'Hechizo'; }
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+    if (useB.textContent !== label) useB.textContent = label;
+    useBtn.classList.toggle('ctx', ctxOn);
+    // subir/bajar de vehículos y bajar (vuelo, helicóptero, escaleras, ascensor)
+    const R = p.riding;
+    const mount = T.querySelector('.b-mount');
+    mount.hidden = !(R || p.vehTarget);
+    mount.querySelector('span').textContent = R ? 'Bajar' : 'Subir';
+    mount.querySelector('i').textContent = R ? '🚶' : '🚗';
+    T.querySelector('.b-down').hidden = !(p.flying || p.onLadder || g.features2?.onElevator || (R && R.type === 'heli') || p.inWater);
+    T.querySelector('.b-chat').hidden = !ctx.net?.active;
+  }
+
   // ---------- botones y teclas ----------
   const wb = $('#worldBtns');
   const bw = document.createElement('button'); bw.textContent = '📍 Marcadores'; bw.onclick = () => { $('#pause').hidden = true; ctx.setPause(false); openWaypoints(); }; wb?.appendChild(bw);
   api.key = (e) => { if (e.code === 'KeyN') { api.addHere(); return true; } return false; };
-  api.update = (dt) => { drawWaypoints(); photoTick(dt); tipsTick(dt); };
-  api.dispose = () => { bw.remove(); bar.remove(); count.remove(); box.innerHTML = ''; tipEl.hidden = true; ctx.renderer.domElement.style.filter = ''; };
+  api.update = (dt) => { drawWaypoints(); photoTick(dt); tipsTick(dt); hudTick(dt); };
+  api.dispose = () => { g.mobs.hit = hitWrap; low.classList.remove('on'); bw.remove(); bar.remove(); count.remove(); box.innerHTML = ''; tipEl.hidden = true; ctx.renderer.domElement.style.filter = ''; };
   return api;
 }

@@ -53,7 +53,7 @@ export function setupAccess({ settings, saveSettings, flash }) {
   document.body.appendChild(svg);
   const style = document.createElement('style');
   style.textContent = `html.cb #game, html.cb #hud { filter: url(#cbf); }
-    html.bigui #hud, html.bigui .overlay .card, html.bigui #menu .card { zoom: 1.18; }
+    #hud, #inv .card, .overlay > .card, #menu .mgrid, #menu .mhead { zoom: var(--uiz, 1); }
     html.contrast #hud { text-shadow: 2px 2px 0 #000, -1px -1px 0 #000; } html.contrast #crosshair::before, html.contrast #crosshair::after { background: #ff0 !important; }
     #access .krow { display: grid; grid-template-columns: 1fr 120px; gap: 6px; align-items: center; margin: 2px 0; }
     #access .krow button { margin: 0; padding: 4px 6px; } #access .krow button.wait { background: #d9823b; color: #000; }`;
@@ -62,7 +62,8 @@ export function setupAccess({ settings, saveSettings, flash }) {
     const cb = settings.cb || '';
     document.documentElement.classList.toggle('cb', !!cb);
     if (cb) svg.querySelector('feColorMatrix').setAttribute('values', corrMatrix(cb));
-    document.documentElement.classList.toggle('bigui', !!settings.bigui);
+    const z = (settings.uiScale ?? (settings.bigui ? 118 : 100)) / 100;
+    document.documentElement.style.setProperty('--uiz', z);
     document.documentElement.classList.toggle('contrast', !!settings.contrast);
   };
   applyLook();
@@ -72,8 +73,14 @@ export function setupAccess({ settings, saveSettings, flash }) {
   ov.innerHTML = `<div class="card" style="width:min(480px,100%)"><h2>Controles y accesibilidad</h2>
     <label for="accCb">Colores para daltonismo</label>
     <select id="accCb"><option value="">Normal</option><option value="deutan">Deuteranopía (verde-rojo, el más común)</option><option value="protan">Protanopía (rojo)</option><option value="tritan">Tritanopía (azul-amarillo)</option></select>
-    <label class="check"><input type="checkbox" id="accBig"> Letra e íconos más grandes</label>
+    <label>Tamaño de la interfaz: <b class="uzV"></b></label><input id="accBig" type="range" min="80" max="140" step="5">
     <label class="check"><input type="checkbox" id="accContrast"> Alto contraste (textos con borde y mira amarilla)</label>
+    <div class="touchOpts"><h3 style="margin:12px 0 4px">Pantalla táctil</h3>
+      <label>Tamaño de los botones: <b class="tsV"></b></label><input class="tsz" type="range" min="70" max="140" step="5">
+      <label>Opacidad: <b class="toV"></b></label><input class="tal" type="range" min="25" max="100" step="5">
+      <label>Sensibilidad para mirar: <b class="tlV"></b></label><input class="tse" type="range" min="40" max="220" step="10">
+      <label class="check"><input type="checkbox" class="hap"> 📳 Vibrar al tocar y al recibir daño</label>
+      <label class="check"><input type="checkbox" class="fix"> 🕹 Joystick fijo (si no, aparece donde apoyás el pulgar)</label></div>
     <h3 style="margin:12px 0 4px">Teclas</h3><p class="muted" style="font-size:15px;margin:0 0 6px">Tocá una acción y apretá la tecla nueva (Esc cancela).</p>
     <div id="accKeys"></div>
     <div class="row2"><button id="accReset">Teclas por defecto</button><button id="accClose" class="primary">Listo</button></div></div>`;
@@ -103,7 +110,20 @@ export function setupAccess({ settings, saveSettings, flash }) {
     }
   };
   $('#accCb').onchange = (e) => { settings.cb = e.target.value; applyLook(); saveSettings(); };
-  $('#accBig').onchange = (e) => { settings.bigui = e.target.checked; applyLook(); saveSettings(); };
+  const touchUI = () => {
+    $('.tsz').value = settings.touchSize ?? 100; $('.tsV').textContent = ($('.tsz').value) + '%';
+    $('.tal').value = settings.touchAlpha ?? 85; $('.toV').textContent = ($('.tal').value) + '%';
+    $('.tse').value = settings.touchSens ?? 100; $('.tlV').textContent = ($('.tse').value) + '%';
+    $('.hap').checked = settings.haptics !== false; $('.fix').checked = !!settings.fixedStick;
+  };
+  const tset = (k, v) => { settings[k] = v; saveSettings(); touchUI(); window.dispatchEvent(new Event('touchopts')); };
+  $('.tsz').oninput = (e) => tset('touchSize', +e.target.value);
+  $('.tal').oninput = (e) => tset('touchAlpha', +e.target.value);
+  $('.tse').oninput = (e) => tset('touchSens', +e.target.value);
+  $('.hap').onchange = (e) => tset('haptics', e.target.checked);
+  $('.fix').onchange = (e) => tset('fixedStick', e.target.checked);
+  $('#accBig').oninput = (e) => { settings.uiScale = +e.target.value; $('.uzV').textContent = settings.uiScale + '%'; applyLook(); };
+  $('#accBig').onchange = () => saveSettings();
   $('#accContrast').onchange = (e) => { settings.contrast = e.target.checked; applyLook(); saveSettings(); };
   $('#accReset').onclick = () => { settings.keys = {}; rebuild(); saveSettings(); renderKeys(); flash?.('Teclas por defecto'); };
   let onClose = null;
@@ -111,7 +131,8 @@ export function setupAccess({ settings, saveSettings, flash }) {
   return {
     open(cb) {
       onClose = cb;
-      $('#accCb').value = settings.cb || ''; $('#accBig').checked = !!settings.bigui; $('#accContrast').checked = !!settings.contrast;
+      $('#accCb').value = settings.cb || ''; $('#accBig').value = settings.uiScale ?? (settings.bigui ? 118 : 100); $('.uzV').textContent = $('#accBig').value + '%'; $('#accContrast').checked = !!settings.contrast;
+      touchUI(); $('.touchOpts').hidden = !document.body.classList.contains('touch');
       renderKeys(); ov.hidden = false;
     },
     keyName: (id) => keyName(settings.keys[id] || ACTIONS.find((a) => a[0] === id)?.[2]),

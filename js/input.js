@@ -40,15 +40,23 @@ export class Input {
   }
 
   // ---------- táctil ----------
+  // joystick flotante (aparece donde apoyás el pulgar izquierdo), mirar con el derecho, botones con íconos
   setupTouch() {
     document.body.classList.add('touch');
     const root = document.getElementById('touch');
     root.hidden = false;
-    const stick = root.querySelector('.stick'), knob = stick.querySelector('i');
+    const opt = () => this.a.opts?.() || {};
+    const buzz = (ms = 8) => { if (opt().haptics !== false) navigator.vibrate?.(ms); };
+    this.buzz = buzz;
+    const stick = root.querySelector('.stick'), knob = stick.querySelector('i'), zone = root.querySelector('.stickzone');
     let stickId = null, sx = 0, sy = 0;
-    stick.addEventListener('touchstart', (e) => {
+    const place = (x, y) => { const r = stick.getBoundingClientRect(); stick.style.left = (x - r.width / 2) + 'px'; stick.style.top = (y - r.height / 2) + 'px'; stick.style.bottom = 'auto'; };
+    const home = () => { stick.style.left = ''; stick.style.top = ''; stick.style.bottom = ''; };
+    zone.addEventListener('touchstart', (e) => {
       const t = e.changedTouches[0]; stickId = t.identifier;
-      const r = stick.getBoundingClientRect(); sx = r.left + r.width / 2; sy = r.top + r.height / 2;
+      if (opt().fixedStick) { const r = stick.getBoundingClientRect(); sx = r.left + r.width / 2; sy = r.top + r.height / 2; }
+      else { sx = t.clientX; sy = t.clientY; place(sx, sy); }
+      stick.classList.add('on');
       e.preventDefault();
     }, { passive: false });
     const lookZone = root.querySelector('.look');
@@ -57,35 +65,53 @@ export class Input {
     window.addEventListener('touchmove', (e) => {
       for (const t of e.changedTouches) {
         if (t.identifier === stickId) {
-          let dx = (t.clientX - sx) / 50, dy = (t.clientY - sy) / 50;
+          const R = stick.getBoundingClientRect().width / 2 * 0.8;
+          let dx = (t.clientX - sx) / R, dy = (t.clientY - sy) / R;
           const l = Math.hypot(dx, dy); if (l > 1) { dx /= l; dy /= l; }
-          knob.style.transform = `translate(${dx * 40}px, ${dy * 40}px)`;
+          knob.style.transform = `translate(${dx * R}px, ${dy * R}px)`;
           this.analog = { x: -dy, y: dx };
+          // empujar a fondo hacia adelante: corre solo
+          this.autoRun = l > 1.35 && dy < -0.7;
         } else if (t.identifier === lookId) {
-          this.a.look((t.clientX - lx) * 2.2, (t.clientY - ly) * 2.2);
+          const k = 2.2 * (opt().touchSens ?? 100) / 100;
+          this.a.look((t.clientX - lx) * k, (t.clientY - ly) * k);
           lx = t.clientX; ly = t.clientY;
         }
       }
     }, { passive: true });
     window.addEventListener('touchend', (e) => {
       for (const t of e.changedTouches) {
-        if (t.identifier === stickId) { stickId = null; this.analog = null; knob.style.transform = ''; }
+        if (t.identifier === stickId) { stickId = null; this.analog = null; this.autoRun = false; knob.style.transform = ''; stick.classList.remove('on'); home(); }
         if (t.identifier === lookId) lookId = null;
       }
     });
     const hold = (sel, down, up) => {
       const el = root.querySelector(sel);
-      el.addEventListener('touchstart', (e) => { e.preventDefault(); el.classList.add('on'); down(); }, { passive: false });
+      el.addEventListener('touchstart', (e) => { e.preventDefault(); el.classList.add('on'); buzz(); down(); }, { passive: false });
       el.addEventListener('touchend', (e) => { e.preventDefault(); el.classList.remove('on'); up?.(); }, { passive: false });
+      el.addEventListener('touchcancel', () => { el.classList.remove('on'); up?.(); });
     };
     hold('.b-jump', () => this.a.setKey('Space', true), () => this.a.setKey('Space', false));
+    hold('.b-down', () => this.a.setKey('KeyC', true), () => this.a.setKey('KeyC', false));
     hold('.b-break', () => this.a.mouse(0, true), () => this.a.mouse(0, false));
     hold('.b-use', () => this.a.mouse(2, true), () => this.a.mouse(2, false));
     hold('.b-inv', () => this.a.press('inventory'));
     hold('.b-pause', () => this.a.press('pause'));
     hold('.b-map', () => this.a.press('map'));
     hold('.b-mount', () => this.a.press('mount'));
+    hold('.b-drop', () => this.a.press('drop'));
+    hold('.b-wp', () => this.a.press('waypoint'));
+    hold('.b-emote', () => this.a.press('emotes'));
+    hold('.b-cam', () => this.a.press('camera'));
+    hold('.b-photo', () => this.a.press('photo'));
+    hold('.b-chat', () => this.a.press('chat'));
     let run = false;
     hold('.b-run', () => { run = !run; this.a.setKey('ShiftLeft', run); root.querySelector('.b-run').classList.toggle('lock', run); });
+  }
+  // ajustes de tamaño y transparencia
+  applyTouchOpts(o) {
+    const root = document.getElementById('touch'); if (!root) return;
+    root.style.setProperty('--ts', (o.touchSize ?? 100) / 100);
+    root.style.setProperty('--to', (o.touchAlpha ?? 85) / 100);
   }
 }

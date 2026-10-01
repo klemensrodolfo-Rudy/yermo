@@ -257,6 +257,8 @@ export function setupGuide(ui, getGame) {
       <h3>🏗 Construcción guiada</h3>
       <p>En la pausa, <b>🏗 Construcción guiada</b>: elegí casita, torre, puente, fuente o cohete y aparece una silueta transparente delante tuyo. Poné los bloques donde marca, capa por capa; abajo a la izquierda te dice cuántos faltan de cada uno. Al terminar ganás 5 fichas.</p>`,
     'Celular y sin conexión': () => `
+      <p><b>📱 Controles táctiles</b>: el joystick aparece donde apoyás el pulgar izquierdo (empujalo a fondo hacia adelante y corrés solo). A la derecha: ⤒ saltar, ⛏ romper (mantener), ✋ usar (dice lo que va a hacer: Abrir, Hablar, Poner, Comer…), 🏃 correr, ⇩ tirar, y aparecen 🚗 subir/bajar cerca de un vehículo y ⤓ bajar cuando volás, nadás o estás en una escalera. Arriba: pausa, mochila, mapa, marcador, gestos, cámara y foto. En <b>Controles y accesibilidad</b> cambiás el tamaño, la transparencia, la sensibilidad, la vibración y si el joystick es fijo.</p>
+      <p>En la <b>mochila</b>, mantené apretada una casilla para moverla rápido (como Shift + clic), y en las recetas usá <b>×5</b> o <b>Máx</b> para fabricar varias.</p>
       <p><b>🔋 Ahorro de batería</b> (en la pausa): limita a 30 cuadros por segundo, baja un poco la resolución y saca las partículas. Ideal para jugar mucho rato en el celu.</p>
       <p><b>⚡ Distancia automática</b> (activada de entrada): si el juego se traba, dibuja un poco menos lejos; cuando vuelve a andar fluido, recupera la distancia que elegiste. Además, lo que está lejos se dibuja sin relieve ni sombras, que no se notan y cuestan mucho.</p>
       <p><b>✈ Sin conexión</b>: la app instalada guarda todo lo necesario la primera vez que la abrís con internet. Después podés jugar tus mundos del dispositivo en el avión o donde no haya señal; lo online (salas, mundo del grupo, aventuras, galería) vuelve cuando haya internet.</p>`,
@@ -326,6 +328,19 @@ export function setupGuide(ui, getGame) {
     body.innerHTML = html;
   };
   nav.innerHTML = '';
+  // buscador: filtra las secciones por su contenido
+  const search = document.createElement('input'); search.placeholder = '🔍 Buscar en la guía…'; search.className = 'gsearch'; search.autocomplete = 'off';
+  nav.appendChild(search);
+  const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const textOf = {};
+  for (const k of Object.keys(tabs)) { let h = ''; try { h = tabs[k](); } catch { /* sin texto */ } textOf[k] = norm(k + ' ' + String(h).replace(/<[^>]+>/g, ' ')); }
+  search.addEventListener('keydown', (e) => e.stopPropagation());
+  search.addEventListener('input', () => {
+    const q = norm(search.value.trim());
+    let first = null;
+    for (const b of nav.querySelectorAll('button')) { const ok = !q || textOf[b.textContent].includes(q); b.hidden = !ok; if (ok && !first) first = b.textContent; }
+    if (q && first) show(first);
+  });
   for (const k of Object.keys(tabs)) { const b = document.createElement('button'); b.textContent = k; b.onclick = () => show(k); nav.appendChild(b); }
   return {
     open(tab) { $('#guide').hidden = false; show(tab || 'Cómo se juega'); },

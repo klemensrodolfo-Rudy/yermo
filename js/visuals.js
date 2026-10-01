@@ -30,7 +30,7 @@ export function createVisuals(ctx) {
     box.innerHTML = `<label>Campo de visión: <b class="fovV">${settings.fov}</b>°</label><input class="fov" type="range" min="60" max="105" value="${settings.fov}">
       <div class="checks"><label class="check"><input type="checkbox" class="bob"> 🚶 Balanceo al caminar</label><label class="check"><input type="checkbox" class="shk"> 💥 Sacudón de cámara</label>
       <label class="check"><input type="checkbox" class="inv"> ↕ Invertir mirada vertical</label><label class="check"><input type="checkbox" class="grd"> 🎨 Color cinematográfico</label>
-      <label class="check"><input type="checkbox" class="amb"> ✨ Partículas del ambiente</label><label class="check"><input type="checkbox" class="tps"> 💡 Consejos la primera vez</label></div>`;
+      <label class="check"><input type="checkbox" class="amb"> ✨ Partículas del ambiente</label><label style="margin:8px 0 0">Mira <select class="xh"><option value="cruz">Cruz</option><option value="punto">Punto</option><option value="aro">Aro</option></select></label><label class="check"><input type="checkbox" class="tps"> 💡 Consejos la primera vez</label></div>`;
     const $ = (s) => box.querySelector(s);
     $('.bob').checked = settings.bob; $('.shk').checked = settings.shake; $('.inv').checked = settings.invertY; $('.grd').checked = settings.grade; $('.amb').checked = settings.ambient;
     const save = () => { applyCam(); ctx.saveSettings?.(); };
@@ -40,6 +40,7 @@ export function createVisuals(ctx) {
     $('.inv').onchange = (e) => { settings.invertY = e.target.checked; save(); };
     $('.grd').onchange = (e) => { settings.grade = e.target.checked; save(); };
     $('.amb').onchange = (e) => { settings.ambient = e.target.checked; save(); };
+    $('.xh').value = settings.crosshair || 'cruz'; $('.xh').onchange = (e) => { settings.crosshair = e.target.value; save(); };
     $('.tps').checked = settings.tips !== false; $('.tps').onchange = (e) => { settings.tips = e.target.checked; save(); };
   }
 

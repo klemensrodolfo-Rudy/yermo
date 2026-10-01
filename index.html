@@ -199,13 +199,7 @@
   body.ctl:not(.playing) #touch { display: none; } /* sólo mientras se juega: en menús tapaban los botones */
   #inv .card { position: relative; } #invClose { position: absolute; top: 6px; right: 6px; width: 40px; height: 40px; padding: 0; font-size: 20px; z-index: 2; }
   #touch .look { position: absolute; right: 0; top: 0; width: 55%; height: 100%; pointer-events: auto; }
-  #touch .stick { position: absolute; left: 24px; bottom: 110px; width: 130px; height: 130px; border-radius: 50%; background: rgba(0,0,0,0.25); border: 2px solid rgba(255,255,255,0.25); pointer-events: auto; }
-  #touch .stick i { position: absolute; left: 40px; top: 40px; width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.35); }
-  #touch .btns { position: absolute; right: 16px; bottom: 100px; display: grid; grid-template-columns: repeat(3, 62px); gap: 10px; pointer-events: auto; }
-  #touch .btns button, #touch .top button { width: 62px; height: 62px; border-radius: 50%; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.35); font-size: 15px; padding: 0; }
   #touch button.on, #touch button.lock { background: rgba(217,130,59,0.6); }
-  #touch .top { position: absolute; top: 170px; right: 14px; display: flex; flex-direction: column; gap: 8px; pointer-events: auto; }
-  #touch .top button { width: 52px; height: 52px; }
   body.touch #hotbar { pointer-events: auto; bottom: 8px; }
 
   #interactHint { position: absolute; left: 50%; top: calc(50% + 26px); transform: translateX(-50%); background: rgba(0,0,0,0.55); padding: 2px 10px; font-size: 18px; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
@@ -244,10 +238,6 @@
     #tut { top: 120px !important; width: min(300px, 70vw); font-size: 17px; }
     .srow { height: 14px; } .srow img { width: 14px; height: 14px; }
     #stats { gap: 2px 8px; bottom: 66px; }
-    body.touch #touch .stick { bottom: 150px; left: 14px; width: 116px; height: 116px; } body.touch #touch .stick i { left: 33px; top: 33px; }
-    body.touch #touch .btns { bottom: 150px; right: 10px; grid-template-columns: repeat(3, 54px); gap: 8px; }
-    body.touch #touch .btns button { width: 54px; height: 54px; font-size: 13px; }
-    body.touch #touch .top { top: 112px; }
     #bossbar { top: 118px; }
     #inv .card { grid-template-columns: 1fr; overflow: auto; }
     .grid { grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; } .slot { width: auto; aspect-ratio: 1; height: auto; min-width: 0; }
@@ -264,15 +254,10 @@
   /* celular acostado: todo más chico y sin pisarse */
   @media (pointer: coarse) and (max-height: 520px) {
     #minimap { width: 72px; height: 72px; top: 6px; right: 8px; }
-    body.touch #touch .top { top: 8px; right: 88px; flex-direction: row; }
-    body.touch #touch .top button { width: 40px; height: 40px; font-size: 13px; }
     #tut { top: 6px !important; right: auto; left: 50%; transform: translateX(-50%); width: min(300px, 40vw); padding: 5px 8px; }
     #tut .tn, #tut .tt { font-size: 12px; } #tut .td { font-size: 14px; } #tut .tp { font-size: 13px; }
     #hotbar { bottom: 4px; padding: 2px; gap: 2px; } #hotbar .slot { width: 36px; height: 36px; } #hotbar .slot canvas { width: 28px; height: 28px; }
     #stats { bottom: 48px; width: 300px; gap: 0 10px; font-size: 13px; } .srow { height: 11px; } .srow img { width: 11px; height: 11px; }
-    body.touch #touch .stick { left: 10px; bottom: 54px; width: 96px; height: 96px; } body.touch #touch .stick i { left: 23px; top: 23px; }
-    body.touch #touch .btns { right: 8px; bottom: 50px; grid-template-columns: repeat(3, 46px); gap: 6px; }
-    body.touch #touch .btns button { width: 46px; height: 46px; font-size: 11px; }
     #info #biome { font-size: 15px; } #info { font-size: 13px; }
     #toast { top: 14%; font-size: 15px; } #interactHint { font-size: 14px; }
   }
@@ -387,6 +372,8 @@
   .slot { border-radius: 3px; } .slot.sel { border-color: #ffe8b8; box-shadow: 0 0 0 2px #000, 0 0 12px rgba(255,220,150,0.45), inset 0 0 12px rgba(240,226,200,0.25); transform: translateY(-2px); transition: transform .1s; }
   #objective, #tut { border-radius: 3px; }
   #craftSearch { flex: 1; min-width: 80px; padding: 2px 8px; font-size: 18px; }
+  .rmore { display: flex; flex-direction: column; gap: 3px; } .rmore button { padding: 1px 8px; font-size: 15px; min-width: 46px; }
+  .recipe { border-radius: 3px; transition: background .1s, border-color .1s; } .recipe.ok:hover { background: #241e18; }
   #craftTabs.creative button { display: none; }
   #invSort { padding: 2px 10px; font-size: 16px; }
   #inv .chead { margin-bottom: 6px; }
@@ -409,6 +396,100 @@
   #tip::before { content: '💡'; position: absolute; left: 10px; top: 6px; font-size: 22px; }
   #tip .tt { color: var(--accent2); display: block; font-family: "Silkscreen", monospace; font-size: 12px; } #tip b { color: #ffe08a; font-weight: normal; }
   @media (pointer: coarse) and (max-height: 520px) { #tip { bottom: 70px; font-size: 13px; padding-left: 34px; } #tip::before { font-size: 16px; left: 8px; } }
+  /* ================= v10.1: controles táctiles ================= */
+  #touch { --ts: 1; --to: 0.85; }
+  #touch .stick, #touch .btns, #touch .top { display: none; }
+  #touch .stickzone { position: absolute; left: 0; bottom: 0; width: 42%; height: 78%; pointer-events: auto; }
+  #touch .stick { display: block; position: absolute; left: calc(26px * var(--ts)); bottom: calc(40px * var(--ts)); width: calc(124px * var(--ts)); height: calc(124px * var(--ts)); border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08), rgba(0,0,0,0.28)); border: 2px solid rgba(255,255,255,0.22); pointer-events: none; opacity: calc(var(--to) * 0.55); transition: opacity .2s; transform: translate(0, 0); }
+  #touch .stick.on { opacity: var(--to); transition: none; }
+  #touch .stick i { position: absolute; left: 50%; top: 50%; width: 44%; height: 44%; margin: -22% 0 0 -22%; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.65), rgba(255,255,255,0.25)); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  #touch .pad { position: absolute; right: calc(14px * var(--ts)); bottom: calc(18px * var(--ts)); width: calc(250px * var(--ts)); height: calc(230px * var(--ts)); pointer-events: none; }
+  #touch .pad button { position: absolute; pointer-events: auto; border-radius: 50%; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+    background: radial-gradient(circle at 50% 35%, rgba(60,50,40,0.55), rgba(10,8,6,0.55)); border: 2px solid rgba(255,236,200,0.35); color: #fff; opacity: var(--to); box-shadow: 0 3px 10px rgba(0,0,0,0.35); transition: transform .08s, background .1s; }
+  #touch .pad button i { font-style: normal; font-size: calc(26px * var(--ts)); line-height: 1; }
+  #touch .pad button span { font-size: calc(11px * var(--ts)); line-height: 1; margin-top: 2px; color: #f0e6d0; text-shadow: 1px 1px 0 #000; max-width: 90%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #touch .pad button.on { transform: scale(0.92); background: radial-gradient(circle, rgba(217,130,59,0.75), rgba(120,60,20,0.65)); }
+  #touch .pad button.lock { background: radial-gradient(circle, rgba(156,255,58,0.45), rgba(40,80,20,0.6)); border-color: #9cff3a; }
+  #touch .b-jump { right: 0; bottom: 0; width: calc(84px * var(--ts)); height: calc(84px * var(--ts)); }
+  #touch .b-break { right: calc(94px * var(--ts)); bottom: calc(6px * var(--ts)); width: calc(72px * var(--ts)); height: calc(72px * var(--ts)); }
+  #touch .b-use { right: calc(30px * var(--ts)); bottom: calc(94px * var(--ts)); width: calc(72px * var(--ts)); height: calc(72px * var(--ts)); }
+  #touch .b-run { right: calc(170px * var(--ts)); bottom: calc(10px * var(--ts)); width: calc(54px * var(--ts)); height: calc(54px * var(--ts)); }
+  #touch .b-down { right: calc(110px * var(--ts)); bottom: calc(88px * var(--ts)); width: calc(54px * var(--ts)); height: calc(54px * var(--ts)); }
+  #touch .b-mount { right: calc(0px * var(--ts)); bottom: calc(176px * var(--ts)); width: calc(58px * var(--ts)); height: calc(58px * var(--ts)); }
+  #touch .b-drop { right: calc(176px * var(--ts)); bottom: calc(72px * var(--ts)); width: calc(46px * var(--ts)); height: calc(46px * var(--ts)); }
+  #touch .b-use.ctx { border-color: #9cff3a; }
+  #touch .tbar { position: absolute; top: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; pointer-events: auto; opacity: var(--to); }
+  #touch .tbar button { width: calc(40px * var(--ts)); height: calc(36px * var(--ts)); padding: 0; font-size: calc(17px * var(--ts)); border-radius: 6px; background: rgba(10,8,6,0.55); border: 2px solid rgba(255,236,200,0.25); }
+  #touch .tbar button.on { background: rgba(217,130,59,0.7); }
+  body.touch #info { top: 6px; } body.touch #objective { top: 52px; }
+  body.touch #hotbar { left: 50%; }
+  @media (pointer: coarse) and (max-height: 520px) {
+    #touch .tbar { top: 4px; } #touch .tbar button { width: calc(34px * var(--ts)); height: calc(30px * var(--ts)); font-size: calc(14px * var(--ts)); }
+    #touch .stick { left: calc(18px * var(--ts)); bottom: calc(30px * var(--ts)); width: calc(104px * var(--ts)); height: calc(104px * var(--ts)); }
+    #touch .pad { transform: scale(0.84); transform-origin: bottom right; }
+  }
+  /* indicador de daño */
+  #dmgDir { position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; pointer-events: none; }
+  #dmgDir i { position: absolute; left: 50%; top: 0; width: 60px; height: 22px; margin-left: -30px; background: radial-gradient(ellipse at 50% 100%, rgba(255,60,40,0.9), rgba(255,60,40,0)); border-radius: 50% 50% 0 0; opacity: 0; transition: opacity .6s; }
+  #dmgDir i.on { opacity: 1; transition: none; }
+  #lowHp { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 50%, rgba(170,0,0,0.55)); opacity: 0; }
+  #lowHp.on { animation: lowhp 1.2s infinite; } @keyframes lowhp { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.75; } }
+  /* mira */
+  #crosshair.dot::before { left: 9px; top: 9px; width: 4px; height: 4px; border-radius: 50%; } #crosshair.dot::after { display: none; }
+  #crosshair.ring::before { left: 3px; top: 3px; width: 12px; height: 12px; background: none !important; border: 2px solid #fff; border-radius: 50%; } #crosshair.ring::after { left: 10px; top: 10px; width: 2px; height: 2px; }
+  #crosshair.ring.mob::before { border-color: #ff5a4a; }
+  #crosshair.hit { animation: hitm .2s; } @keyframes hitm { 0% { transform: translate(-50%, -50%) scale(1.5) rotate(45deg); } 100% { transform: translate(-50%, -50%) scale(1); } }
+  /* ================= v10.1: pulido de componentes ================= */
+  .slot { background: linear-gradient(180deg, rgba(0,0,0,0.5), rgba(0,0,0,0.32)); box-shadow: inset 0 2px 4px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(255,236,200,0.06); }
+  #inv .slot:hover { border-color: var(--accent); box-shadow: inset 0 0 10px rgba(217,130,59,0.35); }
+  .slot .count { font-family: 'Silkscreen', monospace; font-size: 11px; right: 3px; bottom: 1px; text-shadow: 1px 1px 0 #000, -1px 0 0 #000; }
+  .slot .dur { border-radius: 2px; height: 3px; }
+  #itemName { background: rgba(10,8,6,0.62); padding: 1px 12px; border-radius: 12px; border: 1px solid rgba(255,236,200,0.18); font-size: 20px; bottom: 86px; }
+  #interactHint { border-radius: 12px; border: 1px solid rgba(255,236,200,0.2); padding: 2px 12px; background: rgba(10,8,6,0.6); }
+  #ach { border-radius: 6px; box-shadow: 0 8px 26px rgba(0,0,0,0.55), 0 0 0 1px #000, inset 0 0 18px rgba(224,194,58,0.15); padding: 8px 22px 8px 56px; }
+  #ach::before { content: '🏅'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 30px; }
+  #chatLog div { border-radius: 3px; }
+  #death { background: radial-gradient(ellipse at center, rgba(60,0,0,0.45), rgba(20,0,0,0.88)); align-items: center; justify-content: center; text-align: center; backdrop-filter: blur(2px) grayscale(0.6); }
+  #death > * { margin: 0 !important; } #death { gap: 10px; }
+  #death h2 { animation: deathIn .9s cubic-bezier(.2,1.3,.4,1); letter-spacing: 4px; }
+  @keyframes deathIn { from { opacity: 0; transform: scale(1.6); letter-spacing: 30px; } }
+  #death #respawn { min-width: 240px; font-size: 24px; padding: 10px 24px; margin-top: 8px !important; }
+  #death p { max-width: 560px; }
+  #tut { box-shadow: 0 8px 26px rgba(0,0,0,0.5); }
+  #vehHud { border-radius: 6px; } #raceHud { border-radius: 0 6px 6px 0; }
+  #minimap { box-shadow: 0 0 0 2px #2a241d, 0 0 0 4px rgba(0,0,0,0.6), 0 6px 16px rgba(0,0,0,0.45); }
+  #hotbar .slot.sel::after { content: ''; position: absolute; inset: -4px; border: 2px solid rgba(255,232,184,0.35); border-radius: 5px; pointer-events: none; }
+  .tile i { filter: drop-shadow(1px 1px 0 rgba(0,0,0,0.6)); }
+  .card h2, .card h3 { text-shadow: 2px 2px 0 rgba(0,0,0,0.5); }
+  /* mochila en el celu acostado: dos columnas compactas */
+  #inv .chead { padding-right: 46px; }
+  @media (max-height: 520px) and (min-width: 600px) {
+    #inv { padding: 4px; }
+    #inv .card { grid-template-columns: auto minmax(0, 1fr); gap: 12px; max-height: 98vh; overflow: hidden; padding: 8px 10px; }
+    #inv .grid { grid-template-columns: repeat(9, 34px); gap: 2px; }
+    #inv .slot, #hotbar .slot { width: 34px; height: 34px; aspect-ratio: auto; }
+    #inv .slot canvas { width: 26px; height: 26px; }
+    #inv h2 { font-size: 14px; margin: 0; } #invBar { margin-top: 6px; padding-top: 6px; }
+    #equipInfo, #stationInfo { font-size: 13px; margin: 4px 0 0; } #invEquip { margin-top: 6px; }
+    #craftList { max-height: calc(98vh - 84px); }
+    .recipe .slot { width: 30px; height: 30px; } .rinfo b { font-size: 17px; } .ings span { font-size: 14px; } .ings canvas { width: 16px; height: 16px; }
+    #craftTabs button { font-size: 14px; padding: 1px 6px; } #craftSearch { font-size: 15px; }
+    #invClose { width: 34px; height: 34px; top: 4px; right: 4px; }
+  }
+  /* guía: índice al costado */
+  #guide .card { display: grid; grid-template-columns: 220px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 0 14px; width: min(1000px, 100%); height: min(90vh, 760px); }
+  #guide .card > div:first-child { grid-column: 1 / -1; }
+  #guideTabs { flex-direction: column; flex-wrap: nowrap; overflow-y: auto; gap: 3px; margin: 0; padding-right: 4px; }
+  #guideTabs button { text-align: left; padding: 4px 10px; font-size: 17px; flex: none; border-radius: 3px; }
+  #guideTabs button.on { background: #3a2c1e; box-shadow: inset 3px 0 0 var(--accent); }
+  #guideBody { min-height: 0; }
+  @media (max-height: 520px) and (min-width: 600px) { #guide .card { grid-template-columns: 170px minmax(0, 1fr); height: 96vh; padding: 8px 10px; } #guideTabs button { font-size: 15px; padding: 2px 8px; } #guide h2 { font-size: 18px !important; } }
+  @media (max-width: 600px) {
+    #guide .card { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); height: 94vh; }
+    #guideTabs { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding-bottom: 6px; margin-bottom: 6px; } #guideTabs button { white-space: nowrap; }
+  }
+  .gsearch { flex: none; margin-bottom: 4px; padding: 4px 8px; font-size: 16px; }
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
@@ -487,6 +568,8 @@
 <div id="hud" hidden>
   <div id="vignette"></div>
   <div id="hurt"></div>
+  <div id="lowHp"></div>
+  <div id="dmgDir"><i></i></div>
   <div id="netInfo" hidden></div>
   <div id="tut" hidden></div>
   <div id="chatLog"></div>
@@ -705,12 +788,22 @@
 
 <div id="touch" hidden>
   <div class="look"></div>
+  <div class="stickzone"></div>
   <div class="stick"><i></i></div>
-  <div class="btns">
-    <button class="b-use">Usar</button><button class="b-jump">Saltar</button><button class="b-break">Romper</button>
-    <button class="b-run">Correr</button><button class="b-inv">Mochila</button><button class="b-mount">Moto</button>
+  <div class="tbar">
+    <button class="b-pause" title="Pausa">❚❚</button><button class="b-inv" title="Mochila">🎒</button><button class="b-map" title="Mapa">🗺</button>
+    <button class="b-wp" title="Marcador">📍</button><button class="b-emote" title="Gestos">😀</button><button class="b-cam" title="Cámara">👁</button>
+    <button class="b-photo" title="Foto">📷</button><button class="b-chat" title="Chat" hidden>💬</button>
   </div>
-  <div class="top"><button class="b-pause">❚❚</button><button class="b-map">Mapa</button></div>
+  <div class="pad">
+    <button class="b-use"><i>✋</i><span>Usar</span></button>
+    <button class="b-break"><i>⛏</i><span>Romper</span></button>
+    <button class="b-jump"><i>⤒</i><span>Saltar</span></button>
+    <button class="b-run"><i>🏃</i><span>Correr</span></button>
+    <button class="b-down" hidden><i>⤓</i><span>Bajar</span></button>
+    <button class="b-mount" hidden><i>🚗</i><span>Subir</span></button>
+    <button class="b-drop"><i>⇩</i><span>Tirar</span></button>
+  </div>
 </div>
 
 <script type="module" src="js/main.js"></script>

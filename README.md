@@ -112,6 +112,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 - Visual: nubes, estrellas fugaces, auroras, luz dinámica de la antorcha en la mano, partículas del ambiente (luciérnagas, hojas, polvo, chispas, burbujas), color de cine por bioma, sacudón de cámara.
 - Comodidad: buscador y orden en la mochila, marcadores en pantalla y en el mapa, mapa grande con zoom y arrastre, modo foto con filtros, consejos la primera vez, opciones de cámara.
 
+**v10.1 — Celular y pulido**: controles táctiles nuevos (joystick flotante, botones con íconos, «Usar» que dice qué hace, botones que aparecen según la situación, vibración, tamaño/opacidad/sensibilidad), mochila en dos columnas en el celu con mover rápido y fabricar ×5/Máx, guía con índice al costado y buscador, tamaño de la interfaz ajustable, indicador de dónde viene el daño, pulso rojo con poca vida, estilos de mira, pantalla de muerte nueva y pulido de casillas, avisos y logros.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

@@ -174,8 +174,22 @@ export class UI {
 
   // acc: {get, set, accept(id), max}
   bindSlot(el, acc, invIndex) {
+    // táctil: mantener apretado mueve rápido (como Shift + clic) o muestra qué es
+    let lp = null, lpDone = false;
+    el.addEventListener('touchstart', () => {
+      lpDone = false; clearTimeout(lp);
+      lp = setTimeout(() => {
+        lpDone = true;
+        const s = acc.get();
+        if (s && !this.held) { this.clickSlot(acc, false, true, invIndex); navigator.vibrate?.(15); this.sfx.click(); }
+        else if (s) { this.showTip(s.id, '', s); setTimeout(() => (this.tooltip.hidden = true), 1800); }
+      }, 420);
+    }, { passive: true });
+    el.addEventListener('touchend', (e) => { clearTimeout(lp); if (lpDone) e.preventDefault(); }, { passive: false });
+    el.addEventListener('touchmove', () => clearTimeout(lp), { passive: true });
     el.addEventListener('mousedown', (e) => {
       e.preventDefault();
+      if (lpDone) { lpDone = false; return; }
       this.clickSlot(acc, e.button === 2, e.shiftKey, invIndex);
       this.sfx.click();
     });
@@ -412,6 +426,16 @@ export class UI {
       }
       info.appendChild(ing);
       row.appendChild(info);
+      if (ok) {
+        // fabricar varios sin teclado (en el celu no hay Shift)
+        const more = document.createElement('div'); more.className = 'rmore';
+        for (const [txt, n] of [['×5', 5], ['Máx', 64]]) {
+          const b = document.createElement('button'); b.textContent = txt;
+          b.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); let t = n, made = 0; while (t-- > 0 && inv.canCraft(r, this.stations, this.known)) { const res = inv.craft(r, this.stations, this.known); if (res !== true && res > 0) this.onDropHeld?.({ id: r.out[0], count: res }); made++; } if (made) { this.sfx.craft(); this.onCraft?.(r.out[0]); } });
+          more.appendChild(b);
+        }
+        row.appendChild(more);
+      }
       row.addEventListener('mousedown', (e) => {
         e.preventDefault();
         let times = e.shiftKey ? 16 : 1, made = 0;

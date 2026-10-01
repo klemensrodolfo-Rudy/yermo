@@ -88,6 +88,7 @@ export class Player {
     this.invuln = 0.45;
     // desgaste de armadura
     if (real !== amount) for (const slot of ['head', 'body']) { const s = this.inv.equip[slot]; if (s) { s.dur--; if (s.dur <= 0) { this.inv.equip[slot] = null; this.sfx?.toolBreak(); } } }
+    if (knock) this.lastHit = { x: -knock.x, z: -knock.z, t: performance.now() };
     if (knock) { this.vel.x += knock.x * 7; this.vel.z += knock.z * 7; this.vel.y = Math.max(this.vel.y, 4.5); }
     this.onDamage(real, cause);
     // mordidas que infectan
@@ -306,7 +307,7 @@ export class Player {
     const liquid = this.inWater || this.inLava;
     this.onLadder = !R && (!!BLOCKS[feet]?.ladder || !!BLOCKS[w.getBlock(fx0, Math.floor(this.pos.y + 1.2), fz0)]?.ladder);
 
-    const sprint = active && (k.ShiftLeft || k.ShiftRight) && !liquid;
+    const sprint = active && (k.ShiftLeft || k.ShiftRight || this.autoRun) && !liquid;
     let speed = R ? VT.speed : this.flying ? FLY * (sprint ? 1.8 : 1) : sprint ? SPRINT : WALK;
     if (!R && this.buffs.frescura > 0) speed *= 1.15;
     this.nitroOn = false;

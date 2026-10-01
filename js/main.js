@@ -1080,7 +1080,7 @@ async function startGame(meta, hello, cloudInfo) {
     game, ui, net, sfx, flash, scene, camera, renderer, uniforms, skyUniforms, settings, particles, voice, ext,
     skin: skinOf, isAuthority, openInventory, closeInventory, lockPointer, toggleMount, addChat,
     saveGame, Storage, setPause, mapView, toggleBigMap,
-    isPhoto: () => !!game?.features?.photo, photoKey: () => game.features.key({ code: 'F2', preventDefault() {} }),
+    input, isPhoto: () => !!game?.features?.photo, photoKey: () => game.features.key({ code: 'F2', preventDefault() {} }),
     saveSettings: () => { try { localStorage.setItem('yermo-settings', JSON.stringify(settings)); } catch { /* sin almacenamiento */ } },
     endRun: async () => { const id = game.meta.id, local = !game.meta.remote && !game.meta.cloud; $('#death').hidden = true; await quitToMenu(); if (local) { await Storage.deleteWorld(id); showMenu(); } },
     openPanel: (title, render) => { ui.player = player; ui.openPanel(nearbyStations(player.pos), title, render); document.exitPointerLock(); $('#hud').classList.add('dim'); },
@@ -1566,14 +1566,24 @@ const input = new Input({
     else if (name === 'pause') setPause(!paused);
     else if (name === 'mount') toggleMount();
     else if (name === 'drop') dropHand(false);
+    else if (name === 'chat') { if (net.active) { game.player.keys = {}; openChat(); } }
+    else {
+      // atajos del teclado para la barra táctil
+      const code = { waypoint: 'KeyN', emotes: 'KeyB', camera: 'KeyV', photo: 'F2', journal: 'KeyJ' }[name];
+      const e = { code, preventDefault() {} };
+      if (code) game.features.key(e) || game.features2.key(e) || game.ux?.key(e);
+    }
   },
+  opts: () => settings,
 });
+input.applyTouchOpts(settings);
+addEventListener('touchopts', () => input.applyTouchOpts(settings));
 
 // ---------- Bucle ----------
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '10.0 · 2026-10-02';
+const VERSION = '10.1 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1619,7 +1629,7 @@ function loop(now) {
   // en línea el mundo no se detiene con la pausa
   const simDt = paused && !net.active ? 0 : dt;
   const active = inputActive() && !paused && !ui.open && !chatting;
-  player.analog = input.analog;
+  player.analog = input.analog; player.autoRun = input.autoRun;
   game.time = (game.time + simDt / DAY_LEN) % 1;
   // amanecer: logro por noche sobrevivida
   if (game.lastTime < 0.25 && game.time >= 0.25 && !player.dead) game.ach.event('dawn');
@@ -1729,7 +1739,11 @@ function loop(now) {
       else if (b.door) hint = 'Clic derecho: abrir / cerrar';
     }
     if (mt && !mt.def.npc && !mt.def.human && !mt.def.boss) game.ach.event('seen', mt.type);
-    if (hint !== game.hintTxt) { game.hintTxt = hint; $('#interactHint').textContent = hint; $('#interactHint').hidden = !hint; }
+    if (hint !== game.hintTxt) {
+      game.hintTxt = hint;
+      const shown = input.touch ? hint.replace(/Clic derecho/g, '✋ Usar').replace(/\bF:/g, '🚗:').replace(/Espacio/g, '⤒').replace(/\bC baja/g, '⤓ baja') : hint;
+      $('#interactHint').textContent = shown; $('#interactHint').hidden = !hint;
+    }
   }
 
   game.features.preRender();
