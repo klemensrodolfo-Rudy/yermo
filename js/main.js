@@ -752,6 +752,16 @@ async function startGame(meta, hello) {
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
   }
   game.tutorial = new Tutorial(game, ui, sfx);
+  // reglas del mundo: radiación y animales mutantes de día (se pueden cambiar en la pausa)
+  game.applyRules = () => {
+    const r = Object.assign({ rad: true, dayMobs: true }, game.meta.rules);
+    game.meta.rules = r;
+    player.noRad = !r.rad;
+    if (player.noRad) { player.rad = 0; player.radExposure = 0; }
+    mobs.peacefulDay = !r.dayMobs;
+    $('#rad').hidden = player.noRad;
+  };
+  game.applyRules();
   // v5: sistemas nuevos
   game.gen = wgen;
   player.name = net.myName || getName() || 'Superviviente'; player.team = net.team;
@@ -891,6 +901,7 @@ $('#createWorld').onclick = () => {
   const seed = preset.seed ?? (s ? (/^-?\d+$/.test(s) ? parseInt(s) : [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7)) : (Math.random() * 2e9) | 0);
   const meta = { id: 'w' + Date.now().toString(36), name, seed, mode: $('#wMode').value, worldType: $('#wType').value, renderDist: +$('#optDist').value || QUALITY[settings.quality].dist };
   if (preset.spawn) meta.spawnPref = preset.spawn;
+  meta.rules = { rad: $('#wRad').checked, dayMobs: $('#wDay').checked };
   if ($('#wTut').checked) meta.tutorial = { step: 0, done: false };
   $('#newForm').hidden = true;
   startGame(meta);
@@ -904,7 +915,7 @@ function metaFromHello(hello, id) {
   const g = hello.guest;
   return {
     id, name: 'Online', seed: hello.seed, mode: hello.mode, worldType: hello.worldType, remote: true, renderDist: Math.min(6, QUALITY[settings.quality].dist),
-    player: g?.pos ? { ...g.pos } : { ...hello.spawn }, origin: hello.spawn, spawn: g?.spawn,
+    player: g?.pos ? { ...g.pos } : { ...hello.spawn }, origin: hello.spawn, spawn: g?.spawn, rules: hello.rules,
     inventory: g?.inv, equip: g?.equip, blueprints: g?.blueprints, p6: g?.p6,
   };
 }
@@ -958,6 +969,11 @@ function setPause(p) {
     $('#optPublic').checked = net.public; $('#optPublic').disabled = !net.isHost;
     $('#optVoice').checked = voice.on; $('#optVoice').disabled = net.transport !== 'peer';
     $('#achBtn').textContent = `Logros (${game.ach.count()}/${ACHIEVEMENTS.length})`;
+    $('#optName').value = game.player.name;
+    const rules = game.meta.rules || {}, canRules = !net.isClient;
+    $('#optRad').checked = rules.rad !== false; $('#optDay').checked = rules.dayMobs !== false;
+    $('#optRad').disabled = $('#optDay').disabled = !canRules;
+    $('#rulesInfo').textContent = canRules ? '' : '(las decide el anfitrión)';
   }
 }
 $('#resume').onclick = () => { setPause(false); lockPointer(); };
@@ -990,6 +1006,24 @@ $('#optSens').oninput = (e) => { const v = +e.target.value; game.player.sens = v
 $('#optVol').oninput = (e) => { settings.sfx = +e.target.value; applySettings(); };
 $('#optMusic').oninput = (e) => { settings.music = +e.target.value; applySettings(); };
 $('#optQuality').onchange = (e) => { settings.quality = e.target.value; applySettings(); };
+// cambiar el nombre en plena partida: mascotas, terrenos, empleados y online siguen siendo tuyos
+function renamePlayer() {
+  if (!game) return;
+  const n = $('#optName').value.trim().slice(0, 20);
+  const old = game.player.name;
+  if (!n || n === old) return;
+  setName(n); $('#jName').value = n;
+  game.player.name = n;
+  for (const m of game.mobs.list.values()) if (m.owner === old) m.owner = n;
+  for (const [k, c] of game.sim.containers) if (c.type === 'claim' && c.owner === old) { c.owner = n; game.sim.touch(k); }
+  if (net.active) { net.myName = n; net.send({ t: 'fx', op: 'rename', id: net.myId, name: n, old }); addChat(null, `Ahora te llamás ${n}`); }
+  flash(`Ahora te llamás ${n}`);
+}
+$('#optNameOk').onclick = renamePlayer;
+$('#optName').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); renamePlayer(); $('#optName').blur(); } });
+const setRule = (k, v) => { if (!game || net.isClient) return; game.meta.rules = { ...(game.meta.rules || {}), [k]: v }; game.applyRules(); flash(k === 'rad' ? (v ? '☢ Radiación activada' : 'Radiación desactivada') : (v ? 'Los animales mutantes vuelven a atacar de día' : 'De día los animales mutantes ya no atacan')); };
+$('#optRad').onchange = (e) => setRule('rad', e.target.checked);
+$('#optDay').onchange = (e) => setRule('dayMobs', e.target.checked);
 // paquetes de texturas: plantilla para editar y carga de un PNG propio (se guarda en el navegador)
 function usePack(url, save) {
   const img = new Image();
@@ -1170,7 +1204,7 @@ const input = new Input({
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '7.3 · 2026-10-01';
+const VERSION = '7.4 · 2026-10-01';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1214,7 +1248,7 @@ function loop(now) {
   game.features.camera();
   world.update(player.pos.x, player.pos.z);
   updateSky(game.time);
-  const players = [{ pos: player.pos, dead: player.dead, creative: player.creative, local: true, player }];
+  const players = [{ pos: player.pos, dead: player.dead, creative: player.creative, local: true, player, name: player.name }];
   if (net.active && auth) players.push(...net.remotePlayers());
   mobs.update(simDt, players, uniforms.daylight.value);
   drops.update(simDt, players, uniforms.daylight.value);

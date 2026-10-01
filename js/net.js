@@ -74,6 +74,12 @@ export class Avatar {
     this.hat.visible = hat !== 'none';
     if (hat === 'casco') this.hat.material.color.set(0x8a8e94); else if (hat === 'gorro') this.hat.material.color.set(0xc8302a); else if (hat === 'sombrero') this.hat.material.color.set(0x6a4a2a);
   }
+  setName(name) {
+    if (!name || name === this.name) return;
+    this.name = name;
+    this.group.remove(this.tag); this.tag.material.map.dispose(); this.tag.material.dispose();
+    this.tag = nameSprite(name, TEAMS[this.team]?.color); this.group.add(this.tag);
+  }
   setTeam(team) {
     if (team === this.team) return;
     this.team = team;
@@ -195,7 +201,7 @@ export class Net {
   helloFor(id, name) {
     const g = this.game;
     return {
-      t: 'hello', seed: g.meta.seed, mode: g.meta.mode, worldType: g.meta.worldType || 'normal', time: g.time, you: id,
+      t: 'hello', seed: g.meta.seed, mode: g.meta.mode, worldType: g.meta.worldType || 'normal', time: g.time, you: id, rules: g.meta.rules,
       keys: [...g.world.savedKeys, ...g.world.pendingEdits.keys()],
       spawn: g.meta.spawn ?? g.meta.origin, hostName: this.myName,
       containers: g.sim.serialize(), guest: g.meta.guests?.[name] ?? null, pvp: this.pvp,
@@ -246,7 +252,10 @@ export class Net {
         break;
       }
       case 'race': this.onRace(m); this.broadcast(m, from); break;
-      case 'fx': this.onFx({ ...m, from }); this.broadcast({ ...m, from }, from); break;
+      case 'fx':
+        if (m.op === 'rename') { c.name = String(m.name).slice(0, 20); const a = this.avatars.get(from); a?.setName(c.name); this.onChat(null, `${m.old} ahora se llama ${c.name}`); }
+        this.onFx({ ...m, from }); this.broadcast({ ...m, from }, from);
+        break;
       case 'pos': this.applyPos(from, c.name, m); break;
       case 'chat': {
         const text = String(m.text).slice(0, 160);
@@ -388,6 +397,7 @@ export class Net {
         if (m.drops) g.drops.applyRemote(m.drops);
         if (m.veh) g.vehicles.applyRemote(m.veh, this.myId);
         if (m.weather) g.weather.setRemote(m.weather[0], m.weather[1]);
+        if (m.rules && JSON.stringify(m.rules) !== JSON.stringify(g.meta.rules)) { g.meta.rules = m.rules; g.applyRules?.(); }
         this.pvp = !!m.pvp;
         if (m.players) {
           const seen = new Set();
@@ -406,7 +416,10 @@ export class Net {
       case 'give': for (const [id, n, dur] of m.items) { const left = g.inv.add(id, n); if (dur != null) { /* durabilidad por defecto */ } if (left > 0) g.dropLocal?.(id, left); } if (m.kill) g.player.onEvent('kill', m.kill); g.sfx?.pickup(); break;
       case 'chat': this.onChat(m.name, m.text); break;
       case 'race': this.onRace(m); break;
-      case 'fx': this.onFx(m); break;
+      case 'fx':
+        if (m.op === 'rename') { this.avatars.get(m.from ?? m.id)?.setName(m.name); this.onChat(null, `${m.old} ahora se llama ${m.name}`); }
+        this.onFx(m);
+        break;
       case 'cont': g.sim.setRemote(m.k, m.c); g.onRemoteContainer?.(m.k); break;
       case 'authority':
         this.authority = true;
@@ -481,7 +494,7 @@ export class Net {
     if (p.riding && !this.authority) this.sendVehMove(p.riding, true);
     const statePayload = () => ({
       t: 'state', time: g.time, mobs: g.mobs.serialize(), drops: g.drops.serialize(), veh: g.vehicles.serialize(),
-      weather: [g.weather.type, +g.weather.k.toFixed(2)], pvp: this.pvp,
+      weather: [g.weather.type, +g.weather.k.toFixed(2)], pvp: this.pvp, rules: g.meta.rules,
     });
     if (this.isHost) {
       const players = [['host', this.myName, +p.pos.x.toFixed(2), +p.pos.y.toFixed(2), +p.pos.z.toFixed(2), +p.yaw.toFixed(2), +p.pitch.toFixed(2), p.dead ? 1 : 0, p.creative ? 1 : 0, swing, this.team, ride, this.skin]];

@@ -77,6 +77,7 @@ export class Player {
   }
 
   damage(amount, cause, radAdd = 0, knock = null) {
+    if (this.noRad) radAdd = 0;
     if (this.creative || this.dead || (amount <= 0 && !radAdd)) return;
     this.rad = Math.min(100, this.rad + radAdd * (1 - this.radRes));
     if (amount <= 0) return;
@@ -149,7 +150,7 @@ export class Player {
       }
       const feet = w.getBlock(x0, Math.floor(this.pos.y + 0.4), z0);
       const inBoat = this.riding && VEHICLE_TYPES[this.riding.type].boat;
-      this.radExposure = (Math.min(6, e) + (LIQ[feet] === 1 && !inBoat ? 2.5 : 0) + this.extraRad) * (1 - this.radRes);
+      this.radExposure = this.noRad ? 0 : (Math.min(6, e) + (LIQ[feet] === 1 && !inBoat ? 2.5 : 0) + this.extraRad) * (1 - this.radRes);
     }
     if (this.radExposure > 0) this.rad = Math.min(100, this.rad + this.radExposure * dt);
     else this.rad = Math.max(0, this.rad - 0.35 * dt);
@@ -536,7 +537,7 @@ export class Player {
         const lt = this.world.raycast(this.cam.position, dir, 4, true);
         if (lt && (lt.id === 17 || lt.id === 47) && this.thirst < 20) {
           this.thirst = Math.min(20, this.thirst + 4); this.sfx?.drink();
-          if (lt.id === 17) { this.rad = Math.min(100, this.rad + 8 * (1 - this.radRes)); if (Math.random() < 0.2) this.disease.intoxicacion = 60; }
+          if (lt.id === 17) { if (!this.noRad) this.rad = Math.min(100, this.rad + 8 * (1 - this.radRes)); if (Math.random() < 0.2) this.disease.intoxicacion = 60; }
           return;
         }
       }

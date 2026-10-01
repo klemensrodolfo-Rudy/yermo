@@ -324,6 +324,8 @@
           <select id="optDist"><option>4</option><option>5</option><option selected>6</option><option>8</option><option>10</option></select></div>
       </div>
       <label class="check"><input type="checkbox" id="wTut" checked> Tutorial guiado (recomendado la primera vez)</label>
+      <label class="check"><input type="checkbox" id="wRad" checked> ☢ Radiación (cráteres, uranio, lluvia ácida, agua tóxica)</label>
+      <label class="check"><input type="checkbox" id="wDay" checked> 🦂 Animales mutantes que atacan de día (escorpiones, cuervos, lobos, ratas, hongos)</label>
       <div class="row"><button id="cancelNew">Cancelar</button><button id="createWorld" class="primary">Crear mundo</button></div>
     </div>
   </div>
@@ -387,6 +389,8 @@
   <div class="card" style="width:min(420px,100%)">
     <h2 id="pauseTitle">Pausa</h2>
     <p class="muted ver" style="margin:-8px 0 8px;font-size:14px"></p>
+    <label for="optName">Tu nombre</label>
+    <div class="row2"><input id="optName" maxlength="20" autocomplete="off" enterkeyhint="done"><button id="optNameOk">Cambiar</button></div>
     <label>Distancia de visión: <span id="optDistV">6</span> sectores</label>
     <input id="optDistP" type="range" min="3" max="12" value="6">
     <label>Sensibilidad del mouse</label>
@@ -395,6 +399,9 @@
     <input id="optVol" type="range" min="0" max="100" value="60">
     <label>Volumen de música</label>
     <input id="optMusic" type="range" min="0" max="100" value="50">
+    <label>Reglas del mundo <small id="rulesInfo" class="muted"></small></label>
+    <label class="check"><input type="checkbox" id="optRad"> ☢ Radiación</label>
+    <label class="check"><input type="checkbox" id="optDay"> 🦂 Animales mutantes atacan de día</label>
     <label for="optQuality">Calidad gráfica</label>
     <select id="optQuality"><option value="bajo">Baja (PC lenta)</option><option value="medio">Media</option><option value="alto">Alta</option></select>
     <label>Texturas <small id="packInfo" class="muted"></small></label>

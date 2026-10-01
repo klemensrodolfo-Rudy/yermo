@@ -13,15 +13,15 @@ export const MOB_TYPES = {
     drops: [[258, 1, 2, 0.5], [273, 1, 1, 0.12]],
   },
   scorpion: {
-    name: 'Escorpión radiactivo', hp: 12, hw: 0.5, h: 0.65, speed: 4.1, hostile: true, range: 12, dmg: 2, rad: 12,
+    name: 'Escorpión radiactivo', animal: true, hp: 12, hw: 0.5, h: 0.65, speed: 4.1, hostile: true, range: 12, dmg: 2, rad: 12,
     drops: [[261, 1, 1, 0.35], [271, 1, 1, 0.5]],
   },
   rat: {
-    name: 'Rata gigante', hp: 5, hw: 0.3, h: 0.5, speed: 4.6, hostile: true, range: 12, dmg: 1, rad: 2,
+    name: 'Rata gigante', animal: true, hp: 5, hw: 0.3, h: 0.5, speed: 4.6, hostile: true, range: 12, dmg: 1, rad: 2,
     drops: [[271, 1, 1, 0.4]],
   },
   crow: {
-    name: 'Cuervo mutante', hp: 6, hw: 0.35, h: 0.5, speed: 6.5, hostile: true, range: 16, dmg: 2, rad: 0, fly: true,
+    name: 'Cuervo mutante', animal: true, hp: 6, hw: 0.35, h: 0.5, speed: 6.5, hostile: true, range: 16, dmg: 2, rad: 0, fly: true,
     drops: [[314, 1, 2, 0.85]],
   },
   trader: { name: 'Comerciante errante', hp: 40, hw: 0.3, h: 1.9, speed: 1.4, hostile: false, npc: 'trader', drops: [] },
@@ -29,8 +29,8 @@ export const MOB_TYPES = {
   leader: { name: 'Líder del asentamiento', hp: 60, hw: 0.3, h: 1.9, speed: 1.2, hostile: false, npc: 'leader', drops: [], stay: true },
   instructor: { name: 'Instructor de manejo', hp: 60, hw: 0.3, h: 1.9, speed: 1.2, hostile: false, npc: 'instructor', drops: [], stay: true },
   dog: { name: 'Perro del yermo', hp: 14, hw: 0.3, h: 0.8, speed: 5, flee: 5, hostile: false, pet: true, dmg: 3, drops: [[271, 1, 1, 0.5]] },
-  shroom: { name: 'Hongo andante', hp: 14, hw: 0.4, h: 1.4, speed: 1.8, hostile: true, range: 10, dmg: 2, rad: 0, poison: true, drops: [[327, 1, 3, 1]] },
-  wolf: { name: 'Lobo irradiado', hp: 12, hw: 0.35, h: 0.9, speed: 5.2, hostile: true, range: 16, dmg: 3, rad: 3, drops: [[336, 1, 2, 0.8], [271, 1, 1, 0.5]] },
+  shroom: { name: 'Hongo andante', animal: true, hp: 14, hw: 0.4, h: 1.4, speed: 1.8, hostile: true, range: 10, dmg: 2, rad: 0, poison: true, drops: [[327, 1, 3, 1]] },
+  wolf: { name: 'Lobo irradiado', animal: true, hp: 12, hw: 0.35, h: 0.9, speed: 5.2, hostile: true, range: 16, dmg: 3, rad: 3, drops: [[336, 1, 2, 0.8], [271, 1, 1, 0.5]] },
   ratqueen: { name: 'Reina de las ratas', hp: 90, hw: 0.7, h: 1.2, speed: 3.5, hostile: true, range: 20, dmg: 4, rad: 4, boss: true, summon: 'rat',
     drops: [[260, 2, 4, 1], [347, 1, 1, 0.5], [346, 1, 1, 0.4], [306, 1, 2, 1]] },
   leviathan: { name: 'Leviatán tóxico', hp: 120, hw: 1, h: 1.6, speed: 3, hostile: true, range: 22, dmg: 6, rad: 15, boss: true, knock: 2,
@@ -407,7 +407,7 @@ export class Mobs {
         if (m.pos.distanceTo(m.home) > (d.stay ? 5 : 20)) { m.walking = true; m.targetYaw = Math.atan2(-(m.home.x - m.pos.x), -(m.home.z - m.pos.z)); }
         if (m.walking) { mx = -Math.sin(m.targetYaw); mz = -Math.cos(m.targetYaw); speed = d.speed; }
       }
-    } else if (d.hostile && near && !near.dead && !near.creative && nd < d.range) {
+    } else if (d.hostile && near && !near.dead && !near.creative && nd < d.range && !(this.peacefulDay && d.animal && daylight > 0.45 && !m.provoked)) {
       target = near;
     }
     // la reina de las ratas llama a sus crías
@@ -492,7 +492,7 @@ export class Mobs {
     if (d.fly) {
       // vuela alto y se tira en picada sobre el objetivo
       let ty = (m.groundY ?? m.pos.y) + 6;
-      if (d.hostile && near && !near.dead && !near.creative && nd < d.range) ty = near.pos.y + (nd < 5 ? 1 : 4);
+      if (target) ty = near.pos.y + (nd < 5 ? 1 : 4);
       m.vel.y += ((ty - m.pos.y) * 2 - m.vel.y) * Math.min(1, dt * 3);
       m.groundAcc = (m.groundAcc || 0) - dt;
       if (m.groundAcc <= 0) { m.groundAcc = 1; const gy = this.surfaceY(Math.floor(m.pos.x), Math.floor(m.pos.z)); if (gy != null) m.groundY = gy; }
@@ -556,6 +556,7 @@ export class Mobs {
     if (m.dying) return;
     if (!this.authority) { this.onHitRemote?.(m.id, dmg, dir); m.hurt = 0.3; this.sfx?.mobHurt(m.type); return; }
     m.hp -= dmg; m.hurt = 0.3;
+    if (attacker) m.provoked = true;
     if (dir) { m.vel.x += dir.x * 6; m.vel.z += dir.z * 6; m.vel.y = 5; }
     this.sfx?.mobHurt(m.type);
     if (m.type === 'boar' && attacker) { m.fleeT = 5; m.fleeFrom = attacker.pos.clone(); }

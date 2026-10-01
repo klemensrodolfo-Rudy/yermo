@@ -63,6 +63,8 @@ Sandbox voxel postapocalíptico en 3D para el navegador. Three.js, sin dependenc
 - 🔧 **Planos de obra** (copiar y pegar construcciones, se guardan entre mundos), **cañerías, bombas y aspersores**, **ascensores**, **carteles** y **gestos** (B).
 - 🎵 **Música dinámica** según el bioma y la situación (explorar, peligro, carrera, taberna, abismo). 51 logros.
 
+**Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no y animales mutantes que atacan de día sí/no. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.
+
 **Gráficos v7 — texturas HD**
 - Texturas de **32×32** (antes 16×16): ~60 rediseñadas a mano con ruido tileable, celdas y alturas propias (piedra con fisuras, ladrillos con junta, tablas con veta y clavos, corteza con musgo, chapa con remaches, óxido en capas, minerales facetados, lava con grietas incandescentes, agua con cáusticas…); el resto, ampliadas con detalle fino.
 - **Relieve** (normal maps) que reacciona al sol, la luna, las antorchas y los faros; **brillo especular** por material (metal, vidrio, hielo, barro mojado).

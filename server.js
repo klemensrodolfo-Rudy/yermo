@@ -160,7 +160,10 @@ async function onMessage(id, sock, m) {
     }
     case 'pos': c.team = m.team; broadcast({ ...m, from: id, name: c.name }, id); break;
     case 'race': broadcast(m, id); break;
-    case 'fx': broadcast({ ...m, from: id }, id); break;
+    case 'fx':
+      if (m.op === 'rename' && c) c.name = String(m.name || c.name).slice(0, 20);
+      broadcast({ ...m, from: id }, id);
+      break;
     case 'state':
       if (id !== authorityId) break;
       world.meta.time = m.time;
