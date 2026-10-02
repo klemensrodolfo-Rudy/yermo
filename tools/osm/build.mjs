@@ -193,6 +193,8 @@ const PAL = { blanco: 1, white: 1, beige: 2, cream: 2, gray: 3, grey: 3, red: 4,
 const NEUTRAL = [1, 2, 3, 3, 2, 4, 1, 11, 12];
 let nb = 0;
 const heightOf = (t) => {
+  // los monumentos cargados como «edificio» (estatuas, memoriales) son un pedestal, no un edificio
+  if ((/^(memorial|monument)$/.test(t.historic || '') || t.memorial) && !t.height) return 4;
   let h = parseFloat(t.height) || (t['building:levels'] ? (+t['building:levels'] + (+t['roof:levels'] || 0)) * 3.1 + 1 : 0);
   if (!h) h = /^(church|cathedral|chapel)$/.test(t.building) ? (R.suburb ? 10 : 22) : /^(kiosk|hut|shed|garage|toilets)$/.test(t.building) ? 3 : R.defaultHeight; // sin dato: altura de referencia
   return Math.max(3, Math.min(78, Math.round(h)));
@@ -350,13 +352,54 @@ if (R.track) pois.push([R.track.x, Math.round((R.track.z0 + R.track.z1) / 2), 'H
 for (const L of landmarks) if (L.kind === 'santaTrinidad') pois.push([L.x + L.u[0] * 18 + L.v[0] * 12, L.z + L.u[1] * 18 + L.v[1] * 12, 'Iglesia Santa Trinidad', 'iglesia']);
 const uniq = new Map(); for (const p of pois) if (!uniq.has(p[2])) uniq.set(p[2], p);
 
+// ---------- fachadas dibujadas a mano sobre la silueta real ----------
+const facades = [];
+const joinRing = (parts) => {
+  // une los tramos de un borde exterior partido en varias vías
+  const segs = parts.map((p) => p.slice()); const ring = segs.shift();
+  while (segs.length) {
+    const end = ring.at(-1); let k = segs.findIndex((s) => Math.hypot(s[0][0] - end[0], s[0][1] - end[1]) < 0.5 || Math.hypot(s.at(-1)[0] - end[0], s.at(-1)[1] - end[1]) < 0.5);
+    if (k < 0) break; let s = segs.splice(k, 1)[0]; if (Math.hypot(s[0][0] - end[0], s[0][1] - end[1]) >= 0.5) s = s.reverse(); ring.push(...s.slice(1));
+  }
+  return ring;
+};
+const inPoly = (pts, x, z) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, zi] = pts[i], [xj, zj] = pts[j]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) c = !c; } return c; };
+const segDist = (px, pz, [x1, z1], [x2, z2]) => { const dx = x2 - x1, dz = z2 - z1, t = Math.max(0, Math.min(1, ((px - x1) * dx + (pz - z1) * dz) / (dx * dx + dz * dz || 1))); return Math.hypot(px - x1 - t * dx, pz - z1 - t * dz); };
+for (const F of R.facades || []) {
+  const e = all.find((o) => (F.way && o.type === 'way' && o.id === F.way) || (F.rel && o.type === 'relation' && o.id === F.rel));
+  if (!e) { console.log('fachada sin silueta', F.style); continue; }
+  let pts = e.type === 'way' ? e.geometry.map((g) => proj(g.lat, g.lon)) : joinRing((e.members || []).filter((m) => m.role === 'outer' && m.geometry).map((m) => m.geometry.map((g) => proj(g.lat, g.lon))));
+  if (Math.hypot(pts[0][0] - pts.at(-1)[0], pts[0][1] - pts.at(-1)[1]) < 0.5) pts = pts.slice(0, -1);
+  pts = pts.map(([x, z]) => [Math.round(x * 100) / 100, Math.round(z * 100) / 100]);
+  const tg = uniq.get(F.target);
+  // el lado principal: el más largo de los que miran al destino
+  let A = 0; for (let i = 0; i < pts.length; i++) { const [x1, z1] = pts[i], [x2, z2] = pts[(i + 1) % pts.length]; A += x1 * z2 - x2 * z1; }
+  let main = -1, best = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const [x1, z1] = pts[i], [x2, z2] = pts[(i + 1) % pts.length], L = Math.hypot(x2 - x1, z2 - z1); if (L < 4 || !tg) continue;
+    const nx = (A > 0 ? (z2 - z1) : -(z2 - z1)) / L, nz = (A > 0 ? -(x2 - x1) : (x2 - x1)) / L;
+    const mx = (x1 + x2) / 2, mz = (z1 + z2) / 2, tx = tg[0] - mx, tz = tg[1] - mz, tl = Math.hypot(tx, tz) || 1;
+    const sc = ((nx * tx + nz * tz) / tl) * L; if (sc > best) { best = sc; main = i; }
+  }
+  // los bloques quedan un metro adentro (la fachada se dibuja en el borde), sin bloques bajo el pórtico
+  let minx = Infinity, maxx = -Infinity, minz = Infinity, maxz = -Infinity; for (const [x, z] of pts) { minx = Math.min(minx, x); maxx = Math.max(maxx, x); minz = Math.min(minz, z); maxz = Math.max(maxz, z); }
+  for (let z = Math.floor(minz) - 1; z <= maxz + 1; z++) for (let x = Math.floor(minx) - 1; x <= maxx + 1; x++) {
+    const i = at(x, z); if (i < 0 || !inPoly(pts, x + 0.5, z + 0.5)) continue;
+    let d = Infinity; for (let k = 0; k < pts.length; k++) d = Math.min(d, segDist(x + 0.5, z + 0.5, pts[k], pts[(k + 1) % pts.length]));
+    const dm = main >= 0 ? segDist(x + 0.5, z + 0.5, pts[main], pts[(main + 1) % pts.length]) : Infinity;
+    if (F.style === 'piramide' || F.style === 'ecuestre' || d < 1.3 || (F.porch && dm < F.porch + 1.3)) { cls[i] = PLAZA; hgt[i] = 0; } else { cls[i] = EDIF; hgt[i] = Math.max(3, Math.floor(F.h) - 1); }
+  }
+  facades.push({ style: F.style, h: F.h, pts, main, ccw: A > 0, porch: F.porch || 0 });
+}
+console.log('fachadas', facades.map((f) => f.style + ':' + f.pts.length + (f.main < 0 ? '(sin frente)' : '')).join(' '));
+
 // ---------- salida ----------
 const L5 = R.suburb ? 5 : 4;
 const raw = new Uint8Array(N * L5); raw.set(cls, 0); raw.set(hgt, N); raw.set(mat, 2 * N); raw.set(bid, 3 * N); if (L5 === 5) raw.set(rf, 4 * N);
 const comp = deflateRawSync(raw, { level: 9 });
 writeFileSync(join(OUT, R.out + '.bin'), comp);
 const source = 'OpenStreetMap (ODbL) · © colaboradores de OpenStreetMap' + (nOv ? ' · siluetas de edificios: Overture Maps (Google Open Buildings, Microsoft)' : '');
-const meta = { version: 1, region: REGION, layers: L5, source, lat0: LAT0, lon0: LON0, rot: TH, x0: X0, z0: Z0, w: W, h: H, trees, lamps, signs2: signs, pois: [...uniq.values()], landmarks };
+const meta = { version: 1, region: REGION, layers: L5, source, lat0: LAT0, lon0: LON0, rot: TH, x0: X0, z0: Z0, w: W, h: H, trees, lamps, signs2: signs, pois: [...uniq.values()], landmarks, facades };
 writeFileSync(join(OUT, R.out + '.json'), JSON.stringify(meta));
 const cnt = new Array(12).fill(0); for (const c of cls) cnt[c]++;
 console.log('clases', cnt.join(' '), '· edificios', blds.length, '· árboles', trees.length, '· faroles', lamps.length, '· esquinas', signs.length, '· lugares', uniq.size);

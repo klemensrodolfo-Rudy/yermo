@@ -170,6 +170,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v14.4 — Taxi**: en los mundos Buenos Aires y Hurlingham arrancás con un celular para pedir un taxi porteño (negro y amarillo) que llega en 5 segundos; elegís un lugar real de la ciudad y el taxista te lleva por las calles del mapa (el camino se calcula sobre el asfalto). Sólo anda dentro de cada ciudad.
 
+**v14.5 — Fachadas porteñas**: la Casa Rosada, el Cabildo, la Catedral Metropolitana, el Teatro Colón y el Congreso con sus fachadas dibujadas a mano (a partir de fotos de la calle) sobre la silueta real de cada edificio, con sus cúpulas, torres, pórticos y frontones; la Pirámide de Mayo con los pañuelos y el monumento a Belgrano. Las alturas que el mapa no tiene son aproximadas.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

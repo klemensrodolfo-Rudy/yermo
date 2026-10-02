@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { GROUND } from './porteno.js';
 import { getBA, isReal } from './badata.js';
 import { buildHitos } from './hitos3d.js';
+import { buildFacades } from './fachadas3d.js';
 
 export function createBaires(ctx) {
   const { game: g } = ctx;
@@ -63,6 +64,7 @@ export function createBaires(ctx) {
   // paralela a la calle que nombra. Se arman sólo los que están cerca.
   const D = getBA();
   const hitos = D ? buildHitos(D, GROUND, ctx.scene) : null;
+  const fach = D?.facades?.length ? buildFacades(D, GROUND, ctx.scene) : null;
   const SIGNS = D?.signs2 || [];
   const short = (n) => n.toUpperCase().replace(/^AVENIDA /, 'AV. ').replace(/^PASAJE /, 'PJE. ').replace(/^DIAGONAL /, 'DIAG. ');
   const plateTex = new Map();
@@ -118,7 +120,8 @@ export function createBaires(ctx) {
     mat.emissiveIntensity = 0.28 + night * 0.45;
     grp.visible = Math.hypot(p.pos.x, p.pos.z) < 900;
     hitos?.update(p, w.renderDist * 16 * 0.85);
+    fach?.update(p, w.renderDist * 16 * 1.25, Math.min(1, Math.max(0, (ctx.uniforms.daylight.value - 0.2) / 0.5)));
   };
-  api.dispose = () => { hitos?.dispose(); ctx.scene.remove(signGrp); poleGeo.dispose(); poleMat.dispose(); plateGeo.dispose(); edgeMat.dispose(); for (const m of plateTex.values()) { m.map.dispose(); m.dispose(); } ctx.scene.remove(grp); geo.dispose(); mat.dispose(); tex.dispose(); door.geometry.dispose(); door.material.dispose(); };
+  api.dispose = () => { hitos?.dispose(); fach?.dispose(); ctx.scene.remove(signGrp); poleGeo.dispose(); poleMat.dispose(); plateGeo.dispose(); edgeMat.dispose(); for (const m of plateTex.values()) { m.map.dispose(); m.dispose(); } ctx.scene.remove(grp); geo.dispose(); mat.dispose(); tex.dispose(); door.geometry.dispose(); door.material.dispose(); };
   return api;
 }
