@@ -1,13 +1,14 @@
-// Mundo «Buenos Aires»: el centro porteño reconstruido con datos reales de OpenStreetMap
+// Mundos reales («Buenos Aires» y «Hurlingham»), reconstruidos con datos de OpenStreetMap y Overture
 // (calles con su ancho y carriles, cada edificio con su forma y su altura, plazas, árboles y faroles).
-// 1 bloque = 1 metro. El mapa está girado para que la 9 de Julio quede a lo largo del eje z (norte = -z).
+// 1 bloque = 1 metro. El mapa está girado para que la calle guía quede a lo largo del eje z.
 import { hash2, hash3 } from './noise.js';
 import { getBA } from './badata.js';
+import { hitoColumn } from './hitos.js';
 
 export const GROUND = 48;
 export const BLEND = 70;
 // clases de suelo (ver tools/osm/build.mjs)
-const AGUA = 5, VIAS = 8, EDIF = 3;
+const AGUA = 5, VIAS = 8, EDIF = 3, ANDEN = 10, HITO = 11, TEJA = 1151, YELLOW = 1026;
 const SURFACE = [1150, 11, 84, 0, 1038, 47, 1035, 1026, 8, 4];
 // materiales de fachada (índices que guarda el conversor)
 const MAT = [9, 1116, 1043, 9, 13, 1044, 1033, 1036, 1034, 1031, 14, 1038, 1049];
@@ -38,13 +39,28 @@ export function makePorteno(gen) {
     put(G - 3, 2); put(G - 2, 2); put(G - 1, 4);
     const i = idx(D, x, z); if (i < 0) return;
     // el Obelisco: pedestal y núcleo (la forma lisa la dibuja el juego encima)
-    if (Math.abs(x) <= 5 && Math.abs(z) <= 5) {
+    if (D.region === 'ba' && Math.abs(x) <= 5 && Math.abs(z) <= 5) {
       put(G, OBE); put(G + 1, OBE);
       if (Math.abs(x) <= 1 && Math.abs(z) <= 1) for (let y = G + 2; y <= G + 62; y++) put(y, WHITE);
       return;
     }
     const c = D.cls[i];
     if (c === AGUA) { put(G - 2, 229); put(G - 1, 47); put(G, 47); return; }
+    // andén del tren: un metro sobre el suelo, con el borde amarillo
+    if (c === ANDEN) {
+      put(G, CONC);
+      let edge = false; for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const j = idx(D, x + dx, z + dz); if (j >= 0 && D.cls[j] === VIAS) edge = true; }
+      put(G + 1, edge ? YELLOW : CONC);
+      return;
+    }
+    // hitos modelados a mano (la iglesia Santa Trinidad en Hurlingham)
+    if (c === HITO) {
+      for (const L of D.landmarks || []) {
+        const a = (x - L.x) * L.u[0] + (z - L.z) * L.u[1], b = (x - L.x) * L.v[0] + (z - L.z) * L.v[1];
+        if (a >= 6 && a <= 28 && b >= 6 && b <= 30) { hitoColumn(L.kind, a, b, put, G); return; }
+      }
+      put(G, 2); return;
+    }
     if (c !== EDIF) {
       put(G, SURFACE[c] ?? 1150);
       if (c === VIAS) put(G + 1, 101);
@@ -54,7 +70,7 @@ export function makePorteno(gen) {
       return;
     }
     // ---------- edificio con su altura real ----------
-    const h = D.hgt[i], top = G + h, m = MAT[D.mat[i]] ?? CONC;
+    const h = D.hgt[i], top = G + h, m = MAT[D.mat[i]] ?? CONC, roof = D.rf ? D.rf[i] : 0, house = !!D.rf;
     put(G, CONC);
     const side = exposed(D, x, z, i);
     const along = side === 'x' ? z : x;
@@ -65,7 +81,12 @@ export function makePorteno(gen) {
       const ry = y - G - 1, fy = ry % 3, floor = Math.floor(ry / 3);
       let id = 0;
       if (y === top) id = side ? (glassy ? CONC : m) : CONC; // azotea
-      else if (side) {
+      else if (side && house) {
+        // casas del barrio: una ventana cada tanto, a la altura de los ojos, y alguna puerta
+        id = m;
+        if (fy === 1 && ((along % 4) + 4) % 4 === 1) id = GLASS;
+        if (floor === 0 && fy < 2 && ((along % 11) + 11) % 11 === 6) id = 0;
+      } else if (side) {
         id = glassy ? (fy === 0 ? CONC : GLASS) : m;
         if (!glassy) {
           if (floor === 0) id = fy === 2 ? m : (((along % 7) + 7) % 7 === 3 ? 0 : GLASS); // planta baja: vidrieras y entradas
@@ -75,7 +96,8 @@ export function makePorteno(gen) {
       else if (nearFacade && fy === 2 && floor > 0 && hash3(s + 1601, x, y, z) < 0.1) id = LAMP; // luces detrás de algunas ventanas
       if (id) put(y, id);
     }
-    if (side && h > 6) put(top + 1, glassy ? CONC : m); // parapeto
+    if (roof) { for (let y = top + 1; y <= top + roof; y++) put(y, TEJA); return; } // techo de tejas a cuatro aguas
+    if (side && (h > 6 || house)) put(top + 1, glassy ? CONC : m); // parapeto
   }
 
   // árboles reales del mapa (especie según OSM: plátano, jacarandá, tipa, palo borracho, palmera)

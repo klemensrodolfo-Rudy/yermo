@@ -62,6 +62,8 @@ export const TILES = [
   'garage_door',
   // v14: Buenos Aires
   'jac_leaves', 'palo_leaves', 'vereda',
+  // v14.3: barrios
+  'tejas', 'reja',
 ];
 export const T = Object.fromEntries(TILES.map((n, i) => [n, i]));
 
@@ -478,6 +480,8 @@ WALLS.forEach((wall, i) => def(1139 + i, { name: 'Cartel de pared', tex: tx(T.si
 def(1148, { name: 'Hojas de jacarandá', tex: tx(T.jac_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[248, 1, 0.08]] });
 def(1149, { name: 'Hojas de palo borracho', tex: tx(T.palo_leaves), opaque: false, alpha: true, hardness: 0.3, tool: 'axe', drop: 0, extra: [[248, 1, 0.08]] });
 def(1150, { name: 'Vereda porteña', tex: tx(T.vereda), hardness: 1.5, tool: 'pick' });
+def(1151, { name: 'Tejas', tex: tx(T.tejas), hardness: 1.2, tool: 'pick' });
+def(1152, { name: 'Reja negra', tex: tx(T.reja), opaque: false, alpha: true, hardness: 2, tool: 'pick' });
 def(1147, { name: 'Portón automático', tex: { top: T.metal_plate, side: T.garage_door, bottom: T.metal_plate }, hardness: 2.5, tool: 'pick' });
 def(1146, { name: 'Lámpara del faro', tex: tx(T.quartz_lamp), hardness: 1, tool: 'pick', light: 15 });
 def(1143, { name: 'Marca del tesoro', tex: { top: T.x_mark, side: T.sand, bottom: T.sand }, hardness: 0.5, tool: 'shovel', drop: 229 });
@@ -923,6 +927,8 @@ export const RECIPES = [
   { out: [1041, 4], in: [[1040, 4]], station: 'mesa' },
   { out: [1042, 2], in: [[1040, 2]], station: 'mesa' },
   { out: [1043, 4], in: [[1036, 4]], station: 'mesa' },
+  { out: [1151, 4], in: [[13, 2]], station: 'horno' },
+  { out: [1152, 6], in: [[26, 3]], station: 'mesa' },
   { out: [1044, 4], in: [[1043, 4]], station: 'mesa' },
   { out: [1045, 2], in: [[1043, 2]], station: 'mesa' },
   { out: [1046, 4], in: [[205, 4]], station: 'mesa' },

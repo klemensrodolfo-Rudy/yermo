@@ -1383,6 +1383,9 @@ HD.drawer_front = (t) => t.fill((x, y) => { const gap = y % 8 === 0 || x === 0 |
 HD.vase = (t) => t.fill((x, y) => { const band = y > 12 && y < 18; t.S(x, y, 0.7); t.H(x, y, 0.6); return band ? [230, 200, 90] : scl([60, 120, 190], 0.9 + Math.sin(x * 0.4) * 0.05); });
 // v14: vereda porteña (baldosas grises de 20 cm con vainillas)
 HD.vereda = (t) => t.fill((x, y) => { const gx = x % 8, gy = y % 8, joint = gx === 0 || gy === 0, dot = (gx % 4 === 2 || gx % 4 === 3) && gy > 1 && gy < 7 && !joint; t.H(x, y, joint ? 0.15 : dot ? 0.35 : 0.65); return scl([176, 172, 164], joint ? 0.7 : dot ? 0.86 : 0.97 + t.fbm(x, y, 4, 2) * 0.06); });
+// v14.3: tejas coloniales (canaletas curvas en hileras) y reja de hierro negra
+HD.tejas = (t) => t.fill((x, y) => { const row = y >> 3, lx = (x + (row % 2) * 4) % 8, ly = y % 8, curve = Math.sin((lx + 0.5) / 8 * Math.PI), gap = ly === 7; t.H(x, y, gap ? 0.1 : 0.3 + curve * 0.6); const r = mulberry32(row * 13 + ((x + (row % 2) * 4) >> 3) * 7 + 3)(); return scl([178, 86, 54], gap ? 0.55 : 0.72 + curve * 0.3 + r * 0.12 + t.fbm(x, y, 4, 2) * 0.06); });
+HD.reja = (t) => { t.clear(); for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const bar = x % 8 === 3 || x % 8 === 4, rail = y === 2 || y === 3 || y === 28 || y === 29, tip = (x % 8 === 3 || x % 8 === 4) && y < 2; if (bar || rail || tip) t.P(x, y, scl([30, 30, 32], bar && x % 8 === 3 ? 1.4 : 1)); } };
 // v13.2: portón de garaje (chapas horizontales)
 HD.garage_door = (t) => t.fill((x, y) => { const seam = y % 6 === 5, e = x < 2 || x > 29; t.H(x, y, seam ? 0.1 : 0.7); t.S(x, y, 0.45); if (e) return [80, 84, 90]; if (y > 25 && x > 13 && x < 18) return [40, 40, 44]; return scl([176, 182, 188], seam ? 0.6 : 0.92 + Math.sin(y * 1.1) * 0.04); });
 // v12.8: la X del tesoro

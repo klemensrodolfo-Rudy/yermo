@@ -2,7 +2,7 @@
 import { Simplex, hash2, hash3, mulberry32 } from './noise.js';
 import { CHUNK, HEIGHT, SEA, doorId, ladderFor } from './blocks.js';
 import { makePorteno, inArea, areaBlend, GROUND as BA_GROUND } from './porteno.js';
-import { getBA } from './badata.js';
+import { getBA, isReal } from './badata.js';
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -54,7 +54,7 @@ export class WorldGen {
     this.nCanyon = new Simplex(seed + 15);
     this.nSalt = new Simplex(seed + 16);
     this.nGeyser = new Simplex(seed + 17);
-    if (type === 'baires') this.porteno = makePorteno(this);
+    if (isReal(type)) this.porteno = makePorteno(this);
     // desplazamiento por semilla: el ruido simplex vale ~0 en el origen
     this.ox = (hash2(seed, 1, 2) - 0.5) * 200000;
     this.oz = (hash2(seed, 3, 4) - 0.5) * 200000;

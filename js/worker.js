@@ -1,5 +1,5 @@
 import { WorldGen } from './worldgen.js';
-import { loadBA } from './badata.js';
+import { loadBA, isReal } from './badata.js';
 import { buildMesh } from './mesher.js';
 import { BIOME_TINT } from './blocks.js';
 
@@ -7,7 +7,7 @@ let gen = null, ready = Promise.resolve();
 
 self.onmessage = async (e) => {
   const m = e.data;
-  if (m.type === 'init') { if (m.worldType === 'baires') ready = loadBA(); gen = new WorldGen(m.seed, m.worldType); return; }
+  if (m.type === 'init') { if (isReal(m.worldType)) ready = loadBA(m.worldType); gen = new WorldGen(m.seed, m.worldType); return; }
   await ready;
   if (m.type === 'gen') {
     const data = gen.generate(m.cx, m.cz);

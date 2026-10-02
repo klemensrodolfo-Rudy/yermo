@@ -21,7 +21,7 @@ const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 let world = null;
 async function loadWorld() {
   const { WorldGen } = await import('./js/worldgen.js');
-  if (meta.worldType === 'baires') await (await import('./js/badata.js')).loadBA();
+  { const B = await import('./js/badata.js'); if (B.isReal(meta.worldType)) await B.loadBA(meta.worldType); }
   ({ toVox } = await import('./js/blocks.js'));
   const name = String(arg('mundo', 'servidor')).replace(/[^\w-]/g, '_');
   const dir = join(root, 'mundos', name);

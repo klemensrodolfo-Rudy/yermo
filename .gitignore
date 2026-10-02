@@ -10,3 +10,4 @@ videos/
 tools/osm/api/
 tools/osm/*.json
 tools/osm/*.tmp*
+tools/osm/*/

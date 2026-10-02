@@ -1,13 +1,14 @@
-// Mundo «Buenos Aires» (v14): el Obelisco con su forma real (se afina de 7 a 3,5 m y termina en punta),
-// carteles con los nombres de las calles y los lugares famosos marcados en el mapa.
+// Mundos reales (v14): el Obelisco con su forma real (se afina de 7 a 3,5 m y termina en punta),
+// carteles con los nombres de las calles, los hitos modelados a mano y los lugares famosos marcados en el mapa.
 import * as THREE from 'three';
 import { GROUND } from './porteno.js';
-import { getBA } from './badata.js';
+import { getBA, isReal } from './badata.js';
+import { buildHitos } from './hitos3d.js';
 
 export function createBaires(ctx) {
   const { game: g } = ctx;
   const api = {};
-  if (g.meta.worldType !== 'baires') { api.update = () => {}; api.dispose = () => {}; api.markers = () => []; return api; }
+  if (!isReal(g.meta.worldType)) { api.update = () => {}; api.dispose = () => {}; api.markers = () => []; return api; }
   const p = g.player, w = g.world, sim = g.sim, meta = g.meta;
 
   // ---------- el Obelisco ----------
@@ -54,12 +55,14 @@ export function createBaires(ctx) {
   // la puerta (sólo una, sobre el lado sur)
   const door = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.4, 0.08), new THREE.MeshLambertMaterial({ color: 0x3a3226 }));
   door.position.set(cx, y0 + 1.2, cz + b + 0.02);
-  const grp = new THREE.Group(); grp.add(obe, door); ctx.scene.add(grp);
+  const grp = new THREE.Group(); grp.add(obe, door);
+  if (getBA()?.region === 'ba') ctx.scene.add(grp);
 
   // ---------- carteles con los nombres de las calles ----------
   // En cada esquina, un poste negro con una placa por calle (negra con letras blancas, como los de la ciudad),
   // paralela a la calle que nombra. Se arman sólo los que están cerca.
   const D = getBA();
+  const hitos = D ? buildHitos(D, GROUND, ctx.scene) : null;
   const SIGNS = D?.signs2 || [];
   const short = (n) => n.toUpperCase().replace(/^AVENIDA /, 'AV. ').replace(/^PASAJE /, 'PJE. ').replace(/^DIAGONAL /, 'DIAG. ');
   const plateTex = new Map();
@@ -114,7 +117,8 @@ export function createBaires(ctx) {
     const night = 1 - Math.min(1, Math.max(0, (ctx.uniforms.daylight.value - 0.2) / 0.4));
     mat.emissiveIntensity = 0.28 + night * 0.45;
     grp.visible = Math.hypot(p.pos.x, p.pos.z) < 900;
+    hitos?.update(p, w.renderDist * 16 * 0.85);
   };
-  api.dispose = () => { ctx.scene.remove(signGrp); poleGeo.dispose(); poleMat.dispose(); plateGeo.dispose(); edgeMat.dispose(); for (const m of plateTex.values()) { m.map.dispose(); m.dispose(); } ctx.scene.remove(grp); geo.dispose(); mat.dispose(); tex.dispose(); door.geometry.dispose(); door.material.dispose(); };
+  api.dispose = () => { hitos?.dispose(); ctx.scene.remove(signGrp); poleGeo.dispose(); poleMat.dispose(); plateGeo.dispose(); edgeMat.dispose(); for (const m of plateTex.values()) { m.map.dispose(); m.dispose(); } ctx.scene.remove(grp); geo.dispose(); mat.dispose(); tex.dispose(); door.geometry.dispose(); door.material.dispose(); };
   return api;
 }

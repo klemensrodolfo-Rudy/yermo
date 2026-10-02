@@ -46,7 +46,7 @@ import { createBuild13 } from './build13.js';
 import { createFriends13 } from './friends13.js';
 import { createMemories } from './memories.js';
 import { createBaires } from './baires.js';
-import { loadBA } from './badata.js';
+import { loadBA, isReal } from './badata.js';
 import { createTreasure } from './treasure.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
@@ -593,7 +593,7 @@ function updateSky(t) {
     top.lerp(tint.clone().multiplyScalar(0.3 + day * 0.7), f); hor.lerp(tint.clone().multiplyScalar(0.3 + day * 0.7), f);
   }
   const ecl = game.eclipse || 0;
-  if (game.meta.worldType === 'baires') { top.lerp(new THREE.Color(0x3d7ec8).multiplyScalar(0.15 + day * 0.85), 0.75 * day); hor.lerp(new THREE.Color(0xb8d4ea).multiplyScalar(0.12 + day * 0.88), 0.7 * day * (1 - dusk * 0.6)); }
+  if (isReal(game.meta.worldType)) { top.lerp(new THREE.Color(0x3d7ec8).multiplyScalar(0.15 + day * 0.85), 0.75 * day); hor.lerp(new THREE.Color(0xb8d4ea).multiplyScalar(0.12 + day * 0.88), 0.7 * day * (1 - dusk * 0.6)); }
   if (ecl > 0) { top.multiplyScalar(1 - ecl * 0.78); hor.lerp(new THREE.Color(0x2a1e2a), ecl * 0.7); }
   skyUniforms.eclipse.value = ecl; skyUniforms.meteors.value = game.meteors || 0;
   skyUniforms.top.value.copy(top);
@@ -610,7 +610,7 @@ function updateSky(t) {
   uniforms.daylight.value = (0.1 + day * 0.9) * (1 - w.k * 0.25) * (1 - ecl * 0.6);
   uniforms.skyTint.value.setRGB(1, 0.93 - dusk * 0.12, 0.85 - dusk * 0.25).lerp(new THREE.Color(0.55, 0.62, 0.9), 1 - day);
   uniforms.fogColor.value.copy(hor);
-  const R = game.world.renderDist * 16 * w.fogMul * (game.meta.worldType === 'baires' ? 1.35 : 1);
+  const R = game.world.renderDist * 16 * w.fogMul * (isReal(game.meta.worldType) ? 1.35 : 1);
   uniforms.fogNear.value = R * 0.5; uniforms.fogFar.value = R * 1.0;
   handLight.value = uniforms.daylight.value;
   hemi.intensity = 0.25 + day * 1.1;
@@ -780,7 +780,7 @@ async function renderCloud() {
     for (const w of worlds) {
       const row = document.createElement('div'); row.className = 'world';
       const d = new Date(w.updated_at);
-      row.innerHTML = `<div><b></b><small>${w.playing ? `<b>🟢 jugando: ${w.playing.replace(/[<>&]/g, '')}</b> · ` : '⚪ nadie conectado · '}${w.world_type === 'brew' ? '🍺 ' : w.world_type === 'magic' ? '🧙 ' : w.world_type === 'islands' ? '🏝 ' : w.world_type === 'baires' ? '🏙 ' : w.world_type === 'base' ? '🧰 ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · ${w.players} miembro${w.players == 1 ? '' : 's'}${w.owner === Cloud.user.id ? ' · 👑 tuyo' : ''}</small></div><button class="play">Entrar</button><button class="cfg" title="Código, miembros y opciones">⚙</button>`;
+      row.innerHTML = `<div><b></b><small>${w.playing ? `<b>🟢 jugando: ${w.playing.replace(/[<>&]/g, '')}</b> · ` : '⚪ nadie conectado · '}${w.world_type === 'brew' ? '🍺 ' : w.world_type === 'magic' ? '🧙 ' : w.world_type === 'islands' ? '🏝 ' : w.world_type === 'baires' ? '🏙 ' : w.world_type === 'hurlingham' ? '🏡 ' : w.world_type === 'base' ? '🧰 ' : ''}${w.mode === 'creative' ? 'Creativo' : 'Supervivencia'} · ${w.players} miembro${w.players == 1 ? '' : 's'}${w.owner === Cloud.user.id ? ' · 👑 tuyo' : ''}</small></div><button class="play">Entrar</button><button class="cfg" title="Código, miembros y opciones">⚙</button>`;
       row.querySelector('b').textContent = w.name;
       row.querySelector('.play').onclick = () => { row.querySelector('.play').disabled = true; enterCloud(w.id).catch((e) => { cloudMsg(e.message); row.querySelector('.play').disabled = false; }); };
       row.querySelector('.cfg').onclick = () => cloudWorldCfg(w);
@@ -1124,7 +1124,7 @@ async function startGame(meta, hello, cloudInfo) {
     world.remoteLoader = (k) => Cloud.loadChunk(meta.cloud, k).then((data) => ({ data }));
     world.cloudSave = (list) => Cloud.saveChunks(meta.cloud, list);
   } else await world.init();
-  if (meta.worldType === 'baires') { $('#loadText').textContent = 'Cargando el mapa de Buenos Aires…'; try { await loadBA(); } catch { flash('No se pudo cargar el mapa de Buenos Aires'); } }
+  if (isReal(meta.worldType)) { const nm = meta.worldType === 'hurlingham' ? 'Hurlingham' : 'Buenos Aires'; $('#loadText').textContent = `Cargando el mapa de ${nm}…`; try { await loadBA(meta.worldType); } catch { flash(`No se pudo cargar el mapa de ${nm}`); } }
   const wgen = new WorldGen(meta.seed, meta.worldType || 'normal');
   if (!meta.origin) meta.origin = meta.player ? { x: meta.player.x, y: meta.player.y, z: meta.player.z } : wgen.findSpawn(meta.spawnPref);
   if (!meta.player) meta.player = { ...meta.origin };
@@ -1204,7 +1204,7 @@ async function startGame(meta, hello, cloudInfo) {
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'magic') [[385, 6], [353, 10], [379, 1], [26, 8]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'islands') [[398, 1], [402, 1], [403, 4], [26, 8], [267, 1]].forEach(([id, n]) => inv.add(id, n));
-    else if (meta.worldType === 'baires') [[443, 1], [306, 2], [441, 2], [440, 2], [26, 8], [444, 1]].forEach(([id, n]) => inv.add(id, n));
+    else if (isReal(meta.worldType)) [[443, 1], [306, 2], [441, 2], [440, 2], [26, 8], [444, 1]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'base') [[234, 1], [268, 1], [269, 1], [270, 1], [276, 1], [26, 32], [272, 16], [329, 1], [306, 4], [360, 1], [339, 2], [24, 1]].forEach(([id, n]) => inv.add(id, n));
   }
   // mundo cervecero: siempre arrancás con un balde (también los que se unen online y los mundos ya creados)
@@ -1375,7 +1375,7 @@ async function showMenu() {
   if (!worlds.length) list.innerHTML = '<p class="empty">Todavía no hay mundos. Creá uno para empezar.</p>';
   for (const w of worlds) {
     const row = document.createElement('div'); row.className = 'world';
-    const TYPE = { brew: ['🍺', 'Cervecero'], magic: ['🧙', 'Eldra'], islands: ['🏝', 'Archipiélago'], base: ['🧰', 'Base equipada'], baires: ['🏙', 'Buenos Aires'] }[w.worldType] || ['🌲', 'Yermo'];
+    const TYPE = { brew: ['🍺', 'Cervecero'], magic: ['🧙', 'Eldra'], islands: ['🏝', 'Archipiélago'], base: ['🧰', 'Base equipada'], baires: ['🏙', 'Buenos Aires'], hurlingham: ['🏡', 'Hurlingham'] }[w.worldType] || ['🌲', 'Yermo'];
     const MODE = { creative: 'Creativo', hardcore: '☠ Una sola vida', adventure: '🗺 Aventura' }[w.mode] || 'Supervivencia';
     row.innerHTML = `${w.thumb ? `<img class="thumb" src="${w.thumb}" alt="">` : `<div class="thumb">${TYPE[0]}</div>`}<div><b></b><div class="badges"><span class="badge">${TYPE[0]} ${TYPE[1]}</span><span class="badge m-${w.mode}">${MODE}</span>${w.nights ? `<span class="badge">🌙 ${w.nights} noches</span>` : ''}<span class="badge">${ago(w.lastPlayed)}</span></div></div>
       <button class="play primary">Jugar</button><button class="del" title="Borrar mundo">✕</button>`;
@@ -1413,6 +1413,7 @@ const SEED_PRESETS = [
   { id: 'settlement', seed: 3, type: 'normal', spawn: 'settlement', name: '🏘 Asentamiento', desc: 'Arrancás dentro de un pueblo de sobrevivientes con su líder, que da misiones y comercia.' },
   { id: 'circuit', seed: 1, type: 'normal', spawn: 'circuit', name: '🏁 Autódromo', desc: 'Arrancás en los boxes de un autódromo abandonado: autos, motos, carreras y el instructor.' },
   { id: 'base', seed: 556, type: 'base', mode: 'creative', name: '🧰 Base equipada', desc: 'Arrancás en una base con todo listo: helicóptero, bote, autos, motos, camión, tren y vagoneta sobre vías, monturas, taller y cofres llenos. Todos los planos aprendidos. Viene en Creativo, pero podés elegir Supervivencia.' },
+  { id: 'hurlingham', seed: 1888, type: 'hurlingham', name: '🏡 Hurlingham', desc: 'El centro de Hurlingham con el mapa real: la plaza Ravenscroft, las estaciones Hurlingham (San Martín) y Rubén Darío (Urquiza), la iglesia Santa Trinidad, el Hurlingham Club y el hipódromo de trote. Alrededor, el yermo.' },
   { id: 'baires', seed: 1936, type: 'baires', name: '🏙 Buenos Aires', desc: 'Réplica del centro porteño: la Avenida 9 de Julio con el Obelisco, la Plaza de la República, Corrientes con sus teatros, la Diagonal Norte, el Teatro Colón y el Metrobús. Alrededor, el yermo. Arrancás al pie del Obelisco con un globo aerostático.' },
   { id: 'islas', seed: 11, type: 'islands', name: '🏝 Archipiélago', desc: 'Mar abierto con islas de arena y palmeras, corales, naufragios con cofres del tesoro y faros. Arrancás con caña de pescar y un velero: pescá, buceá (con tanque de buceo) y navegá entre islas.' },
   { id: 'eldra', seed: 7, type: 'magic', name: '🧙 Reinos de Eldra', desc: 'Mundo medieval y mágico: colinas de medianos, bosques élficos de árboles de plata, montes enanos con mithril, ciénagas con arañas y un dragón en las Tierras de Brasa. Orcos de noche, trolls que se vuelven piedra con el sol, magos, báculos, anillos y pociones. Sin historia: explorá a tu ritmo.' },
@@ -1430,7 +1431,7 @@ $('#wSeedSel').onchange = () => {
 };
 $('#wSeedSel').onchange();
 $('#createWorld').onclick = () => {
-  const name = $('#wName').value.trim() || ($('#wType').value === 'brew' ? 'Cervecería del yermo' : $('#wType').value === 'magic' ? 'Reinos de Eldra' : $('#wType').value === 'islands' ? 'Archipiélago' : $('#wType').value === 'baires' ? 'Buenos Aires' : 'Yermo sin nombre');
+  const name = $('#wName').value.trim() || ($('#wType').value === 'brew' ? 'Cervecería del yermo' : $('#wType').value === 'magic' ? 'Reinos de Eldra' : $('#wType').value === 'islands' ? 'Archipiélago' : $('#wType').value === 'baires' ? 'Buenos Aires' : $('#wType').value === 'hurlingham' ? 'Hurlingham' : 'Yermo sin nombre');
   const preset = SEED_PRESETS.find((x) => x.id === $('#wSeedSel').value);
   const s = preset.id === 'custom' ? $('#wSeed').value.trim() : '';
   const seed = preset.seed ?? (s ? (/^-?\d+$/.test(s) ? parseInt(s) : [...s].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7)) : (Math.random() * 2e9) | 0);
@@ -1779,7 +1780,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '14.2 · 2026-10-02';
+const VERSION = '14.3 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles

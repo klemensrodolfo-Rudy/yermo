@@ -154,6 +154,16 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Hurlingham': () => `
+      <p>Creá un mundo nuevo de tipo <b>🏡 Hurlingham</b> (o elegí «Hurlingham» en las semillas): el centro de Hurlingham con el <b>mapa real</b>, en escala real (1 bloque = 1 metro), rodeado por el yermo. Arrancás en la <b>plaza John Ravenscroft</b>.</p>
+      <ul><li><b>Qué abarca</b>: unos 2 × 2,2 km, de la estación Hurlingham hasta el hipódromo de trote, con el Hurlingham Club y su cancha de golf en el medio.</li>
+      <li><b>🚆 Las estaciones</b> <b>Hurlingham</b> (San Martín) y <b>Rubén Darío</b> (Urquiza), con sus andenes elevados y las vías.</li>
+      <li><b>⛪ La iglesia Santa Trinidad</b> (luterana), en Pedro de Mendoza esquina Isabel la Católica, modelada a mano a partir de las fotos de la calle: el hastial de ladrillo con sus tres ventanas ojivales y las tres rectangulares de abajo, la torre con el arco, la puerta y la rosa de Lutero mirando al jardín, el costado blanco, las cruces, la reja negra sobre el murito blanco y la casa de la esquina.</li>
+      <li><b>🐎 El hipódromo de trote</b>: el óvalo no está en OpenStreetMap, así que se calcó de la foto satelital.</li>
+      <li><b>Las casas</b>: cada una con su silueta real (Google Open Buildings y Microsoft, por Overture Maps). Como esos datos no traen la altura ni el techo, se dibujan de una planta (7 m las muy grandes), algunas con techo de tejas y otras con terraza: eso es aproximado.</li>
+      <li><b>Árboles</b>: en las veredas y las plazas van con ubicación aproximada (el mapa no los tiene cargados).</li>
+      <li><b>Carteles</b> en cada esquina con los nombres reales de las calles.</li></ul>
+      <p class="muted">Datos del mapa © colaboradores de OpenStreetMap (ODbL); siluetas de edificios: Overture Maps (Google Open Buildings, Microsoft).</p>`,
     'Buenos Aires': () => `
       <p>Creá un mundo nuevo de tipo <b>🏙 Buenos Aires</b> (o elegí «Buenos Aires» en las semillas): es el centro porteño hecho con el <b>mapa real de OpenStreetMap</b>, en escala real (1 bloque = 1 metro), rodeado por el yermo.</p>
       <ul><li><b>Qué abarca</b>: unos 3,5 × 3,5 km alrededor del <b>🗼 Obelisco</b> (67,5 m, iluminado de noche): de Retiro y Plaza San Martín hasta la avenida Independencia, y del Congreso hasta los diques de Puerto Madero.</li>
