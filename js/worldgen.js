@@ -1,7 +1,8 @@
 // Generación procedural del mundo postapocalíptico.
 import { Simplex, hash2, hash3, mulberry32 } from './noise.js';
 import { CHUNK, HEIGHT, SEA, doorId, ladderFor } from './blocks.js';
-import { makePorteno, inArea, areaBlend, GROUND as BA_GROUND, AREA as BA_AREA } from './porteno.js';
+import { makePorteno, inArea, areaBlend, GROUND as BA_GROUND } from './porteno.js';
+import { getBA } from './badata.js';
 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -1438,8 +1439,8 @@ export class WorldGen {
 
   // v14: rellena las columnas del centro porteño (todo lo de arriba se rehace)
   portenoFill(data, cx, cz, I) {
-    const x0 = cx * CHUNK, z0 = cz * CHUNK;
-    if (x0 + 15 < BA_AREA.x0 || x0 > BA_AREA.x1 || z0 + 15 < BA_AREA.z0 || z0 > BA_AREA.z1) return;
+    const x0 = cx * CHUNK, z0 = cz * CHUNK, D = getBA();
+    if (!D || x0 + 15 < D.x0 || x0 > D.x0 + D.w || z0 + 15 < D.z0 || z0 > D.z0 + D.h) return;
     for (let lz = 0; lz < CHUNK; lz++) for (let lx = 0; lx < CHUNK; lx++) {
       const wx = x0 + lx, wz = z0 + lz;
       if (!inArea(wx, wz)) continue;
@@ -1880,7 +1881,15 @@ export class WorldGen {
   }
 
   findSpawn(pref) {
-    if (this.porteno) return { x: 0.5, y: BA_GROUND + 2, z: 24.5 };
+    if (this.porteno) {
+      // al pie del Obelisco, sobre la vereda o la plaza más cercana del lado sur
+      const D = getBA();
+      if (D) for (let r = 8; r < 80; r++) for (let a = 0; a < 24; a++) {
+        const x = Math.round(Math.sin(a / 24 * Math.PI * 2) * r), z = Math.round(Math.cos(a / 24 * Math.PI * 2) * r), i = (x - D.x0) + (z - D.z0) * D.w;
+        if (i >= 0 && [0, 2, 4].includes(D.cls[i])) return { x: x + 0.5, y: BA_GROUND + 2, z: z + 0.5 };
+      }
+      return { x: 0.5, y: BA_GROUND + 2, z: 12.5 };
+    }
     if (this.type === 'islands') {
       for (let r = 0; r < 600; r += 4) for (let a = 0; a < 24; a++) {
         const wx = Math.round(Math.cos(a / 24 * Math.PI * 2) * r), wz = Math.round(Math.sin(a / 24 * Math.PI * 2) * r);

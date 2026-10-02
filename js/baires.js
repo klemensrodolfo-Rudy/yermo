@@ -1,7 +1,8 @@
 // Mundo «Buenos Aires» (v14): el Obelisco con su forma real (se afina de 7 a 3,5 m y termina en punta),
 // carteles con los nombres de las calles y los lugares famosos marcados en el mapa.
 import * as THREE from 'three';
-import { GROUND, STREETS } from './porteno.js';
+import { GROUND } from './porteno.js';
+import { getBA } from './badata.js';
 
 export function createBaires(ctx) {
   const { game: g } = ctx;
@@ -57,21 +58,9 @@ export function createBaires(ctx) {
 
   // ---------- carteles con los nombres de las calles ----------
   const pending = [];
-  if (!meta.bairesSigns) {
-    for (const [zk, [name, hw]] of Object.entries(STREETS)) {
-      const z0 = +zk;
-      for (const x of [-68, 68]) {
-        const z = z0 + (hw + 2) * (x > 0 ? 1 : -1);
-        pending.push({ x, z, text: `${name.toUpperCase()} · AV. 9 DE JULIO` });
-      }
-    }
-    pending.push({ x: 0, z: 9, text: 'OBELISCO · 1936 · PLAZA DE LA REPÚBLICA' });
-    pending.push({ x: -66, z: -280, text: 'TEATRO COLÓN' });
-    pending.push({ x: 74, z: -16, text: 'AV. CORRIENTES · LA CALLE QUE NUNCA DUERME' });
-    pending.push({ x: 95, z: 73, text: 'DIAGONAL NORTE · ROQUE SÁENZ PEÑA' });
-    pending.push({ x: -5, z: 62, text: 'METROBÚS · OBELISCO SUR' });
-    pending.push({ x: 5, z: -62, text: 'METROBÚS · OBELISCO NORTE' });
-  }
+  const D = getBA();
+  // un cartel en cada esquina con los nombres reales de las dos calles (se ponen a medida que se cargan)
+  if (!meta.bairesSigns2 && D) for (const [x, z, text] of D.signs || []) pending.push({ x, z, text });
   let acc = 0;
   function placeSigns() {
     if (!ctx.isAuthority() || !pending.length) return;
@@ -86,12 +75,12 @@ export function createBaires(ctx) {
       }
       pending.splice(i, 1);
     }
-    if (!pending.length) meta.bairesSigns = true;
+    if (!pending.length) meta.bairesSigns2 = true;
   }
 
   // ---------- lugares en el mapa ----------
-  const POIS = [['🗼 Obelisco', 0, 0], ['🎭 Teatro Colón', -120, -280], ['🎬 Gran Rex', 110, -24], ['🎭 Teatro Ópera', 110, 24], ['↘ Diagonal Norte', 160, 160], ['🚌 Metrobús', 0, 76], ['🏛 Av. de Mayo', 0, 560]];
-  api.markers = () => POIS.map(([label, x, z]) => ({ x, z, color: '#74b8ff', kind: 'poi', label, cat: 'lugares' }));
+  const POIS = [['🗼 Obelisco', 0, 0], ...(D?.pois || []).filter((q) => !/obelisco/i.test(q[2])).map(([x, z, n]) => [n, x, z])];
+  api.markers = () => POIS.filter(([, x, z]) => Math.hypot(x - p.pos.x, z - p.pos.z) < 900).map(([label, x, z]) => ({ x, z, color: '#74b8ff', kind: 'poi', label, cat: 'lugares' }));
 
   api.update = (dt) => {
     acc += dt; if (acc > 1) { acc = 0; placeSigns(); }

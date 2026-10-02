@@ -155,12 +155,14 @@ export function setupGuide(ui, getGame) {
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
     'Buenos Aires': () => `
-      <p>Creá un mundo nuevo de tipo <b>🏙 Buenos Aires</b> (o elegí «Buenos Aires» en las semillas): es una réplica del centro porteño, en escala real (1 bloque = 1 metro), rodeada por el yermo.</p>
-      <ul><li><b>🗼 El Obelisco</b> (67,5 m) en la Plaza de la República, con las letras «BA». De noche se ilumina.</li>
-      <li><b>Avenida 9 de Julio</b>: 140 m de ancho, con el Metrobús en el centro, cinco carriles por mano, plazoletas con tipas, jacarandás y palos borrachos, y las colectoras Cerrito y Carlos Pellegrini.</li>
-      <li><b>Avenida Corrientes</b>, la calle que nunca duerme: los carteles del Gran Rex y del Ópera, marquesinas con luces y teatros.</li>
-      <li><b>Diagonal Norte</b>, el <b>Teatro Colón</b> sobre Cerrito y las calles Lavalle, Tucumán, Viamonte, Córdoba, Sarmiento, Perón, Mitre, Rivadavia y Avenida de Mayo, con sus carteles.</li></ul>
-      <p>Arrancás al pie del Obelisco con un globo aerostático para verla desde arriba. En el centro no aparecen bichos peligrosos: sólo palomas. Suena un tango suave.</p>`,
+      <p>Creá un mundo nuevo de tipo <b>🏙 Buenos Aires</b> (o elegí «Buenos Aires» en las semillas): es el centro porteño hecho con el <b>mapa real de OpenStreetMap</b>, en escala real (1 bloque = 1 metro), rodeado por el yermo.</p>
+      <ul><li><b>Qué abarca</b>: unos 3,5 × 3,5 km alrededor del <b>🗼 Obelisco</b> (67,5 m, iluminado de noche): de Retiro y Plaza San Martín hasta la avenida Independencia, y del Congreso hasta los diques de Puerto Madero.</li>
+      <li><b>Calles y cuadras</b>: todas en su lugar, con el ancho según sus carriles: la 9 de Julio con sus colectoras, Corrientes, Diagonal Norte y Sur, Avenida de Mayo, Rivadavia, Leandro N. Alem, Paseo Colón, Callao, Belgrano y el resto de la grilla.</li>
+      <li><b>Edificios</b>: cada uno con su forma y su altura real cuando el mapa la tiene (Plaza de Mayo, Casa Rosada, Cabildo, Catedral, Congreso, Palacio Barolo, Teatro Colón, Galerías Pacífico, Torre Galicia…). Los que no tienen altura cargada se dibujan de 6 pisos, y donde el mapa todavía no cargó edificios queda la vereda.</li>
+      <li><b>Plazas y árboles</b>: los árboles cargados en el mapa van en su lugar con su especie (plátano, jacarandá, tipa, palo borracho o palmera). En las plazas y canteros sin árboles cargados se agregan algunos, con ubicación aproximada.</li>
+      <li><b>Carteles</b> en cada esquina con los nombres reales de las dos calles, faroles donde el mapa los tiene y los lugares famosos marcados en el mapa grande.</li></ul>
+      <p>Arrancás al pie del Obelisco con un globo aerostático para verla desde arriba. En el centro no aparecen bichos peligrosos: sólo palomas. Suena un tango suave.</p>
+      <p class="muted">Datos del mapa © colaboradores de OpenStreetMap, licencia ODbL (openstreetmap.org/copyright).</p>`,
     'Recuerdos y mascotas': () => `
       <p><b>📔 Álbum de viaje</b> (pausa → Juego): se llena solo con una foto de cada logro, cada bioma nuevo y los momentos especiales (tesoros, eclipses, caravanas, carreras, tu primer vuelo en globo).</p>
       <p><b>🎬 Grabar recorrido</b> (pausa → Juego): la cámara vuela sola alrededor de tu casa y se aleja mostrando tu mundo; en 30 segundos tenés un video para guardar o compartir. Esc lo corta.</p>

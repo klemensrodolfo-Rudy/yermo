@@ -162,6 +162,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v14.0 — Buenos Aires**: nuevo tipo de mundo con una réplica del centro porteño en escala real: la Avenida 9 de Julio (140 m, Metrobús, plazoletas con jacarandás, palos borrachos y tipas), el Obelisco en la Plaza de la República con las letras «BA», Corrientes con los carteles del Gran Rex y el Ópera, la Diagonal Norte, el Teatro Colón, carteles con los nombres de las calles, palomas y tango.
 
+**v14.1 — Buenos Aires de verdad**: el mundo porteño se rehízo con datos reales de OpenStreetMap (unos 3,5 × 3,5 km, de Retiro a Independencia y del Congreso a Puerto Madero): calles, cuadras, plazas, edificios con su altura real y árboles con su especie. Los edificios sin altura cargada se dibujan de 6 pisos y los árboles agregados en plazas sin datos tienen ubicación aproximada. Mapa © colaboradores de OpenStreetMap (ODbL); se regenera con `node tools/osm/dl_api.mjs` y `node tools/osm/build.mjs`.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

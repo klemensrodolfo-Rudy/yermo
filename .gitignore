@@ -6,3 +6,7 @@ node_modules/
 Thumbs.db
 .claude/
 videos/
+# datos crudos de OpenStreetMap (se bajan con tools/osm/dl_api.mjs)
+tools/osm/api/
+tools/osm/*.json
+tools/osm/*.tmp*

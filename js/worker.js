@@ -1,12 +1,14 @@
 import { WorldGen } from './worldgen.js';
+import { loadBA } from './badata.js';
 import { buildMesh } from './mesher.js';
 import { BIOME_TINT } from './blocks.js';
 
-let gen = null;
+let gen = null, ready = Promise.resolve();
 
-self.onmessage = (e) => {
+self.onmessage = async (e) => {
   const m = e.data;
-  if (m.type === 'init') { gen = new WorldGen(m.seed, m.worldType); return; }
+  if (m.type === 'init') { if (m.worldType === 'baires') ready = loadBA(); gen = new WorldGen(m.seed, m.worldType); return; }
+  await ready;
   if (m.type === 'gen') {
     const data = gen.generate(m.cx, m.cz);
     self.postMessage({ type: 'gen', job: m.job, cx: m.cx, cz: m.cz, data }, [data.buffer]);

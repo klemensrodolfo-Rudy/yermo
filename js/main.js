@@ -46,6 +46,7 @@ import { createBuild13 } from './build13.js';
 import { createFriends13 } from './friends13.js';
 import { createMemories } from './memories.js';
 import { createBaires } from './baires.js';
+import { loadBA } from './badata.js';
 import { createTreasure } from './treasure.js';
 import { Cloud } from './cloud.js';
 import { Race } from './race.js';
@@ -1123,6 +1124,7 @@ async function startGame(meta, hello, cloudInfo) {
     world.remoteLoader = (k) => Cloud.loadChunk(meta.cloud, k).then((data) => ({ data }));
     world.cloudSave = (list) => Cloud.saveChunks(meta.cloud, list);
   } else await world.init();
+  if (meta.worldType === 'baires') { $('#loadText').textContent = 'Cargando el mapa de Buenos Aires…'; try { await loadBA(); } catch { flash('No se pudo cargar el mapa de Buenos Aires'); } }
   const wgen = new WorldGen(meta.seed, meta.worldType || 'normal');
   if (!meta.origin) meta.origin = meta.player ? { x: meta.player.x, y: meta.player.y, z: meta.player.z } : wgen.findSpawn(meta.spawnPref);
   if (!meta.player) meta.player = { ...meta.origin };
@@ -1777,7 +1779,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '14.0 · 2026-10-02';
+const VERSION = '14.1 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
