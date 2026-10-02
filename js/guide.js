@@ -154,13 +154,14 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
-    'Taxi': () => `
+    'Carruaje': () => `
       <p>En los mundos <b>🏙 Buenos Aires</b> y <b>🏡 Hurlingham</b> arrancás con un <b>📱 celular</b> (si el mundo ya existía, te lo regalan al entrar). Clic derecho con el celular en la mano:</p>
-      <ul><li><b>🚕 Pedir un taxi</b>: llega en unos 5 segundos por la calle más cercana. Es negro con el techo amarillo, como los porteños.</li>
-      <li><b>Subirte</b>: acercate al taxi y se abre la lista de lugares reales de la ciudad (los más buscados, estaciones, plazas, iglesias, barrios y más), con buscador.</li>
-      <li><b>El viaje</b>: el taxista te lleva por las calles del mapa (no respeta las manos de las calles). Podés mirar por la ventanilla.</li>
+      <ul><li><b>🐎 Pedir un carruaje</b>: un mateo tirado por un caballo llega al trote en unos 5 segundos por la calle más cercana.</li>
+      <li><b>Subirte</b>: acercate y te sentás en el pescante, al lado del cochero (bien alto, para ver el paisaje). Se abre la lista de lugares reales de la ciudad, con buscador.</li>
+      <li><b>El viaje</b>: el cochero te lleva al trote por las calles del mapa (no respeta las manos de las calles).</li>
+      <li><b>Indicaciones</b>: arriba de la pantalla, un cartelito te dice por qué calle vas, dónde vas a doblar y a cuántos metros, y cuánto falta.</li>
       <li>Con el celular, durante el viaje: <b>⏩ Llegar ya</b> o <b>🚪 Bajarme acá</b>. También te bajás saltando.</li>
-      <li>El taxi sólo anda dentro de la ciudad en la que estás: no va de Capital a Hurlingham ni sale al yermo.</li></ul>
+      <li>Sólo anda dentro de la ciudad en la que estás: no va de Capital a Hurlingham ni sale al yermo.</li></ul>
       <p>El celular también te dice en qué esquina estás.</p>`,
     'Hurlingham': () => `
       <p>Creá un mundo nuevo de tipo <b>🏡 Hurlingham</b> (o elegí «Hurlingham» en las semillas): el centro de Hurlingham con el <b>mapa real</b>, en escala real (1 bloque = 1 metro), rodeado por el yermo. Arrancás en la <b>plaza John Ravenscroft</b>.</p>
@@ -178,7 +179,7 @@ export function setupGuide(ui, getGame) {
       <li><b>Calles y cuadras</b>: todas en su lugar, con el ancho según sus carriles: la 9 de Julio con sus colectoras, Corrientes, Diagonal Norte y Sur, Avenida de Mayo, Rivadavia, Leandro N. Alem, Paseo Colón, Callao, Belgrano y el resto de la grilla.</li>
       <li><b>Edificios</b>: cada uno con su forma y su altura real cuando el mapa la tiene (Plaza de Mayo, Casa Rosada, Cabildo, Catedral, Congreso, Palacio Barolo, Teatro Colón, Galerías Pacífico, Torre Galicia…). Los que no tienen altura cargada se dibujan de 6 pisos, y donde el mapa todavía no cargó edificios queda la vereda.</li>
       <li><b>Plazas y árboles</b>: los árboles cargados en el mapa van en su lugar con su especie (plátano, jacarandá, tipa, palo borracho o palmera). En las plazas y canteros sin árboles cargados se agregan algunos, con ubicación aproximada.</li>
-      <li><b>Fachadas dibujadas a mano</b> a partir de fotos de la calle, sobre la silueta real de cada edificio: la <b>Casa Rosada</b> (rosada, con el arco central, el reloj, la bandera y las dos cúpulas), el <b>Cabildo</b> (las arcadas blancas, las puertas verdes y la torre), la <b>Catedral Metropolitana</b> (las doce columnas y el frontón), el <b>Teatro Colón</b> (piedra clara, ojos de buey y la mansarda), el <b>Congreso</b> (el pórtico y la cúpula verde de unos 80 m), la <b>Pirámide de Mayo</b> con los pañuelos pintados alrededor y el <b>monumento a Belgrano</b>. Las alturas que el mapa no tiene (la Casa Rosada, la torre del Cabildo, la cúpula de la Catedral) son aproximadas.</li>
+      <li><b>Fachadas dibujadas a mano</b> a partir de fotos de la calle, sobre la silueta real de cada edificio: la <b>Casa Rosada</b> (rosada, con el arco central, el reloj, la bandera y las dos cúpulas), el <b>Cabildo</b> (las arcadas blancas, las puertas verdes y la torre), la <b>Catedral Metropolitana</b> (las doce columnas y el frontón), el <b>Teatro Colón</b> (piedra clara, ojos de buey y la mansarda), el <b>Congreso</b> (el pórtico y la cúpula verde de unos 80 m), la <b>Pirámide de Mayo</b> con los pañuelos pintados alrededor, el <b>monumento a Belgrano</b> y la <b>Fragata Presidente Sarmiento</b> amarrada en el Dique 3 (con sus tres mástiles, las chimeneas y la cubierta). Las alturas que el mapa no tiene (la Casa Rosada, la torre del Cabildo, la cúpula de la Catedral) son aproximadas.</li>
       <li><b>Carteles</b> en cada esquina: un poste con una placa por calle, con su nombre real y puesta paralela a la calle que nombra, faroles donde el mapa los tiene y los lugares famosos marcados en el mapa grande.</li></ul>
       <p>Arrancás al pie del Obelisco con un globo aerostático para verla desde arriba. En el centro no aparecen bichos peligrosos: sólo palomas. Suena un tango suave.</p>
       <p class="muted">Datos del mapa © colaboradores de OpenStreetMap, licencia ODbL (openstreetmap.org/copyright).</p>`,

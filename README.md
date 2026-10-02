@@ -172,6 +172,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v14.5 — Fachadas porteñas**: la Casa Rosada, el Cabildo, la Catedral Metropolitana, el Teatro Colón y el Congreso con sus fachadas dibujadas a mano (a partir de fotos de la calle) sobre la silueta real de cada edificio, con sus cúpulas, torres, pórticos y frontones; la Pirámide de Mayo con los pañuelos y el monumento a Belgrano. Las alturas que el mapa no tiene son aproximadas.
 
+**v14.6 — Carruaje y fragata**: el taxi pasa a ser un mateo tirado por un caballo (vas en el pescante, al lado del cochero) con indicaciones del viaje en texto, como un GPS sin mapa (calle actual, próxima vuelta y metros). La Fragata Presidente Sarmiento, que el mapa tenía como edificio, ahora es el barco amarrado en el Dique 3.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

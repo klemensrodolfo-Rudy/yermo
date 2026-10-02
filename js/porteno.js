@@ -8,7 +8,7 @@ import { hitoColumn } from './hitos.js';
 export const GROUND = 48;
 export const BLEND = 70;
 // clases de suelo (ver tools/osm/build.mjs)
-const AGUA = 5, VIAS = 8, EDIF = 3, ANDEN = 10, HITO = 11, TEJA = 1151, YELLOW = 1026;
+const AGUA = 5, VIAS = 8, EDIF = 3, ANDEN = 10, HITO = 11, BARCO = 12, TEJA = 1151, YELLOW = 1026;
 const SURFACE = [1150, 11, 84, 0, 1038, 47, 1035, 1026, 8, 4];
 // materiales de fachada (índices que guarda el conversor)
 const MAT = [9, 1116, 1043, 9, 13, 1044, 1033, 1036, 1034, 1031, 14, 1038, 1049];
@@ -46,6 +46,8 @@ export function makePorteno(gen) {
     }
     const c = D.cls[i];
     if (c === AGUA) { put(G - 2, 229); put(G - 1, 47); put(G, 47); return; }
+    // barco amarrado (la Fragata Sarmiento): casco macizo y cubierta de madera (el casco lo dibuja el juego encima)
+    if (c === BARCO) { put(G - 2, 229); for (let y = G - 1; y <= G + 1; y++) put(y, CONC); put(G + 2, 1058); return; }
     // andén del tren: un metro sobre el suelo, con el borde amarillo
     if (c === ANDEN) {
       put(G, CONC);

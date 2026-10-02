@@ -2,6 +2,7 @@
 import { itemName } from './blocks.js';
 
 export const NEWS = [
+  ['14.6', 'Carruaje y fragata', [[445, 'El taxi ahora es un carruaje tirado por un caballo: vas en el pescante al lado del cochero.'], [445, 'Indicaciones del viaje: por qué calle vas, dónde doblás y a cuántos metros.'], [1058, 'La Fragata Sarmiento en Puerto Madero ya no es un edificio: es el barco, con sus mástiles y su cubierta.']]],
   ['14.5', 'Fachadas porteñas', [[1116, 'La Casa Rosada, el Cabildo, la Catedral, el Teatro Colón y el Congreso con sus fachadas dibujadas a partir de fotos de la calle.'], [1035, 'La Pirámide de Mayo con los pañuelos y el monumento a Belgrano.'], [1150, 'Los monumentos del mapa ya no aparecen como edificios.']]],
   ['14.4', 'Taxi', [[445, 'Celular: pedí un taxi que llega en 5 segundos y te lleva a los lugares reales de la ciudad (Casa Rosada, Teatro Colón, Puerto Madero, la estación Hurlingham…).'], [445, 'Durante el viaje podés llegar al instante o bajarte donde quieras.']]],
   ['14.3', 'Hurlingham', [[1151, 'Nuevo mundo real: el centro de Hurlingham con la plaza Ravenscroft, las estaciones Hurlingham y Rubén Darío, el Hurlingham Club y el hipódromo de trote.'], [13, 'La iglesia Santa Trinidad modelada a mano a partir de las fotos de la calle.'], [1152, 'Bloques nuevos: tejas y reja negra.']]],

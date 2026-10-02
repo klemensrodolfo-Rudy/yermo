@@ -26,10 +26,13 @@ export function loadBA(type = 'baires') {
       const fs = await import('node:fs/promises'), zlib = await import('node:zlib');
       meta = JSON.parse(await fs.readFile(new URL(file + '.json', base), 'utf8'));
       bin = new Uint8Array(zlib.inflateRawSync(await fs.readFile(new URL(file + '.bin', base))));
+      try { meta.nameGrid = new Uint16Array(new Uint8Array(zlib.inflateRawSync(await fs.readFile(new URL(file + '.calles.bin', base)))).buffer); } catch { /* sin nombres */ }
     } else {
       meta = await (await fetch(new URL(file + '.json', base))).json();
       const r = await fetch(new URL(file + '.bin', base));
       bin = new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+      // los nombres de las calles sólo hacen falta en el juego (no en los workers)
+      if (typeof window !== 'undefined') try { const rn = await fetch(new URL(file + '.calles.bin', base)); if (rn.ok) meta.nameGrid = new Uint16Array(await new Response(rn.body.pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); } catch { /* sin nombres */ }
     }
     return unpack(meta, bin);
   })();

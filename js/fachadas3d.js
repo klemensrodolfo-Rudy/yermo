@@ -186,6 +186,13 @@ function buildOne(F, G) {
   };
   // tapa del techo (por si se ve desde arriba)
   const roofCap = (y, mat) => { const shape = new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, z))); const g = new THREE.ShapeGeometry(shape); g.rotateX(Math.PI / 2); const o = new THREE.Mesh(g, mat); o.position.y = G + y; grp.add(o); };
+  const flagAt = (pos, h, ry) => {
+    cyl(0.07, 0.09, h, keep(lam({ color: 0xdedede })), pos.clone().add(new THREE.Vector3(0, h / 2, 0)), 8);
+    const c = document.createElement('canvas'); c.width = 96; c.height = 60; const x = c.getContext('2d');
+    x.fillStyle = '#74acdf'; x.fillRect(0, 0, 96, 60); x.fillStyle = '#ffffff'; x.fillRect(0, 20, 96, 20); x.fillStyle = '#f6b40e'; x.beginPath(); x.arc(48, 30, 6, 0, Math.PI * 2); x.fill();
+    const t = keep(new THREE.CanvasTexture(c)); t.colorSpace = THREE.SRGBColorSpace;
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.5), keep(lam({ map: t }))); f.position.copy(pos).add(new THREE.Vector3(Math.sin(ry) * 1.2, h - 0.8, Math.cos(ry) * 1.2)); f.rotation.y = ry + Math.PI / 2; grp.add(f);
+  };
   const flag = (pos, h) => {
     cyl(0.08, 0.1, h, keep(lam({ color: 0xdedede })), pos.clone().add(new THREE.Vector3(0, h / 2, 0)), 8);
     const c = document.createElement('canvas'); c.width = 96; c.height = 60; const x = c.getContext('2d');
@@ -295,6 +302,59 @@ function buildOne(F, G) {
     for (const [f, s] of [[1.1, 0.3], [1.1, -0.3], [-1.1, 0.3], [-1.1, -0.3]]) box(0.25, 1.6, 0.25, bronze, at(4.0, f, s));
     box(0.6, 1.0, 0.5, bronze, at(6.6, -0.2)); box(0.32, 0.32, 0.32, bronze, at(7.35, -0.2)); // el jinete
     box(0.08, 3, 0.08, bronze, at(8.0, 0.2, 0.4)); box(0.05, 1.0, 1.4, keep(lam({ color: 0x8fb8d8 })), at(8.9, 0.2, 1.1)); // la bandera
+  } else if (F.style === 'fragata') {
+    // Fragata ARA «Presidente Sarmiento» (1897), buque museo en el Dique 3: casco blanco con la franja negra
+    // de flotación y la línea de ojos de buey, tres mástiles ocre con vergas, dos chimeneas, bauprés y toldos blancos.
+    // Ejes del barco: de popa a proa (la proa mira al destino «target»)
+    let bi = 0, bj = 0, bd = 0;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]); if (d > bd) { bd = d; bi = i; bj = j; } }
+    let A = pts[bi], Bp = pts[bj];
+    // la proa es la punta que queda más cerca del frente principal calculado con el destino
+    if (M >= 0) { const c0 = [(A[0] + Bp[0]) / 2, (A[1] + Bp[1]) / 2], sa = (A[0] - c0[0]) * mn[0] + (A[1] - c0[1]) * mn[1], sb = (Bp[0] - c0[0]) * mn[0] + (Bp[1] - c0[1]) * mn[1]; if (sa > sb) [A, Bp] = [Bp, A]; }
+    const Lh = bd, ax = [(Bp[0] - A[0]) / Lh, (Bp[1] - A[1]) / Lh], side = [-ax[1], ax[0]];
+    const P = (f, s = 0, y = 0) => new THREE.Vector3(A[0] + ax[0] * f * Lh + side[0] * s, G + y, A[1] + ax[1] * f * Lh + side[1] * s);
+    const shipYaw = Math.atan2(-ax[0], -ax[1]) + Math.PI; // el eje local -z mira a la proa
+    const DECK = 2, TOP = 2.9;
+    // casco: blanco, franja negra bajo el agua, línea dorada y ojos de buey
+    const kh = canvasFor(10, TOP + 1.6), Y0 = 1.6;
+    kh.x.fillStyle = '#f2f1ec'; kh.x.fillRect(0, 0, kh.c.width, kh.c.height);
+    kh.x.fillStyle = '#1d1d1f'; kh.x.fillRect(0, kh.Y(Y0 + 0.25), kh.c.width, kh.m(Y0 + 0.25));
+    kh.x.fillStyle = '#c9a148'; kh.x.fillRect(0, kh.Y(Y0 + 2.15), kh.c.width, kh.m(0.12));
+    for (let px = 0.8; px < 10; px += 1.6) { kh.x.fillStyle = '#c9a148'; kh.x.beginPath(); kh.x.arc(kh.m(px), kh.Y(Y0 + 1.35), kh.m(0.2), 0, Math.PI * 2); kh.x.fill(); kh.x.fillStyle = '#2b3036'; kh.x.beginPath(); kh.x.arc(kh.m(px), kh.Y(Y0 + 1.35), kh.m(0.14), 0, Math.PI * 2); kh.x.fill(); }
+    kh.x.fillStyle = '#6b4a2e'; kh.x.fillRect(0, 0, kh.c.width, kh.m(0.18));
+    const hullM = keep(lam({ map: keep(texOf(kh, true)) }));
+    for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.2) continue; grp.add(wallQuad(a, b, G - Y0, G + TOP, hullM, L / 10)); }
+    const ochre = keep(lam({ color: 0xc69d4c })), darkW = keep(lam({ color: 0x4a3626 })), white = keep(lam({ color: 0xf4f3ee })), blackM = keep(lam({ color: 0x1d1d1f }));
+    const spar = (r0, r1, len, mat, pos, rot) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(r0, r1, len, 8), mat); o.position.copy(pos); o.rotation.copy(rot); grp.add(o); return o; };
+    const lines = [];
+    // mástiles: trinquete, mayor y mesana, con cuatro vergas cada uno
+    const MASTS = [[0.24, 36, 19], [0.48, 39, 21], [0.71, 33, 16]];
+    for (const [f, h, yard] of MASTS) {
+      spar(0.42, 0.16, h, ochre, P(f, 0, DECK + h / 2), new THREE.Euler(0, 0, 0));
+      [0.36, 0.55, 0.71, 0.85].forEach((t, k) => {
+        const len = yard * Math.pow(0.78, k), y = DECK + h * t;
+        const o = spar(0.17, 0.17, len, k ? ochre : darkW, P(f, 0, y), new THREE.Euler(0, 0, Math.PI / 2)); o.rotation.set(0, shipYaw + Math.PI / 2, Math.PI / 2);
+        o.rotation.order = 'YXZ'; o.rotation.set(0, shipYaw, Math.PI / 2);
+        // obenques de cada lado y brazas
+        for (const sd of [-1, 1]) { lines.push(P(f, sd * len / 2, y), P(f + 0.012 * (k + 1), sd * 6.6, DECK + 0.8)); }
+      });
+      for (const sd of [-1, 1]) for (const df of [-0.02, 0, 0.02]) lines.push(P(f, 0, DECK + h * 0.9), P(f + df, sd * 6.8, TOP));
+    }
+    // estays entre los mástiles y hacia el bauprés
+    lines.push(P(0.24, 0, DECK + 36), P(0.48, 0, DECK + 30), P(0.48, 0, DECK + 39), P(0.71, 0, DECK + 26), P(0.71, 0, DECK + 33), P(0.98, 0, TOP + 1));
+    // bauprés: sale de la proa hacia adelante y arriba
+    const bow = P(0, 0, TOP), tip = P(-0.17, 0, TOP + 4.5);
+    const bs = spar(0.32, 0.14, bow.distanceTo(tip), ochre, bow.clone().lerp(tip, 0.5), new THREE.Euler()); bs.lookAt(tip); bs.rotateX(Math.PI / 2);
+    lines.push(tip, P(0.24, 0, DECK + 30), tip, P(0.24, 0, DECK + 20), tip, P(0.02, 2.5, TOP), tip, P(0.02, -2.5, TOP));
+    const lg = new THREE.BufferGeometry().setFromPoints(lines); grp.add(new THREE.LineSegments(lg, keep(new THREE.LineBasicMaterial({ color: 0x3a3430 }))));
+    // dos chimeneas ocre entre el trinquete y el palo mayor
+    for (const f of [0.33, 0.39]) { spar(0.85, 0.9, 6.5, ochre, P(f, 0, DECK + 3.25), new THREE.Euler()); spar(0.88, 0.88, 0.7, blackM, P(f, 0, DECK + 6.85), new THREE.Euler()); }
+    // toldos blancos sobre la cubierta y la caseta de popa
+    for (const [f, len] of [[0.15, 9], [0.56, 10], [0.84, 8]]) { const t = box(9.6, 0.25, len, white, P(f, 0, DECK + 2.6), shipYaw); t.rotation.order = 'YXZ'; }
+    box(6, 2.3, 7, white, P(0.8, 0, DECK + 1.15), shipYaw);
+    for (const [f, sd] of [[0.15, 4.6], [0.15, -4.6], [0.56, 4.6], [0.56, -4.6], [0.84, 4.6], [0.84, -4.6]]) spar(0.06, 0.06, 2.5, white, P(f, sd, DECK + 1.3), new THREE.Euler());
+    // la bandera argentina en la popa
+    flagAt(P(1.0, 0, TOP), 6, shipYaw);
   } else if (F.style === 'piramide') {
     // Pirámide de Mayo: obelisco blanco de 18,76 m con la estatua de la Libertad
     const white = keep(lam({ color: 0xf3f1ea })), sp = new THREE.Vector3(...[pts.reduce((s, p) => s + p[0] / n, 0), 0, pts.reduce((s, p) => s + p[1] / n, 0)]);

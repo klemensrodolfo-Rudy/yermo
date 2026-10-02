@@ -19,6 +19,7 @@ export const REGIONS = {
       { way: 23633911, style: 'colon', h: 18.5, target: 'Plaza Lavalle' },
       { rel: 2468981, style: 'congreso', h: 26, target: 'Plaza del Congreso' },
       { way: 720034699, style: 'piramide', h: 0, target: 'Plaza de Mayo' },
+      { way: 173065810, style: 'fragata', h: 0, target: 'Puente de la Mujer' }, // Fragata Sarmiento: la proa mira al puente
       { way: 720034722, style: 'ecuestre', h: 0, target: 'Museo Casa Rosada' }, // Monumento a Belgrano: el caballo mira a la Casa Rosada
     ],
   },

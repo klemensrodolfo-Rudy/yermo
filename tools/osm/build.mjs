@@ -59,7 +59,7 @@ console.log('grilla', W, 'x', H);
 const cls = new Uint8Array(N), hgt = new Uint8Array(N), mat = new Uint8Array(N), bid = new Uint8Array(N), rf = new Uint8Array(N);
 const at = (x, z) => { const i = Math.floor(x) - X0, j = Math.floor(z) - Z0; return i >= 0 && j >= 0 && i < W && j < H ? i + j * W : -1; };
 // clases de suelo
-const VEREDA = 0, ASF = 1, PASTO = 2, EDIF = 3, PLAZA = 4, AGUA = 5, BLANCO = 6, AMARILLO = 7, VIAS = 8, TIERRA = 9, ANDEN = 10, HITO = 11;
+const VEREDA = 0, ASF = 1, PASTO = 2, EDIF = 3, PLAZA = 4, AGUA = 5, BLANCO = 6, AMARILLO = 7, VIAS = 8, TIERRA = 9, ANDEN = 10, HITO = 11, BARCO = 12;
 // en los barrios de casas, lo que no es calle ni edificio son terrenos con jardín
 if (R.suburb) cls.fill(PASTO);
 const park = new Uint8Array(N); // plazas y parques (para el arbolado aproximado)
@@ -387,11 +387,26 @@ for (const F of R.facades || []) {
     const i = at(x, z); if (i < 0 || !inPoly(pts, x + 0.5, z + 0.5)) continue;
     let d = Infinity; for (let k = 0; k < pts.length; k++) d = Math.min(d, segDist(x + 0.5, z + 0.5, pts[k], pts[(k + 1) % pts.length]));
     const dm = main >= 0 ? segDist(x + 0.5, z + 0.5, pts[main], pts[(main + 1) % pts.length]) : Infinity;
+    if (F.style === 'fragata') { cls[i] = d < 1.2 ? AGUA : BARCO; hgt[i] = 0; continue; } // un barco amarrado: agua alrededor y la cubierta adentro
     if (F.style === 'piramide' || F.style === 'ecuestre' || d < 1.3 || (F.porch && dm < F.porch + 1.3)) { cls[i] = PLAZA; hgt[i] = 0; } else { cls[i] = EDIF; hgt[i] = Math.max(3, Math.floor(F.h) - 1); }
   }
   facades.push({ style: F.style, h: F.h, pts, main, ccw: A > 0, porch: F.porch || 0 });
 }
 console.log('fachadas', facades.map((f) => f.style + ':' + f.pts.length + (f.main < 0 ? '(sin frente)' : '')).join(' '));
+
+// ---------- nombres de las calles en una grilla de 4 m (para las indicaciones del viaje) ----------
+const NS = 4, NW = Math.ceil(W / NS), NH = Math.ceil(H / NS), nameGrid = new Uint16Array(NW * NH), streetNames = [''];
+{
+  const idx = new Map();
+  // primero las calles chicas y después las avenidas (en los cruces queda la más importante)
+  const rank = (t) => ({ motorway: 6, trunk: 5, primary: 4, secondary: 3, tertiary: 2 })[t.highway.replace(/_link$/, '')] || 1;
+  for (const r of roads.filter((r) => r.car && r.t.name).sort((a, b) => rank(a.t) - rank(b.t))) {
+    if (!idx.has(r.t.name)) { idx.set(r.t.name, streetNames.length); streetNames.push(r.t.name); }
+    const id = idx.get(r.t.name);
+    stroke(r.pts, r.hw + 1, (x, z) => { const i = Math.floor((x - X0) / NS), j = Math.floor((z - Z0) / NS); if (i >= 0 && j >= 0 && i < NW && j < NH) nameGrid[i + j * NW] = id; });
+  }
+}
+writeFileSync(join(OUT, R.out + '.calles.bin'), deflateRawSync(new Uint8Array(nameGrid.buffer), { level: 9 }));
 
 // ---------- salida ----------
 const L5 = R.suburb ? 5 : 4;
@@ -399,8 +414,8 @@ const raw = new Uint8Array(N * L5); raw.set(cls, 0); raw.set(hgt, N); raw.set(ma
 const comp = deflateRawSync(raw, { level: 9 });
 writeFileSync(join(OUT, R.out + '.bin'), comp);
 const source = 'OpenStreetMap (ODbL) · © colaboradores de OpenStreetMap' + (nOv ? ' · siluetas de edificios: Overture Maps (Google Open Buildings, Microsoft)' : '');
-const meta = { version: 1, region: REGION, layers: L5, source, lat0: LAT0, lon0: LON0, rot: TH, x0: X0, z0: Z0, w: W, h: H, trees, lamps, signs2: signs, pois: [...uniq.values()], landmarks, facades };
+const meta = { version: 1, region: REGION, layers: L5, source, lat0: LAT0, lon0: LON0, rot: TH, x0: X0, z0: Z0, w: W, h: H, trees, lamps, signs2: signs, pois: [...uniq.values()], landmarks, facades, streets: streetNames, ns: NS };
 writeFileSync(join(OUT, R.out + '.json'), JSON.stringify(meta));
-const cnt = new Array(12).fill(0); for (const c of cls) cnt[c]++;
+const cnt = new Array(13).fill(0); for (const c of cls) cnt[c]++;
 console.log('clases', cnt.join(' '), '· edificios', blds.length, '· árboles', trees.length, '· faroles', lamps.length, '· esquinas', signs.length, '· lugares', uniq.size);
 console.log('comprimido', (comp.length / 1e6).toFixed(2), 'MB');
