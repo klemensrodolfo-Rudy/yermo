@@ -164,6 +164,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v14.1 — Buenos Aires de verdad**: el mundo porteño se rehízo con datos reales de OpenStreetMap (unos 3,5 × 3,5 km, de Retiro a Independencia y del Congreso a Puerto Madero): calles, cuadras, plazas, edificios con su altura real y árboles con su especie. Los edificios sin altura cargada se dibujan de 6 pisos y los árboles agregados en plazas sin datos tienen ubicación aproximada. Mapa © colaboradores de OpenStreetMap (ODbL); se regenera con `node tools/osm/dl_api.mjs` y `node tools/osm/build.mjs`.
 
+**v14.2 — Carteles de las calles**: en el mundo Buenos Aires, un poste en cada esquina (unas 800) con una placa por calle, con su nombre real de OpenStreetMap, paralela a la calle que nombra.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

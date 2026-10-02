@@ -160,7 +160,7 @@ export function setupGuide(ui, getGame) {
       <li><b>Calles y cuadras</b>: todas en su lugar, con el ancho según sus carriles: la 9 de Julio con sus colectoras, Corrientes, Diagonal Norte y Sur, Avenida de Mayo, Rivadavia, Leandro N. Alem, Paseo Colón, Callao, Belgrano y el resto de la grilla.</li>
       <li><b>Edificios</b>: cada uno con su forma y su altura real cuando el mapa la tiene (Plaza de Mayo, Casa Rosada, Cabildo, Catedral, Congreso, Palacio Barolo, Teatro Colón, Galerías Pacífico, Torre Galicia…). Los que no tienen altura cargada se dibujan de 6 pisos, y donde el mapa todavía no cargó edificios queda la vereda.</li>
       <li><b>Plazas y árboles</b>: los árboles cargados en el mapa van en su lugar con su especie (plátano, jacarandá, tipa, palo borracho o palmera). En las plazas y canteros sin árboles cargados se agregan algunos, con ubicación aproximada.</li>
-      <li><b>Carteles</b> en cada esquina con los nombres reales de las dos calles, faroles donde el mapa los tiene y los lugares famosos marcados en el mapa grande.</li></ul>
+      <li><b>Carteles</b> en cada esquina: un poste con una placa por calle, con su nombre real y puesta paralela a la calle que nombra, faroles donde el mapa los tiene y los lugares famosos marcados en el mapa grande.</li></ul>
       <p>Arrancás al pie del Obelisco con un globo aerostático para verla desde arriba. En el centro no aparecen bichos peligrosos: sólo palomas. Suena un tango suave.</p>
       <p class="muted">Datos del mapa © colaboradores de OpenStreetMap, licencia ODbL (openstreetmap.org/copyright).</p>`,
     'Recuerdos y mascotas': () => `

@@ -208,20 +208,27 @@ for (const e of all) if (e.type === 'node' && e.tags?.natural === 'tree') { cons
 }
 const lamps = [];
 for (const e of all) if (e.type === 'node' && e.tags?.highway === 'street_lamp') { const [x, z] = proj(e.lat, e.lon); if (at(x, z) >= 0) lamps.push([Math.round(x), Math.round(z)]); }
-// esquinas con nombre: nodo compartido por dos calles con nombres distintos
-const signs = [], seen = new Set();
+// esquinas con nombre: nodo compartido por dos calles con nombres distintos.
+// Un poste por esquina con una placa por calle, paralela a la calle que nombra.
+const signs = [], seen = new Set(), corners = [], SK = { one: 0, cand: 0, nofree: 0 };
+const dirAt = (r, i) => { const a = r.pts[Math.max(0, i - 1)], b = r.pts[Math.min(r.pts.length - 1, i + 1)]; return Math.round(Math.atan2(b[1] - a[1], b[0] - a[0]) * 100) / 100; };
 const isFree = (x, z) => { const i = at(x, z); return i >= 0 && (cls[i] === VEREDA || cls[i] === PLAZA); };
 for (const [nd, list] of roadsByNode) {
   const names = [...new Set(list.map(([r]) => r.t.name).filter(Boolean))];
-  if (names.length < 2) continue;
-  const key = names.slice().sort().join('|'); if (seen.has(key)) continue;
+  if (names.length < 2) { if (list.length > 1) SK.one++; continue; }
+  SK.cand++;
   const [r, i] = list[0], [cx, cz] = r.pts[i];
+  const key = names.slice().sort().join('|') + '|' + Math.floor(cx / 45) + ',' + Math.floor(cz / 45); if (seen.has(key)) continue;
+  // las avenidas con dos manos cruzan varias veces la misma calle: una sola esquina cada ~45 m
+  if (corners.some(([x, z, k]) => k === names.slice().sort().join('|') && Math.hypot(x - cx, z - cz) < 45)) continue;
   let best = null;
   for (let rad = 2; rad < 26 && !best; rad++) for (let a = 0; a < 16 && !best; a++) { const x = Math.round(cx + Math.cos(a / 16 * Math.PI * 2 + 0.4) * rad), z = Math.round(cz + Math.sin(a / 16 * Math.PI * 2 + 0.4) * rad); if (isFree(x, z)) best = [x, z]; }
-  if (!best) continue;
-  seen.add(key);
-  signs.push([best[0], best[1], names.slice(0, 2).join(' y ').toUpperCase()]);
+  if (!best) { SK.nofree++; continue; }
+  seen.add(key); corners.push([cx, cz, names.slice().sort().join('|')]);
+  const plates = names.slice(0, 3).map((n) => [n, dirAt(...list.find(([rr]) => rr.t.name === n))]);
+  signs.push([best[0], best[1], plates]);
 }
+console.log('esquinas: candidatas', SK.cand, '· sin vereda libre', SK.nofree, '· cruces sin dos nombres', SK.one);
 // lugares conocidos (con artículo en Wikipedia o atracción turística)
 const pois = [];
 for (const e of all) {
@@ -238,7 +245,7 @@ const uniq = new Map(); for (const p of pois) if (!uniq.has(p[2])) uniq.set(p[2]
 const raw = new Uint8Array(N * 4); raw.set(cls, 0); raw.set(hgt, N); raw.set(mat, 2 * N); raw.set(bid, 3 * N);
 const comp = deflateRawSync(raw, { level: 9 });
 writeFileSync(join(OUT, 'ba_centro.bin'), comp);
-const meta = { version: 1, source: 'OpenStreetMap (ODbL) · © colaboradores de OpenStreetMap', lat0: LAT0, lon0: LON0, rot: TH, x0: X0, z0: Z0, w: W, h: H, trees, lamps, signs, pois: [...uniq.values()] };
+const meta = { version: 1, source: 'OpenStreetMap (ODbL) · © colaboradores de OpenStreetMap', lat0: LAT0, lon0: LON0, rot: TH, x0: X0, z0: Z0, w: W, h: H, trees, lamps, signs2: signs, pois: [...uniq.values()] };
 writeFileSync(join(OUT, 'ba_centro.json'), JSON.stringify(meta));
 const cnt = new Array(10).fill(0); for (const c of cls) cnt[c]++;
 console.log('clases', cnt.join(' '), '· edificios', blds.length, '· árboles', trees.length, '· faroles', lamps.length, '· esquinas', signs.length, '· lugares', uniq.size);

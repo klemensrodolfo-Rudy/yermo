@@ -2,6 +2,7 @@
 import { itemName } from './blocks.js';
 
 export const NEWS = [
+  ['14.2', 'Carteles de las calles', [[191, 'En Buenos Aires, cada esquina tiene su poste con los nombres reales de las calles que se cruzan, como los de la ciudad.']]],
   ['14.1', 'Buenos Aires de verdad', [[1116, 'El centro porteño se rehízo con el mapa real de OpenStreetMap: unos 3,5 × 3,5 km, de Retiro a Independencia y del Congreso a Puerto Madero.'], [1043, 'Cada cuadra, cada calle y cada edificio en su lugar, con su altura cuando el mapa la tiene.'], [1148, 'Los árboles cargados en el mapa, con su especie: plátanos, jacarandás, tipas, palos borrachos y palmeras.'], [191, 'Carteles en cada esquina con los nombres reales de las dos calles, y los lugares famosos en el mapa.']]],
   ['14.0', 'Buenos Aires', [[1116, 'Nuevo tipo de mundo: réplica del centro porteño con el Obelisco, la 9 de Julio y Corrientes.'], [1148, 'Jacarandás, palos borrachos y tipas en las plazoletas.'], [1117, 'Carteles del Gran Rex y del Ópera, Teatro Colón y Diagonal Norte.'], [443, 'Arrancás al pie del Obelisco con un globo aerostático.']]],
   ['13.4', 'Recuerdos y mascotas', [[116, 'Álbum de viaje automático con tus mejores momentos.'], [443, 'Grabar recorrido: un video de tu mundo en 30 segundos.'], [271, 'El perro encuentra tesoros y la cabra avisa del peligro.'], [245, 'Música propia en los cañones, el salar y los géiseres.']]],

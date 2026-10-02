@@ -57,25 +57,51 @@ export function createBaires(ctx) {
   const grp = new THREE.Group(); grp.add(obe, door); ctx.scene.add(grp);
 
   // ---------- carteles con los nombres de las calles ----------
-  const pending = [];
+  // En cada esquina, un poste negro con una placa por calle (negra con letras blancas, como los de la ciudad),
+  // paralela a la calle que nombra. Se arman sólo los que están cerca.
   const D = getBA();
-  // un cartel en cada esquina con los nombres reales de las dos calles (se ponen a medida que se cargan)
-  if (!meta.bairesSigns2 && D) for (const [x, z, text] of D.signs || []) pending.push({ x, z, text });
-  let acc = 0;
-  function placeSigns() {
-    if (!ctx.isAuthority() || !pending.length) return;
-    for (let i = pending.length - 1; i >= 0; i--) {
-      const sgn = pending[i];
-      const y = GROUND + 1, b0 = w.getBlock(sgn.x, y, sgn.z);
-      if (b0 < 0) continue;
-      if (b0 === 0) {
-        w.setBlock(sgn.x, y, sgn.z, 191);
-        const k = `${sgn.x},${y},${sgn.z}`;
-        sim.containers.set(k, { type: 'sign', text: sgn.text }); sim.touch(k);
-      }
-      pending.splice(i, 1);
+  const SIGNS = D?.signs2 || [];
+  const short = (n) => n.toUpperCase().replace(/^AVENIDA /, 'AV. ').replace(/^PASAJE /, 'PJE. ').replace(/^DIAGONAL /, 'DIAG. ');
+  const plateTex = new Map();
+  function texFor(name) {
+    if (plateTex.has(name)) return plateTex.get(name);
+    const txt = short(name), c = document.createElement('canvas'); c.width = 512; c.height = 96;
+    const x = c.getContext('2d');
+    x.fillStyle = '#16181b'; x.fillRect(0, 0, 512, 96);
+    x.strokeStyle = '#e8e8e8'; x.lineWidth = 4; x.strokeRect(7, 7, 498, 82);
+    let fs = 54; x.font = `bold ${fs}px Arial, Helvetica, sans-serif`;
+    while (x.measureText(txt).width > 470 && fs > 22) { fs -= 2; x.font = `bold ${fs}px Arial, Helvetica, sans-serif`; }
+    x.fillStyle = '#f4f4f4'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(txt, 256, 50);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    const m = new THREE.MeshLambertMaterial({ map: t });
+    plateTex.set(name, m); return m;
+  }
+  const poleGeo = new THREE.CylinderGeometry(0.05, 0.06, 1, 6), poleMat = new THREE.MeshLambertMaterial({ color: 0x1b1d20 });
+  const plateGeo = new THREE.BoxGeometry(1.9, 0.36, 0.04), edgeMat = new THREE.MeshLambertMaterial({ color: 0x16181b });
+  const signGrp = new THREE.Group(); ctx.scene.add(signGrp);
+  const built = new Map();
+  let lastX = 1e9, lastZ = 1e9, acc = 0;
+  function makeSign([x, z, plates]) {
+    const s = new THREE.Group(); s.position.set(x + 0.5, GROUND + 1, z + 0.5);
+    // las placas van apiladas arriba del poste, que termina debajo de la última
+    const top = 3.1, step = 0.37, low = top - (plates.length - 1) * step - 0.18;
+    const pole = new THREE.Mesh(poleGeo, poleMat); pole.scale.y = low; pole.position.y = low / 2; s.add(pole);
+    plates.forEach(([name, ang], k) => {
+      const m = tf(name), pl = new THREE.Mesh(plateGeo, [edgeMat, edgeMat, edgeMat, edgeMat, m, m]);
+      pl.position.y = top - k * step; pl.rotation.y = -ang; s.add(pl);
+    });
+    return s;
+  }
+  const tf = texFor;
+  function refreshSigns() {
+    if (Math.hypot(p.pos.x - lastX, p.pos.z - lastZ) < 12) return;
+    lastX = p.pos.x; lastZ = p.pos.z;
+    const R = 140;
+    for (let i = 0; i < SIGNS.length; i++) {
+      const sg = SIGNS[i], near = Math.abs(sg[0] - p.pos.x) < R && Math.abs(sg[1] - p.pos.z) < R;
+      if (near && !built.has(i)) { const o = makeSign(sg); built.set(i, o); signGrp.add(o); }
+      else if (!near && built.has(i)) { signGrp.remove(built.get(i)); built.delete(i); }
     }
-    if (!pending.length) meta.bairesSigns2 = true;
   }
 
   // ---------- lugares en el mapa ----------
@@ -83,12 +109,12 @@ export function createBaires(ctx) {
   api.markers = () => POIS.filter(([, x, z]) => Math.hypot(x - p.pos.x, z - p.pos.z) < 900).map(([label, x, z]) => ({ x, z, color: '#74b8ff', kind: 'poi', label, cat: 'lugares' }));
 
   api.update = (dt) => {
-    acc += dt; if (acc > 1) { acc = 0; placeSigns(); }
+    acc += dt; if (acc > 0.5) { acc = 0; refreshSigns(); }
     // de noche, el Obelisco iluminado por los reflectores
     const night = 1 - Math.min(1, Math.max(0, (ctx.uniforms.daylight.value - 0.2) / 0.4));
     mat.emissiveIntensity = 0.28 + night * 0.45;
     grp.visible = Math.hypot(p.pos.x, p.pos.z) < 900;
   };
-  api.dispose = () => { ctx.scene.remove(grp); geo.dispose(); mat.dispose(); tex.dispose(); door.geometry.dispose(); door.material.dispose(); };
+  api.dispose = () => { ctx.scene.remove(signGrp); poleGeo.dispose(); poleMat.dispose(); plateGeo.dispose(); edgeMat.dispose(); for (const m of plateTex.values()) { m.map.dispose(); m.dispose(); } ctx.scene.remove(grp); geo.dispose(); mat.dispose(); tex.dispose(); door.geometry.dispose(); door.material.dispose(); };
   return api;
 }
