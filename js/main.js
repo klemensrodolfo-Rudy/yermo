@@ -46,6 +46,7 @@ import { createBuild13 } from './build13.js';
 import { createFriends13 } from './friends13.js';
 import { createMemories } from './memories.js';
 import { createBaires } from './baires.js';
+import { createTaxi } from './taxi.js';
 import { loadBA, isReal } from './badata.js';
 import { createTreasure } from './treasure.js';
 import { Cloud } from './cloud.js';
@@ -1204,7 +1205,7 @@ async function startGame(meta, hello, cloudInfo) {
     else if (meta.worldType === 'brew') [[277, 1], [281, 8], [283, 4], [291, 2], [295, 4], [273, 2]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'magic') [[385, 6], [353, 10], [379, 1], [26, 8]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'islands') [[398, 1], [402, 1], [403, 4], [26, 8], [267, 1]].forEach(([id, n]) => inv.add(id, n));
-    else if (isReal(meta.worldType)) [[443, 1], [306, 2], [441, 2], [440, 2], [26, 8], [444, 1]].forEach(([id, n]) => inv.add(id, n));
+    else if (isReal(meta.worldType)) [[445, 1], [443, 1], [306, 2], [441, 2], [440, 2], [26, 8], [444, 1]].forEach(([id, n]) => inv.add(id, n));
     else if (meta.worldType === 'base') [[234, 1], [268, 1], [269, 1], [270, 1], [276, 1], [26, 32], [272, 16], [329, 1], [306, 4], [360, 1], [339, 2], [24, 1]].forEach(([id, n]) => inv.add(id, n));
   }
   // mundo cervecero: siempre arrancás con un balde (también los que se unen online y los mundos ya creados)
@@ -1277,6 +1278,9 @@ async function startGame(meta, hello, cloudInfo) {
   game.friends13 = createFriends13(fctx);
   game.album = createMemories(fctx);
   game.baires = createBaires(fctx);
+  const TX = game.taxi = createTaxi(fctx);
+  const useTX = player.onUseItem;
+  player.onUseItem = (...a) => TX.onUseItem(...a) || useTX(...a);
   const useB13 = player.onUseItem;
   player.onUseItem = (...a) => B13.onUseItem(...a) || useB13(...a);
   const TR = game.treasure = createTreasure(fctx);
@@ -1345,7 +1349,7 @@ async function doQuit() {
   await saveGame(true);
   if (cloudHost) { clearInterval(cloudHost.timer); const ch = cloudHost; cloudHost = null; await Cloud.release(ch.id, ch.tok).catch(() => {}); }
   net.close();
-  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); game.news?.dispose(); game.wildlife?.dispose(); game.treasure?.dispose(); game.qol?.dispose(); game.world13?.dispose(); game.build13?.dispose(); game.friends13?.dispose(); game.album?.dispose(); game.baires?.dispose(); voice.disable();
+  game.race?.end(); game.features?.dispose(); game.features2?.dispose(); game.eldra?.dispose(); game.extras?.dispose(); game.modes?.dispose(); game.sea?.dispose(); game.minigames?.dispose(); game.creative?.dispose(); game.nature?.dispose(); game.social?.dispose(); game.learn?.dispose(); game.visuals?.dispose(); game.ux?.dispose(); game.voiceCmd?.dispose(); game.life?.dispose(); game.progress?.dispose(); game.building?.dispose(); game.together?.dispose(); game.geo?.dispose(); game.machines?.dispose(); game.home?.dispose(); game.news?.dispose(); game.wildlife?.dispose(); game.treasure?.dispose(); game.qol?.dispose(); game.world13?.dispose(); game.build13?.dispose(); game.friends13?.dispose(); game.album?.dispose(); game.baires?.dispose(); game.taxi?.dispose(); voice.disable();
   game.mobs.clear(); game.drops.clear(); game.vehicles.clear(); game.projectiles.clear();
   scene.remove(game.weather.rain);
   game.world.dispose();
@@ -1780,7 +1784,7 @@ addEventListener('touchopts', () => input.applyTouchOpts(settings));
 let last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0, hudAcc = 0;
 const gen = { g: null, seed: null };
 // versión visible (cambiarla en cada actualización publicada)
-const VERSION = '14.3 · 2026-10-02';
+const VERSION = '14.4 · 2026-10-02';
 document.querySelectorAll('.ver').forEach((e) => (e.textContent = 'YERMO v' + VERSION));
 let wasPlaying = null;
 document.body.classList.add('ctl'); // esta versión controla cuándo se ven los controles táctiles
@@ -1880,6 +1884,7 @@ function loop(now) {
   game.friends13?.update(dt);
   game.album?.update(dt);
   game.baires?.update(dt);
+  game.taxi?.update(dt);
   game.race.update(dt);
   if (player.riding) {
     if (auth) player.riding.rider = 'local';
@@ -2033,7 +2038,7 @@ function loop(now) {
     if (gen.seed !== game.meta.seed) { gen.g = new WorldGen(game.meta.seed, game.meta.worldType || 'normal'); gen.seed = game.meta.seed; }
     const c = gen.g.column(Math.floor(player.pos.x), Math.floor(player.pos.z));
     const hours = Math.floor(game.time * 24), mins = Math.floor((game.time * 24 % 1) * 60);
-    $('#biome').textContent = BIOME_NAMES[c.biome] + (c.level ? ` · nivel ${c.level}` : '');
+    $('#biome').textContent = (c.biome === 23 && game.meta.worldType === 'hurlingham' ? 'Hurlingham' : BIOME_NAMES[c.biome]) + (c.level ? ` · nivel ${c.level}` : '');
     const se = game.season?.();
     $('#clock').textContent = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}` + (se ? ` · ${se.icon} ${se.name}` : '') + (weather.k > 0.3 ? ` · ${WEATHER_NAMES[weather.type]}` : '');
     game.ach.event('biome', c.biome);

@@ -2,6 +2,7 @@
 import { itemName } from './blocks.js';
 
 export const NEWS = [
+  ['14.4', 'Taxi', [[445, 'Celular: pedí un taxi que llega en 5 segundos y te lleva a los lugares reales de la ciudad (Casa Rosada, Teatro Colón, Puerto Madero, la estación Hurlingham…).'], [445, 'Durante el viaje podés llegar al instante o bajarte donde quieras.']]],
   ['14.3', 'Hurlingham', [[1151, 'Nuevo mundo real: el centro de Hurlingham con la plaza Ravenscroft, las estaciones Hurlingham y Rubén Darío, el Hurlingham Club y el hipódromo de trote.'], [13, 'La iglesia Santa Trinidad modelada a mano a partir de las fotos de la calle.'], [1152, 'Bloques nuevos: tejas y reja negra.']]],
   ['14.2', 'Carteles de las calles', [[191, 'En Buenos Aires, cada esquina tiene su poste con los nombres reales de las calles que se cruzan, como los de la ciudad.']]],
   ['14.1', 'Buenos Aires de verdad', [[1116, 'El centro porteño se rehízo con el mapa real de OpenStreetMap: unos 3,5 × 3,5 km, de Retiro a Independencia y del Congreso a Puerto Madero.'], [1043, 'Cada cuadra, cada calle y cada edificio en su lugar, con su altura cuando el mapa la tiene.'], [1148, 'Los árboles cargados en el mapa, con su especie: plátanos, jacarandás, tipas, palos borrachos y palmeras.'], [191, 'Carteles en cada esquina con los nombres reales de las dos calles, y los lugares famosos en el mapa.']]],

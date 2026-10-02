@@ -154,6 +154,14 @@ export function setupGuide(ui, getGame) {
       <p><b>Cuevas</b>: ${icon(1112)} estalactitas, ${icon(1113)} estalagmitas, ${icon(1114)} hongos que brillan, ${icon(1115)} cristales violetas en lo profundo, lagos subterráneos y ${icon(1111)} obsidiana sobre la lava.</p>
       <h3>Minerales nuevos</h3>
       <p>${icon(1110)} <b>Cuarzo</b> (desde pico de chatarra): sirve para ${icon(1116)} bloques y ${icon(1117)} lámparas de cuarzo, y para los mecanismos nuevos. ${icon(1111)} <b>Obsidiana</b> (pico de acero o mejor): con ella se hacen ${icon(417)} herramientas y ${icon(420)} espada que casi no se gastan.</p>`,
+    'Taxi': () => `
+      <p>En los mundos <b>🏙 Buenos Aires</b> y <b>🏡 Hurlingham</b> arrancás con un <b>📱 celular</b> (si el mundo ya existía, te lo regalan al entrar). Clic derecho con el celular en la mano:</p>
+      <ul><li><b>🚕 Pedir un taxi</b>: llega en unos 5 segundos por la calle más cercana. Es negro con el techo amarillo, como los porteños.</li>
+      <li><b>Subirte</b>: acercate al taxi y se abre la lista de lugares reales de la ciudad (los más buscados, estaciones, plazas, iglesias, barrios y más), con buscador.</li>
+      <li><b>El viaje</b>: el taxista te lleva por las calles del mapa (no respeta las manos de las calles). Podés mirar por la ventanilla.</li>
+      <li>Con el celular, durante el viaje: <b>⏩ Llegar ya</b> o <b>🚪 Bajarme acá</b>. También te bajás saltando.</li>
+      <li>El taxi sólo anda dentro de la ciudad en la que estás: no va de Capital a Hurlingham ni sale al yermo.</li></ul>
+      <p>El celular también te dice en qué esquina estás.</p>`,
     'Hurlingham': () => `
       <p>Creá un mundo nuevo de tipo <b>🏡 Hurlingham</b> (o elegí «Hurlingham» en las semillas): el centro de Hurlingham con el <b>mapa real</b>, en escala real (1 bloque = 1 metro), rodeado por el yermo. Arrancás en la <b>plaza John Ravenscroft</b>.</p>
       <ul><li><b>Qué abarca</b>: unos 2 × 2,2 km, de la estación Hurlingham hasta el hipódromo de trote, con el Hurlingham Club y su cancha de golf en el medio.</li>

@@ -168,6 +168,8 @@ Preparación (una sola vez, en el proyecto de Supabase): correr [`supabase/schem
 
 **v14.3 — Hurlingham**: nuevo mundo real con el centro de Hurlingham (unos 2 × 2,2 km): la plaza John Ravenscroft, las estaciones Hurlingham (San Martín) y Rubén Darío (Urquiza) con sus andenes, el Hurlingham Club y el hipódromo de trote (calcado de la foto satelital). Las casas tienen su silueta real de Overture Maps (Google Open Buildings y Microsoft); como no traen altura ni techo, se dibujan de una planta con techos aproximados. La iglesia luterana Santa Trinidad (Pedro de Mendoza e Isabel la Católica) está modelada a mano a partir de las fotos de la calle. Bloques nuevos: tejas y reja negra. Se regenera con `node tools/osm/dl_api.mjs hurlingham`, `python tools/osm/overture.py hurlingham` y `node tools/osm/build.mjs hurlingham`.
 
+**v14.4 — Taxi**: en los mundos Buenos Aires y Hurlingham arrancás con un celular para pedir un taxi porteño (negro y amarillo) que llega en 5 segundos; elegís un lugar real de la ciudad y el taxista te lleva por las calles del mapa (el camino se calcula sobre el asfalto). Sólo anda dentro de cada ciudad.
+
 **Base equipada** — Tipo de mundo con todo listo desde el inicio: hangar con autos y motos, helicóptero, bote, tren y vagoneta sobre vías, monturas, taller con todas las estaciones y cofres llenos, todos los planos aprendidos.
 
 **Reglas del mundo** — Al crear el mundo (y después desde la pausa): radiación sí/no, animales mutantes que atacan de día sí/no y humanos armados (bandidos, piratas y soldados) sí/no, apagado por defecto. En línea las decide el anfitrión. El nombre también se cambia desde la pausa.

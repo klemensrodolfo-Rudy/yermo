@@ -337,16 +337,17 @@ console.log('esquinas: candidatas', SK.cand, '· sin vereda libre', SK.nofree, '
 const pois = [];
 for (const e of all) {
   const t = e.tags; if (!t?.name) continue;
-  if (R.suburb && (t.railway === 'station' || (t.leisure === 'park' && e.type !== 'node') || t.amenity === 'place_of_worship' || t.leisure === 'sports_centre')) { /* en el barrio, también estaciones, plazas, iglesias y clubes */ }
+  if (t.railway === 'station' || /^(quarter|neighbourhood|suburb)$/.test(t.place || '')) { /* estaciones de tren y barrios (destinos del taxi) */ }
+  else if (R.suburb && ( (t.leisure === 'park' && e.type !== 'node') || t.amenity === 'place_of_worship' || t.leisure === 'sports_centre')) { /* en el barrio, también estaciones, plazas, iglesias y clubes */ }
   else if (!(t.wikidata || t.wikipedia) || !(t.tourism || t.historic || t.amenity === 'theatre' || t.building || t.leisure === 'park' || t.place === 'square' || t.amenity === 'place_of_worship')) continue;
   const gm = e.geometry?.length ? e.geometry.reduce((a, p) => ({ lat: a.lat + p.lat / e.geometry.length, lon: a.lon + p.lon / e.geometry.length }), { lat: 0, lon: 0 }) : null;
   const g = e.lat != null ? e : e.bounds ? { lat: (e.bounds.minlat + e.bounds.maxlat) / 2, lon: (e.bounds.minlon + e.bounds.maxlon) / 2 } : R.suburb ? gm : null;
   if (!g) continue;
   const [x, z] = proj(g.lat, g.lon); if (at(x, z) < 0) continue;
-  pois.push([Math.round(x), Math.round(z), t.name]);
+  pois.push([Math.round(x), Math.round(z), t.name, t.railway === 'station' ? (t.station === 'subway' ? 'subte' : 'tren') : t.place ? 'barrio' : t.amenity === 'place_of_worship' ? 'iglesia' : /^(park|garden)$/.test(t.leisure || '') || t.place === 'square' ? 'plaza' : 'lugar']);
 }
-if (R.track) pois.push([R.track.x, Math.round((R.track.z0 + R.track.z1) / 2), 'Hipódromo de trote']);
-for (const L of landmarks) if (L.kind === 'santaTrinidad') pois.push([L.x + L.u[0] * 18 + L.v[0] * 12, L.z + L.u[1] * 18 + L.v[1] * 12, 'Iglesia Santa Trinidad']);
+if (R.track) pois.push([R.track.x, Math.round((R.track.z0 + R.track.z1) / 2), 'Hipódromo de trote', 'lugar']);
+for (const L of landmarks) if (L.kind === 'santaTrinidad') pois.push([L.x + L.u[0] * 18 + L.v[0] * 12, L.z + L.u[1] * 18 + L.v[1] * 12, 'Iglesia Santa Trinidad', 'iglesia']);
 const uniq = new Map(); for (const p of pois) if (!uniq.has(p[2])) uniq.set(p[2], p);
 
 // ---------- salida ----------

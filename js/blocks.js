@@ -773,6 +773,7 @@ export const ITEMS = {
   442: { name: 'Mapa del tesoro', icon: 'tmap', stack: 1, tmap: true },
   443: { name: 'Globo aerostático', icon: 'balloon', vehicle: 'balloon' },
   444: { name: 'Pincel', icon: 'brush', brush: true, durability: 200 },
+  445: { name: 'Celular', icon: 'phone', stack: 1, phone: true },
 };
 // daño cuerpo a cuerpo de herramientas (sin arma dedicada)
 for (const it of Object.values(ITEMS)) if (it.tool && !it.weapon) it.weapon = 1 + it.tier;
